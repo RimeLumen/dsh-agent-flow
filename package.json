@@ -1,0 +1,52 @@
+{
+  "name": "dsh-agent-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent Flow for DeepSeek Harness: a conversation-bar context injector (pick skills/tools per session) plus a right-side node-based flow canvas with CSS-animated live progress.",
+  "main": "./src/host/index.js",
+  "exports": {
+    ".": "./src/host/index.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ]
+    }
+  },
+  "files": [
+    "src",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "README.zh.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "agent-flow",
+    "workflow",
+    "skills",
+    "tools"
+  ],
+  "license": "MIT",
+  "author": "RimeLumen",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RimeLumen/dsh-agent-flow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RimeLumen/dsh-agent-flow/issues"
+  },
+  "homepage": "https://github.com/RimeLumen/dsh-agent-flow#readme"
+}
