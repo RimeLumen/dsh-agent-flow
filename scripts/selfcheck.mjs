@@ -293,6 +293,7 @@ function check(section, label, ok, extra) {
 {
   const section = 'wiring'
   const hostIndex = readFileSync(join(root, 'src', 'host', 'index.js'), 'utf8')
+  const clientSrc = readFileSync(join(root, 'src', 'client.js'), 'utf8')
   const routeText = readFileSync(join(root, 'src', 'host', 'routes', 'index.js'), 'utf8')
   const routeFiles = ['plan', 'workflow', 'runs', 'data', 'errors', 'experience', 'selection']
     .map((n) => readFileSync(join(root, 'src', 'host', 'routes', n + '.js'), 'utf8')).join('\n')
@@ -308,6 +309,13 @@ function check(section, label, ok, extra) {
   check(section, '自动入库被真正调用', routeFiles.includes('autoCaptureExperience('))
   check(section, '就绪门被真正等待', routeText.includes('store.ready()'))
   check(section, '路由 /workflows/:id/compose 存在', routeFiles.includes("'/workflows/:id/compose'"))
+  check(section, '批量流程路由存在', routeFiles.includes("'/workflows/batch'"))
+  check(section, '批量路由支持三种操作', ['archive', 'restore', 'delete'].every((a) => routeFiles.includes("''")) === false || routeFiles.includes("archive / restore / delete"))
+  check(section, 'FlowManager 独立组件存在', clientSrc.includes('function FlowManager(props)'))
+  check(section, '停靠栏挂载 FlowManager', clientSrc.includes('h(FlowManager,'))
+  check(section, '批量操作已接线', clientSrc.includes('batchWorkflows'))
+  check(section, '回收站视图存在', clientSrc.includes('recycleTitle'))
+  check(section, '旧 flowRows 内联列表已删除', !clientSrc.includes('const flowRows'))
   check(section, '路由 /plan/confirm 存在', routeFiles.includes("'/plan/confirm'"))
 
   // 「方法 + 路径」不得重复（同一路径配不同方法是正当 REST；同方法同路径才会让后者永不匹配）

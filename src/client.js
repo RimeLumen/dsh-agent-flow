@@ -148,6 +148,15 @@ window.__ModuleLoader__.load({
         exportPng: '导出 PNG（4×）',
         busyNow: 'Agent 执行中',
         busyHint: '当前会话的 Agent 正在工作（来自 agent/status）',
+        recycleTitle: '回收站',
+        backToList: '返回列表',
+        selectAll: '全选',
+        clearSelection: '清空选择',
+        selectedCount: '已选',
+        restoreSelected: '复原所选',
+        deleteSelected: '删除所选',
+        selectFlow: '选择该流程',
+        batchDone: '批量操作完成',
         compose: '组合为提示词',
         composeHint: '把画布上的节点与连线组合成可执行的提示词，交回给 Agent',
         composeCopy: '复制提示词',
@@ -344,6 +353,15 @@ window.__ModuleLoader__.load({
         exportPng: 'Export PNG (4x)',
         busyNow: 'Agent working',
         busyHint: 'The agent of this session is working (from agent/status)',
+        recycleTitle: 'Recycle bin',
+        backToList: 'Back to list',
+        selectAll: 'Select all',
+        clearSelection: 'Clear selection',
+        selectedCount: 'Selected',
+        restoreSelected: 'Restore selected',
+        deleteSelected: 'Delete selected',
+        selectFlow: 'Select this flow',
+        batchDone: 'Batch done',
         compose: 'Compose prompt',
         composeHint: 'Turn the canvas into an executable prompt for the agent',
         composeCopy: 'Copy prompt',
@@ -467,6 +485,7 @@ window.__ModuleLoader__.load({
       createWorkflow: (name, from) => request('POST', '/workflows', { name, from }),
       saveWorkflow: (id, workflow) => request('PUT', `/workflows/${encodeURIComponent(id)}`, { workflow }),
       deleteWorkflow: (id) => request('DELETE', `/workflows/${encodeURIComponent(id)}`),
+      batchWorkflows: (action, ids) => request('POST', '/workflows/batch', { action, ids }),
       archiveWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/archive`),
       restoreWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/restore`),
       experiences: (workspaceId, cwd) => request('GET', `/experiences?workspaceId=${encodeURIComponent(workspaceId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),
@@ -766,6 +785,10 @@ window.__ModuleLoader__.load({
   padding: 6px; border: 1px solid var(--dsw-alias-border-l1); border-top-left-radius: 0;
   background: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent); backdrop-filter: blur(10px);
   box-shadow: var(--daf-shadow-2); }
+.daf-flow-check { flex: none; width: 14px; height: 14px; accent-color: var(--dsw-alias-brand-primary); cursor: pointer; }
+.daf-batch-bar { display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 8%, transparent); }
 .daf-flow-dock-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 2px 4px; }
 .daf-dock-switch { border: none; background: none; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer;
   padding: 2px 4px; border-radius: 6px; }
@@ -3112,6 +3135,131 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * 流程管理（独立组件）：列表 + 回收站 + 批量操作。
+     * 从画布主图层抽出；自身只做渲染与选择状态，数据与处理器由 props 传入。
+     *
+     * 回收站视图（showArchived=true）下：
+     *   - 每行复选框选择；点击行切换选中
+     *   - 顶部批量操作条：全选 / 清空选择 / 批量复原 / 批量删除
+     *   - 每行右键菜单仍提供单个复原 / 永久删除（3 秒倒计时防误删）
+     */
+    function FlowManager(props) {
+      const {
+        flows, current, sessionId, t, h: hh, Icon: Ic, Btn: Bt,
+        pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
+        flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
+        showArchived, setShowArchived, batchOperation,
+      } = props
+      const [selectedIds, setSelectedIds] = useState(() => new Set())
+      const [batchBusy, setBatchBusy] = useState(false)
+
+      const archivedRows = flows.filter((item) => item.archivedAt)
+      const activeRows = flows.filter((item) => !item.archivedAt)
+      const inRecycle = showArchived === true
+      const selectable = inRecycle ? archivedRows : activeRows
+      const allSelected = selectable.length > 0 && selectable.every((item) => selectedIds.has(item.id))
+
+      const toggleOne = (id) => {
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          if (next.has(id)) next.delete(id)
+          else next.add(id)
+          return next
+        })
+      }
+      const toggleAll = () => {
+        setSelectedIds(allSelected ? new Set() : new Set(selectable.map((item) => item.id)))
+      }
+      // 视图切换后清空选择——两个视图的可选集合不同，残留选择会误伤
+      const switchView = () => {
+        setSelectedIds(new Set())
+        setShowArchived((value) => !value)
+      }
+
+      const runBatch = async (action) => {
+        if (selectedIds.size === 0 || batchBusy) return
+        setBatchBusy(true)
+        try {
+          await batchOperation(action, [...selectedIds])
+          setSelectedIds(new Set())
+        } finally {
+          setBatchBusy(false)
+        }
+      }
+
+      const rows = flows.slice(0, 60).map((flow) => {
+        const menu = purgePendingId === flow.id
+          ? hh('div', { className: 'daf-purge-warn', role: 'alert' },
+              hh('span', null, `3 ${t.purgeCountdown}`),
+              hh('span', { className: 'daf-purge-bar', 'aria-hidden': 'true' }),
+              hh(Bt, { onClick: () => setPurgePendingId(null) }, t.cancel))
+          : flowMenu === flow.id
+            ? hh('div', { className: 'daf-flow-menu daf-flow-menu-static' },
+                hh(Bt, { onClick: () => { setFlowMenu(null); void duplicateFlow(flow) } }, t.duplicate),
+                flow.archivedAt
+                  ? hh(Bt, { onClick: () => { setFlowMenu(null); void restoreFlowById(flow) } }, t.restoreFlow)
+                  : hh(Bt, { onClick: () => { setFlowMenu(null); void archiveFlowById(flow) } }, t.archiveFlow),
+                flow.archivedAt
+                  ? hh(Bt, { variant: 'danger', onClick: () => { setFlowMenu(null); requestPurge(flow) } }, t.purgeFlow)
+                  : null)
+            : null
+        return hh('div', { key: flow.id, className: 'daf-flow-row' },
+          inRecycle && Boolean(flow.archivedAt)
+            ? hh('input', {
+              type: 'checkbox',
+              className: 'daf-flow-check',
+              'aria-label': t.selectFlow,
+              checked: selectedIds.has(flow.id),
+              onChange: () => toggleOne(flow.id),
+            })
+            : null,
+          hh('button', {
+            type: 'button',
+            className: 'daf-chip daf-flow-row-chip',
+            'data-active': String(flow.id === current?.id),
+            'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
+            'data-archived': flow.archivedAt ? 'true' : undefined,
+            'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
+            title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
+            onClick: () => {
+              if (inRecycle && Boolean(flow.archivedAt)) { toggleOne(flow.id); return }
+              if (flow.id !== current?.id) void pickFlow(flow.id)
+            },
+            onContextMenu: (event) => {
+              event.preventDefault()
+              setFlowMenu((prev) => (prev === flow.id ? null : flow.id))
+            },
+          },
+            Boolean(sessionId) && flow.sessionId === sessionId ? hh(Ic, { name: 'bolt', size: 11 }) : null,
+            hh('span', { className: 'daf-flow-name' }, flow.name),
+            hh('span', { className: 'daf-chip-count' }, String(flow.nodes))),
+          menu)
+      })
+
+      return hh('div', { className: 'daf-flow-manager' },
+        hh('div', { className: 'daf-flow-dock-head' },
+          hh('span', { className: 'daf-muted' }, `${inRecycle ? t.recycleTitle : t.flowDock} · ${inRecycle ? archivedRows.length : activeRows.length}`),
+          hh('span', { className: 'daf-spacer' }),
+          hh('button', {
+            type: 'button',
+            className: 'daf-dock-switch',
+            onClick: switchView,
+          }, inRecycle ? t.backToList : t.recycleTitle)),
+        inRecycle && selectable.length > 0
+          ? hh('div', { className: 'daf-batch-bar' },
+              hh('button', { type: 'button', className: 'daf-dock-switch', onClick: toggleAll },
+                allSelected ? t.clearSelection : t.selectAll),
+              hh('span', { className: 'daf-muted' }, `${t.selectedCount}: ${selectedIds.size}`),
+              hh('span', { className: 'daf-spacer' }),
+              hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected),
+              hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
+          : null,
+        flows.length === 0
+          ? hh('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
+          : rows)
+    }
+
+    /**
      * 开发者面板（独立组件）。
      * 从画布主图层抽出：关闭时完全不实例化；只做渲染、不持有状态——
      * 数据与处理器全部由 CanvasTab 经 props 传入（接口即下面这段解构）。
@@ -3877,6 +4025,22 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // 批量操作（一次请求）：完成后刷新列表；当前画布被删则清空选中
+      const batchOperation = async (action, ids) => {
+        try {
+          await api.batchWorkflows(action, ids)
+          if (action === 'delete' && current && ids.includes(current.id)) {
+            setCurrent(null)
+            setSelectedId(null)
+          }
+          setNotice(`${t.batchDone}: ${ids.length}`)
+          const list = await api.workflows(showArchivedRef.current ? 'all' : undefined)
+          setFlows(list)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
+
       const duplicateFlow = async (flow) => {
         try {
           await api.createWorkflow(`${flow.name} ${t.duplicate}`, flow.id)
@@ -4126,42 +4290,6 @@ window.__ModuleLoader__.load({
         return () => clearTimeout(timer)
       }, [purgePendingId])
 
-      const flowRows = flows.slice(0, 60).map((flow) => {
-        const menu = purgePendingId === flow.id
-          ? h('div', { className: 'daf-purge-warn', role: 'alert' },
-              h('span', null, `3 ${t.purgeCountdown}`),
-              h('span', { className: 'daf-purge-bar', 'aria-hidden': 'true' }),
-              h(Btn, { onClick: () => setPurgePendingId(null) }, t.cancel))
-          : flowMenu === flow.id
-            ? h('div', { className: 'daf-flow-menu daf-flow-menu-static' },
-                h(Btn, { onClick: () => { setFlowMenu(null); void duplicateFlow(flow) } }, t.duplicate),
-                flow.archivedAt
-                  ? h(Btn, { onClick: () => { setFlowMenu(null); void restoreFlowById(flow) } }, t.restoreFlow)
-                  : h(Btn, { onClick: () => { setFlowMenu(null); void archiveFlowById(flow) } }, t.archiveFlow),
-                flow.archivedAt
-                  ? h(Btn, { variant: 'danger', onClick: () => { setFlowMenu(null); requestPurge(flow) } }, t.purgeFlow)
-                  : null)
-            : null
-        return h('div', { key: flow.id, className: 'daf-flow-row' },
-          h('button', {
-            type: 'button',
-            className: 'daf-chip daf-flow-row-chip',
-            'data-active': String(flow.id === current?.id),
-            'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
-            'data-archived': flow.archivedAt ? 'true' : undefined,
-            'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
-            title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
-            onClick: () => { if (flow.id !== current?.id) void pickFlow(flow.id) },
-            onContextMenu: (event) => {
-              event.preventDefault()
-              setFlowMenu((prev) => (prev === flow.id ? null : flow.id))
-            },
-          },
-            Boolean(sessionId) && flow.sessionId === sessionId ? h(Icon, { name: 'bolt', size: 11 }) : null,
-            h('span', { className: 'daf-flow-name' }, flow.name),
-            h('span', { className: 'daf-chip-count' }, String(flow.nodes))),
-          menu)
-      })
 
       const activeFlowCount = flows.filter((item) => !item.archivedAt).length
 
@@ -4380,16 +4508,12 @@ window.__ModuleLoader__.load({
           h(Icon, { name: 'layers', size: 16 }),
           activeFlowCount > 0 ? h('span', { className: 'daf-dock-badge' }, String(activeFlowCount)) : null),
         h('div', { className: 'daf-flow-dock-body' },
-              h('div', { className: 'daf-flow-dock-head' },
-                h('span', { className: 'daf-muted' }, `${t.flowDock} · ${flows.length}`),
-                h('button', {
-                  type: 'button',
-                  className: 'daf-dock-switch',
-                  onClick: () => setShowArchived((value) => !value),
-                }, `${t.showArchived}: ${showArchived ? t.on : t.off}`)),
-              flows.length === 0
-                ? h('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
-                : flowRows))
+          h(FlowManager, {
+            flows, current, sessionId, t, h, Icon, Btn,
+            pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
+            flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
+            showArchived, setShowArchived, batchOperation,
+          })))
 
       const moreMenu = h('div', { className: 'daf-flow-menu daf-more-menu' },
         h(Btn, { onClick: () => { setMoreOpen(false); void validate() }, disabled: busy || !current }, h(Icon, { name: 'check', size: 12 }), t.validate),
