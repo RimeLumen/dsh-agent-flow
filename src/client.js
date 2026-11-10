@@ -837,6 +837,16 @@ window.__ModuleLoader__.load({
 .daf-switch[aria-checked="true"] .daf-switch-dot { transform: translateX(12px); background: var(--daf-on-brand); }
 .daf-muted { color: var(--dsw-alias-label-secondary); font-size: 11.5px; }
 .daf-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; }
+/* 贴屏右侧抽屉：与画布等高，滑入淡出 */
+.daf-drawer-backdrop { position: fixed; inset: 0; z-index: 60; background: var(--daf-scrim);
+  opacity: 0; animation: daf-drawer-fade var(--daf-t-fast) var(--daf-ease-out) forwards; }
+@keyframes daf-drawer-fade { to { opacity: 1; } }
+.daf-drawer-right { position: absolute; top: 0; right: 0; bottom: 0; width: min(440px, 46vw);
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow: auto;
+  background: var(--dsw-alias-bg-overlay); border-left: 1px solid var(--dsw-alias-border-l1);
+  box-shadow: var(--daf-shadow-3); animation: daf-slide-in var(--daf-t-base) var(--daf-ease-out); }
+@keyframes daf-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.daf-drawer-head { display: flex; align-items: center; gap: 8px; }
 .daf-modal-backdrop { position: fixed; inset: 0; background: var(--daf-scrim); display: flex; align-items: center;
   justify-content: center; z-index: 60; padding: 16px; }
 .daf-modal { background: var(--dsw-alias-bg-overlay); border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px;
@@ -971,6 +981,17 @@ window.__ModuleLoader__.load({
 @keyframes daf-busy-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
 .daf-scope[data-busy="true"] .daf-canvas-root { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent); }
 .daf-scope[data-motion="off"] .daf-busy-dot { animation: none; }
+/* 悬停名称提示：淡入淡出；右缘竖栏时出现在按钮左侧 */
+.daf-tip { position: relative; }
+.daf-tip::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px);
+  transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+  background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary);
+  border: 1px solid var(--dsw-alias-border-l1); box-shadow: var(--daf-shadow-1);
+  opacity: 0; pointer-events: none; z-index: 80;
+  transition: opacity var(--daf-t-fast) var(--daf-ease-out); }
+.daf-tip:hover::after, .daf-tip:focus-visible::after { opacity: 1; }
+.daf-side-rail .daf-tip::after { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+@media (prefers-reduced-motion: reduce) { .daf-tip::after { transition: none; } }
 /* 平移手势（空格或中键）：光标给出可拖拽提示 */
 .daf-scope[data-pan="true"] .daf-surface { cursor: grab; }
 .daf-scope[data-pan="true"] .daf-surface:active { cursor: grabbing; }
@@ -2012,10 +2033,12 @@ window.__ModuleLoader__.load({
         for (const [ring, list] of byRing) {
           const radius = 200 + ring * 170
           const totalSlots = list.reduce((sum, unit) => sum + unit.members.length, 0)
+          // 环间错开起始角：否则每个环都从正上方开始，多环时全部叠成一条垂直线
+          const startAngle = -Math.PI / 2 + ring * (Math.PI / Math.max(3, totalSlots))
           let slot = 0
           for (const unit of list) {
             for (const id of unit.members) {
-              const angle = (Math.PI * 2 * slot) / Math.max(1, totalSlots) - Math.PI / 2
+              const angle = startAngle + (Math.PI * 2 * slot) / Math.max(1, totalSlots)
               positions.set(id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
               slot += 1
             }
@@ -2182,12 +2205,15 @@ window.__ModuleLoader__.load({
     }
 
     function Btn({ children, onClick, variant, disabled, title, type }) {
+      // 悬停名称提示统一由 CSS 淡入淡出（data-tip）承担；原生 title 移除避免双重显示，
+      // 无障碍语义由 aria-label 保留。
       return h('button', {
         type: type ?? 'button',
-        className: `daf-btn${variant === 'primary' ? ' daf-btn-primary' : variant === 'danger' ? ' daf-btn-danger' : ''}`,
+        className: `daf-btn daf-tip${variant === 'primary' ? ' daf-btn-primary' : variant === 'danger' ? ' daf-btn-danger' : ''}`,
         onClick,
         disabled: disabled === true,
-        title,
+        'data-tip': title,
+        'aria-label': title,
       }, children)
     }
 
@@ -5356,6 +5382,7 @@ window.__ModuleLoader__.load({
         h(StyleTag, { css: BASE_CSS + CANVAS_CSS }),
         h('div', { className: 'daf-canvas-root' },
             h('div', { className: 'daf-side-rail', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': t.flowDock },
+            h(Btn, { onClick: () => setFlowDock((value) => !value), 'aria-expanded': String(Boolean(flowDock)), title: t.flowDock }, h(Icon, { name: 'layers', size: 15 })),
             h(Btn, { onClick: createFlow, disabled: busy, title: t.newFlow }, h(Icon, { name: 'plus', size: 15 })),
             h(Btn, { onClick: saveFlow, disabled: busy || !current || !dirty, title: t.saveFlow }, h(Icon, { name: 'save', size: 15 })),
             h(Btn, { onClick: () => void archiveCurrent(), disabled: busy || !current, title: t.archiveFlow }, h(Icon, { name: 'archive', size: 15 })),
