@@ -706,26 +706,14 @@ window.__ModuleLoader__.load({
 .daf-flow-menu.daf-more-menu { left: auto; right: 0; }
 .daf-more-group { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; }
 
-.daf-flow-dock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 9; }
-.daf-flow-dock-toggle { position: relative; width: 40px; height: 40px; border-radius: 999px; display: inline-flex;
-  align-items: center; justify-content: center; border: 1px solid var(--dsw-alias-border-l1);
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 82%, transparent); color: var(--dsw-alias-label-secondary);
-  cursor: pointer; backdrop-filter: blur(6px); transition: color var(--daf-t-fast) var(--daf-ease-out),
-  border-color var(--daf-t-fast) var(--daf-ease-out), transform var(--daf-t-fast) var(--daf-ease-out); }
-.daf-flow-dock-toggle:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-border-l2); }
-.daf-flow-dock-toggle:active { transform: scale(.94); }
-.daf-flow-dock.is-open .daf-flow-dock-toggle { color: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); }
+/* 流程管理壳已改为贴屏右侧抽屉（daf-drawer-right），旧的圆钮定位样式随之移除。 */
 .daf-dock-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; border-radius: 999px;
   background: var(--dsw-alias-brand-primary); color: var(--daf-on-brand); font-size: 10px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
-.daf-flow-dock-body { position: absolute; top: calc(100% + 8px); right: 0; width: 248px; max-height: min(62vh, 520px);
-  overflow: auto; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 10px;
-  border: 1px solid var(--dsw-alias-border-l1); background: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent);
-  backdrop-filter: blur(10px); box-shadow: var(--daf-shadow-2);
-  opacity: 0; transform: translateX(10px); visibility: hidden; pointer-events: none;
-  transition: opacity var(--daf-t-fast) ease, transform var(--daf-t-fast) ease, visibility 0s linear var(--daf-t-fast); }
-.daf-flow-dock.is-open .daf-flow-dock-body { opacity: 1; transform: none; visibility: visible; pointer-events: auto;
-  transition: opacity var(--daf-t-base) var(--daf-ease-out), transform var(--daf-t-base) var(--daf-ease-out); }
+.daf-dock-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; border-radius: 999px;
+  background: var(--dsw-alias-brand-primary); color: var(--daf-on-brand); font-size: 10px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+/* 旧 dock body 的绝对定位样式已随抽屉化移除（抽屉容器提供滚动与背景）。 */
 
 .daf-edge[data-selected="true"] { stroke: var(--dsw-alias-brand-primary); stroke-width: 2.2; }
 .daf-edge-editor { position: absolute; z-index: 6; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px;
@@ -772,19 +760,10 @@ window.__ModuleLoader__.load({
 .daf-exp-card-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--dsw-alias-label-primary); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) {
-  .daf-flow-dock-body { transition-duration: 1ms; }
+  .daf-drawer-right { animation: none; }
   .daf-purge-bar::before { animation-duration: 3s; } }
 
-.daf-flow-dock { position: absolute; top: 8px; right: 8px; z-index: 9; display: flex; flex-direction: column; align-items: flex-end; }
-.daf-flow-dock-toggle { border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; padding: 4px 10px;
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 82%, transparent); color: var(--dsw-alias-label-secondary);
-  font-size: 11.5px; cursor: pointer; backdrop-filter: blur(6px); }
-.daf-flow-dock-toggle:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-border-l2); }
-.daf-flow-dock.is-open .daf-flow-dock-toggle { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.daf-flow-dock-body { width: 240px; max-height: min(62vh, 520px); overflow: auto; display: flex; flex-direction: column; gap: 2px;
-  padding: 6px; border: 1px solid var(--dsw-alias-border-l1); border-top-left-radius: 0;
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent); backdrop-filter: blur(10px);
-  box-shadow: var(--daf-shadow-2); }
+/* 窄屏下的旧 dock 样式已随抽屉化移除。 */
 .daf-flow-check { flex: none; width: 14px; height: 14px; accent-color: var(--dsw-alias-brand-primary); cursor: pointer; }
 .daf-batch-bar { display: flex; align-items: center; gap: 6px; padding: 5px 8px;
   border-bottom: 1px solid var(--dsw-alias-border-l1);
@@ -1057,8 +1036,10 @@ window.__ModuleLoader__.load({
 .daf-edge-glow[data-state="active"] { opacity: .30; }
 .daf-edge-glow[data-state="done"] { opacity: .16; }
 .daf-edge-flow { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 2 16; opacity: .22;
-  animation: daf-flow-move var(--daf-flow-dur, 3.4s) linear infinite;
+  /* 流动只属于 data-animate 的边（运行中/主干），其余保持静态——
+     节点多时几百条无限动画会让整片连线高频闪烁 */
   transition: opacity var(--daf-t-base) var(--daf-ease-out); }
+.daf-edge-flow[data-animate="true"] { animation: daf-flow-move var(--daf-flow-dur, 3.4s) linear infinite; }
 
 .daf-btn-dev.is-on { border-color: var(--dsw-alias-brand-primary); color: var(--dsw-alias-brand-primary); }
 .daf-edge-flow[data-state="active"] { opacity: .9; --daf-flow-dur: .9s; }
@@ -1118,8 +1099,7 @@ window.__ModuleLoader__.load({
 .daf-hovercard-calls { display: flex; flex-direction: column; gap: 2px; }
 .daf-hovercard-error { color: var(--dsw-alias-state-error-primary); -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 .daf-node[data-status="pending"] { opacity: .45; border-style: dashed; }
-.daf-node[data-status="ready"] { animation: daf-breathe 2.2s ease-in-out infinite; }
-@keyframes daf-breathe { 0%,100% { border-color: var(--dsw-alias-border-l1); } 50% { border-color: var(--dsw-alias-border-l2); } }
+/* ready 是未开始的常态，不播放呼吸——节点多时整片边框都在闪 */
 .daf-node[data-status="running"] { border-color: var(--dsw-alias-brand-primary); }
 .daf-node[data-status="running"]::after { content: ''; position: absolute; inset: -3px; border-radius: 12px;
   background: conic-gradient(from var(--daf-angle, 0deg), transparent 0deg, var(--dsw-alias-brand-primary) 90deg, transparent 200deg);
@@ -1252,7 +1232,8 @@ window.__ModuleLoader__.load({
 @media (prefers-reduced-motion: reduce) {
   .daf-node[data-diff="added"], .daf-node[data-diff="moved"] { animation: none; } }
 
-.daf-node[data-selected="true"] { animation: daf-select 2.4s ease-in-out infinite; }
+/* 选中态用静态强调，不做无限循环——节点多时反复重选会变成持续闪烁 */
+.daf-node[data-selected="true"] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 40%, transparent), 0 0 10px color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent); }
 @keyframes daf-select {
   0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 40%, transparent), 0 0 10px color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent); }
   50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 70%, transparent), 0 0 22px color-mix(in srgb, var(--dsw-alias-brand-primary) 45%, transparent); }
@@ -3262,7 +3243,7 @@ window.__ModuleLoader__.load({
           menu)
       })
 
-      return hh('div', { className: 'daf-flow-manager' },
+      return hh('div', { className: 'daf-flow-manager', style: { display: 'flex', flexDirection: 'column', minHeight: 0, flex: '1 1 auto' } },
         hh('div', { className: 'daf-flow-dock-head' },
           hh('span', { className: 'daf-muted' }, `${inRecycle ? t.recycleTitle : t.flowDock} · ${inRecycle ? archivedRows.length : activeRows.length}`),
           hh('span', { className: 'daf-spacer' }),
@@ -3282,7 +3263,7 @@ window.__ModuleLoader__.load({
           : null,
         flows.length === 0
           ? hh('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
-          : rows)
+          : hh('div', { className: 'daf-flow-manager-list', style: { overflow: 'auto', minHeight: 0 } }, rows))
     }
 
     /**
@@ -4013,15 +3994,8 @@ window.__ModuleLoader__.load({
         return () => window.removeEventListener('mousedown', close)
       }, [moreOpen])
 
-      useEffect(() => {
-        if (!flowDock) return undefined
-        const close = (event) => {
-          if (event.target?.closest?.('.daf-flow-dock')) return
-          setFlowDock(false)
-        }
-        window.addEventListener('mousedown', close)
-        return () => window.removeEventListener('mousedown', close)
-      }, [flowDock])
+      // 流程管理的关闭交互由 RightDrawer 自带（遮罩点击 / Esc），无需额外的外部点击监听
+      // ——旧监听豁免的是已删除的 .daf-flow-dock 类，会让抽屉内部点击也触发关闭（打开即关）。
 
       useEffect(() => {
         if (!edgeMenu) return undefined
@@ -4523,23 +4497,16 @@ window.__ModuleLoader__.load({
         }
       }
 
-      const flowDockView = h('div', { className: `daf-flow-dock${flowDock ? ' is-open' : ''}` },
-        h('button', {
-          type: 'button',
-          className: 'daf-flow-dock-toggle',
-          title: t.flowDock,
-          'aria-expanded': String(Boolean(flowDock)),
-          onClick: () => setFlowDock((value) => !value),
-        },
-          h(Icon, { name: 'layers', size: 16 }),
-          activeFlowCount > 0 ? h('span', { className: 'daf-dock-badge' }, String(activeFlowCount)) : null),
-        h('div', { className: 'daf-flow-dock-body' },
-          h(FlowManager, {
-            flows, current, sessionId, t, h, Icon, Btn,
-            pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
-            flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
-            showArchived, setShowArchived, batchOperation,
-          })))
+      // 流程管理：贴屏右侧、与画布等高的抽屉（与 Mermaid 导入一致的交互与动效）。
+      const flowDockView = flowDock
+        ? h(RightDrawer, { title: t.flowDock, onClose: () => setFlowDock(false) },
+            h(FlowManager, {
+              flows, current, sessionId, t, h, Icon, Btn,
+              pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
+              flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
+              showArchived, setShowArchived, batchOperation,
+            }))
+        : null
 
       const moreMenu = h('div', { className: 'daf-flow-menu daf-more-menu' },
         h(Btn, { onClick: () => { setMoreOpen(false); void validate() }, disabled: busy || !current }, h(Icon, { name: 'check', size: 12 }), t.validate),
@@ -4797,6 +4764,41 @@ window.__ModuleLoader__.load({
       // 空间网格每次渲染建一次（O(N)），代替原来逐边 O(E×N) 的障碍数组构建。
       const obstacleGrid = createSpatialGrid(160)
       for (const item of allRects) obstacleGrid.insert(item.rect, item)
+      // 路由结果缓存（key=edge.id，current 换代即弃）：节点多时每渲染重跑几百次
+      // Dijkstra 是连线高频卡顿/闪烁的直接来源；命中直接复用 d，节点挪动后
+      // mutate 产生新 current，缓存自然失效重算。
+      // 标号定位（修复漂移）：不再用数学近似（edgeMidpoint 与实际折线/贝塞尔脱节），
+      // 渲染后对每条可见路径调 getPointAtLength(len/2) 取**真实线上的中点**。
+      const edgePathEls = useRef(new Map())
+      const [edgeMids, setEdgeMids] = useState(() => new Map())
+      useEffect(() => {
+        const next = new Map()
+        for (const [edgeId, el] of edgePathEls.current) {
+          try {
+            const len = el.getTotalLength()
+            if (len > 0) {
+              const point = el.getPointAtLength(len / 2)
+              next.set(edgeId, { x: point.x, y: point.y })
+            }
+          } catch { /* 路径不可测（隐藏/无 d）时保留旧值 */ }
+        }
+        setEdgeMids((prev) => {
+          if (prev.size === next.size && [...next.entries()].every(([id, point]) => {
+            const old = prev.get(id)
+            return old && Math.abs(old.x - point.x) < 0.5 && Math.abs(old.y - point.y) < 0.5
+          })) return prev
+          return next
+        })
+      }, [current, zoom])
+      if (routeCacheRef.current?.for !== current) routeCacheRef.current = { for: current, map: new Map() }
+      const routeCache = routeCacheRef.current.map
+      const edgeDCached = (fromRect, toRect, edge, oA, oB) => {
+        const hit = routeCache.get(edge.id)
+        if (typeof hit === 'string') return hit
+        const d = edgeDCached(fromRect, toRect, edge, oA, oB)
+        routeCache.set(edge.id, d)
+        return d
+      }
 
       // 路由探针：把每条边**实际算出**的路径解析成折线，
       // 检查结构性问题。放在客户端做，避免把路由器在宿主侧再实现一遍（两处实现必然漂移）。
@@ -4912,7 +4914,7 @@ window.__ModuleLoader__.load({
         const traversals = run.traversals?.[edge.id] ?? 0
         const resolvedColor = Number.isFinite(Number(edge.color)) ? Number(edge.color) : autoColors.get(edge.id)
         const colorStyle = Number.isFinite(resolvedColor) ? { stroke: `var(--daf-edge-${resolvedColor % EDGE_PALETTE_SIZE})` } : undefined
-        const mid = edgeMidpoint(fromRect, toRect, edge)
+        const mid = edgeMids.get(edge.id) ?? edgeMidpoint(fromRect, toRect, edge)
         const flowState = state === 'idle' ? undefined : state
         const onMain = mainPathSet.size > 0 && mainPathSet.has(edge.from) && mainPathSet.has(edge.to)
         // 动效治理：预算内的边才播放流动；预算外的保留颜色与状态，只是不播动画。
@@ -4921,7 +4923,8 @@ window.__ModuleLoader__.load({
         const budgetSkip = state === 'active' && !animating ? 'skip' : undefined
         return h('g', { key: edge.id },
           h('path', { className: 'daf-edge-glow', d, 'data-state': flowState, 'data-main': onMain ? 'true' : undefined, style: colorStyle }),
-          h('path', { className: 'daf-edge-flow', d, 'data-state': flowState, 'data-budget': budgetSkip, 'data-main': onMain ? 'true' : undefined, style: colorStyle }),
+          h('path', { className: 'daf-edge-flow', d, 'data-state': flowState, 'data-budget': budgetSkip, 'data-main': onMain ? 'true' : undefined,
+            'data-animate': String(state === 'active' || (onMain && state !== 'failed')), style: colorStyle }),
           h('path', { className: 'daf-edge-bolus', d, 'data-state': flowState, 'data-budget': budgetSkip, style: colorStyle }),
           h('path', {
             d,
@@ -4938,6 +4941,7 @@ window.__ModuleLoader__.load({
           }),
           h('path', {
             className: 'daf-edge',
+            ref: (el) => { if (el) edgePathEls.current.set(edge.id, el); else edgePathEls.current.delete(edge.id) },
             d,
             'data-state': flowState,
             'data-kind': 'seq',
@@ -5392,7 +5396,6 @@ window.__ModuleLoader__.load({
             run.status === 'running' && !paused ? h(Btn, { onClick: () => control('pause'), title: t.pause }, h(Icon, { name: 'pause', size: 15 })) : run.status === 'running' && paused ? h(Btn, { onClick: () => control('resume'), title: t.resume }, h(Icon, { name: 'play', size: 15 })) : h(Btn, { variant: 'primary', onClick: startRun, disabled: busy || !current, title: t.run }, h(Icon, { name: 'play', size: 15 })),
             runId && run.status === 'running' ? h(Btn, { variant: 'danger', onClick: () => control('cancel'), title: t.cancelRun }, h(Icon, { name: 'cross', size: 15 })) : null,
             h(Btn, { onClick: validate, disabled: busy || !current, title: t.validate }, h(Icon, { name: 'check', size: 15 })),
-            h(Btn, { onClick: () => current && mutate((wf) => autoLayout(wf)), disabled: !current, title: t.autoLayout }, h(Icon, { name: 'refresh', size: 15 })),
             h(Btn, { onClick: () => void copyMermaid(), disabled: !current, title: t.mermaidCopy }, h(Icon, { name: 'copy', size: 15 })),
             h(Btn, { onClick: () => setMermaidOpen(true), title: t.mermaidImport }, h(Icon, { name: 'layers', size: 15 }))
             ),
