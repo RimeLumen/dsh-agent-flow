@@ -1,4 +1,13 @@
 /* @client-shard: 09-entry */
+                    h('strong', null, t.outline),
+                    h('button', { type: 'button', className: 'daf-dock-switch', onClick: () => setOutlineOpen(false) }, t.close)),
+                  h('div', { className: 'daf-outline-body' }, outlineRows))
+                : null,
+              flowDockView,
+              showDevPanels ? h(DevLayer, { selected, t, mutate, statusOf, run, checkpoint, current, setError, childrenOf, ctx, issues, runId, setSelectedId, addChild, control, nodesById, steps }) : null,
+            ))
+    }
+
     function apply(ctx) {
       const disposers = []
       try {

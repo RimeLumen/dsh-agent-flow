@@ -16,6 +16,17 @@ export function planRoutes(deps) {
       pattern: '/plan',
       handler: async ({ res, url }) => {
         const sessionId = queryParam(url, 'sessionId') ?? ''
+        // 版本号短路（性能审计 R-A）：客户端带上次见到的 updatedAt，无变化时
+        // 只回一个空壳——省掉 steps/phases 的全量序列化与传输（稳态轮询 99% 命中）。
+        const since = queryParam(url, 'since') ?? ''
+        if (since !== '') {
+          const plan = deps.plans ? deps.plans.describe(sessionId) : null
+          const current = plan?.updatedAt ?? ''
+          if (current !== '' && current === since) {
+            writeJson(res, 200, { same: true, updatedAt: current })
+            return
+          }
+        }
         writeJson(res, 200, {
           plan: deps.plans ? deps.plans.describe(sessionId) : { status: 'idle' },
           enabled: deps.planFirst !== false,

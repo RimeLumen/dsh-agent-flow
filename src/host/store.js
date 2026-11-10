@@ -105,6 +105,11 @@ export class Store {
     this.loaded = false
 
     this._queue = Promise.resolve()
+    // 写盘防抖（性能审计 P-B）：执行期 flow_progress 每步上报都会 mutate，
+    // 逐次全量写盘是执行期 I/O 写放大的直接来源。300ms 窗口内的多次 mutate
+    // 合并为一次落盘；原子写保证窗口内崩溃也不会损坏已有文件。
+    this._flushTimer = null
+    this._exitHookInstalled = false
     // 就绪门（批次 6）：apply() 里 store.load() 不 await，而路由是并行挂载的，
     // 首个请求可能读到还没加载完的 state。让路由显式等待这个 promise。
     this._readyDeferred = null
@@ -142,6 +147,11 @@ export class Store {
   }
 
   flush() {
+    // 显式落盘：立即语义；若有挂起的防抖写，先清定时器避免重复。
+    if (this._flushTimer) {
+      clearTimeout(this._flushTimer)
+      this._flushTimer = null
+    }
     // 紧凑序列化：pretty-print 的缩进让每次写盘体积与耗时 +~30%（state 是机器态，
     // 人读性由 /diagnostics 端点与本文件头注释承担）。
     const payload = JSON.stringify(this.state)
@@ -173,9 +183,38 @@ export class Store {
   async mutate(fn) {
     const result = fn(this.state)
     this.state.updatedAt = new Date().toISOString()
-    await this.flush()
+    this.scheduleFlush()
     this.emit()
     return result
+  }
+
+  /**
+   * 防抖落盘（性能审计 P-B）：300ms 窗口合并；显式 flush() 仍是立即语义。
+   * 进程退出前有同步保底（exit 钩子），窗口内崩溃最多丢最后一次 mutate。
+   */
+  scheduleFlush() {
+    if (this._flushTimer) return
+    this._flushTimer = setTimeout(() => {
+      this._flushTimer = null
+      void this.flush().catch(() => {})
+    }, 300)
+    if (!this._exitHookInstalled) {
+      this._exitHookInstalled = true
+      process.once('exit', () => {
+        if (this._flushTimer === null) return
+        clearTimeout(this._flushTimer)
+        this._flushTimer = null
+        // 同步保底：exit 回调里只能同步 I/O；原子写（tmp+renameSync）防半截文件。
+        try {
+          const { writeFileSync, renameSync, mkdirSync } = require('node:fs')
+          mkdirSync(this.dir, { recursive: true })
+          const tmp = this.file + '.tmp'
+          writeFileSync(tmp, JSON.stringify(this.state), 'utf8')
+          renameSync(tmp, this.file)
+        } catch {
+        }
+      })
+    }
   }
 
   subscribe(listener) {

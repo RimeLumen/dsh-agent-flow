@@ -66,12 +66,21 @@
         let failures = 0
         const tick = async () => {
           let base = 4000
+          let lastPlanVersion = ''
           if (typeof document !== 'undefined' && document.hidden) {
             if (!closed) timer = setTimeout(tick, POLL_MAX)
             return
           }
           try {
-            const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}`)
+            const sinceParam = lastPlanVersion !== '' ? `&since=${encodeURIComponent(lastPlanVersion)}` : ''
+            const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}${sinceParam}`)
+            if (result?.same === true) {
+              base = 4000
+              failures = 0
+              if (!closed) timer = setTimeout(tick, pollDelay(base, failures))
+              return
+            }
+            lastPlanVersion = result?.plan?.updatedAt ?? ''
             const next = result?.plan ?? { status: 'idle' }
             base = next.status === 'awaiting' ? 1500 : 4000
             failures = 0
@@ -755,12 +764,3 @@
           seen.set(next, (seen.get(id) ?? 0) + 1)
           queue.push(next)
         }
-      }
-      return [...workflow.nodes].sort((a, b) => {
-        const la = seen.get(a.id) ?? 0
-        const lb = seen.get(b.id) ?? 0
-        if (la !== lb) return la - lb
-        return a.pos.y - b.pos.y
-      })
-    }
-

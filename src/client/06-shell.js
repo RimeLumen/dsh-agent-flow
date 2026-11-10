@@ -1,4 +1,13 @@
 /* @client-shard: 06-shell */
+      }
+      return [...workflow.nodes].sort((a, b) => {
+        const la = seen.get(a.id) ?? 0
+        const lb = seen.get(b.id) ?? 0
+        if (la !== lb) return la - lb
+        return a.pos.y - b.pos.y
+      })
+    }
+
     function CanvasTabTitle(props) {
       const ctx = props.ctx
       const run = useStoreValue(activeRun)
@@ -296,12 +305,3 @@
         className: 'daf-tri',
         'data-state': state,
         role: 'switch',
-        'aria-checked': state === 'all',
-        'aria-label': label,
-        onClick: (event) => {
-          event.stopPropagation()
-          onClick(state !== 'all')
-        },
-      }, h('span', { className: 'daf-tri-dot' }))
-    }
-

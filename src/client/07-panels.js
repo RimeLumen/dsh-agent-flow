@@ -1,4 +1,13 @@
 /* @client-shard: 07-panels */
+        'aria-checked': state === 'all',
+        'aria-label': label,
+        onClick: (event) => {
+          event.stopPropagation()
+          onClick(state !== 'all')
+        },
+      }, h('span', { className: 'daf-tri-dot' }))
+    }
+
     function renderManagedList({ items, isSelected, onToggle, onGroupToggle, t, flashKey, keyPrefix, collapsed = {}, onCollapseToggle, labelOf }) {
       const nameOf = (key) => (typeof labelOf === 'function' ? labelOf(key) : key)
       const groupKeyOf = (item) => item.parent || item.category || item.source || 'other'
@@ -1090,12 +1099,3 @@
                   : null,
                 h('div', { className: 'daf-col-head' }, h('span', null, t.logs)),
                 h('div', { className: 'daf-log' },
-                  (run.logs ?? []).slice(-80).map((line, index) => h('div', {
-                    key: `${line.ts}-${index}`,
-                    className: 'daf-log-line',
-                    'data-level': line.level,
-                  }, `${new Date(line.ts).toLocaleTimeString('zh-CN')} ${line.message}`))))
-      ]
-    }
-
-

@@ -1,4 +1,13 @@
 /* @client-shard: 08-canvas */
+                  (run.logs ?? []).slice(-80).map((line, index) => h('div', {
+                    key: `${line.ts}-${index}`,
+                    className: 'daf-log-line',
+                    'data-level': line.level,
+                  }, `${new Date(line.ts).toLocaleTimeString('zh-CN')} ${line.message}`))))
+      ]
+    }
+
+
     function CanvasTab(props) {
       const { ctx, sessionId } = props
       const t = dictFor(ctx)
@@ -2136,12 +2145,3 @@
               outlineOpen
                 ? h('div', { className: 'daf-outline' },
                   h('div', { className: 'daf-outline-head' },
-                    h('strong', null, t.outline),
-                    h('button', { type: 'button', className: 'daf-dock-switch', onClick: () => setOutlineOpen(false) }, t.close)),
-                  h('div', { className: 'daf-outline-body' }, outlineRows))
-                : null,
-              flowDockView,
-              showDevPanels ? h(DevLayer, { selected, t, mutate, statusOf, run, checkpoint, current, setError, childrenOf, ctx, issues, runId, setSelectedId, addChild, control, nodesById, steps }) : null,
-            ))
-    }
-
