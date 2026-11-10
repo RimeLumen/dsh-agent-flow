@@ -388,6 +388,54 @@ function check(section, label, ok, extra) {
   check(section, '阶段框渲染在节点之下', frameAt > 0 && nodesAt > frameAt, 'frame@' + frameAt + ' nodes@' + nodesAt)
 }
 
+// ── 5g. 布局引擎（四种布局共享同一结构：从属跟随 + 执行顺序 + 孤岛后置）──
+{
+  const section = 'layout'
+  const src = readFileSync(join(root, 'src', 'client.js'), 'utf8')
+  const lines = src.split(/\r?\n/)
+  const s = lines.findIndex((l) => l.includes('function layoutPositions('))
+  let e = -1
+  for (let i = s + 1; i >= 0 && i < lines.length; i += 1) if (/^    function /.test(lines[i])) { e = i - 1; break }
+  if (s < 0 || e < 0) {
+    check(section, '可从 client.js 提取布局引擎', false)
+  } else {
+    const code = ['const NODE_WIDTH = 220', 'const NODE_HEIGHT = 96', ...lines.slice(s, e + 1)].join('\n')
+    const layoutPositions = new Function(code + '\nreturn layoutPositions')()
+    const wf = {
+      name: 't', entry: 'a', mainPath: ['a', 'b', 'c'],
+      nodes: [
+        { id: 'p1', kind: 'phase', title: '阶段1', pos: { x: 0, y: 0 }, params: { order: 0 } },
+        { id: 'a', kind: 'agent.task', title: 'A', pos: { x: 0, y: 100 }, phaseId: 'p1' },
+        { id: 'p2', kind: 'phase', title: '阶段2', pos: { x: 300, y: 0 }, params: { order: 1 } },
+        { id: 'b', kind: 'agent.task', title: 'B', pos: { x: 300, y: 100 }, phaseId: 'p2' },
+        { id: 'c', kind: 'agent.task', title: 'C', pos: { x: 300, y: 200 }, phaseId: 'p2' },
+        { id: 'z', kind: 'agent.task', title: '孤岛', pos: { x: 900, y: 0 } },
+      ],
+      edges: [
+        { id: 'e1', from: 'p1', to: 'a' }, { id: 'e2', from: 'a', to: 'p2' },
+        { id: 'e3', from: 'p2', to: 'b' }, { id: 'e4', from: 'b', to: 'c' },
+      ], vars: {},
+    }
+    for (const layout of ['chain', 'tb', 'star', 'radial']) {
+      const pos = layoutPositions(wf, layout)
+      check(section, layout + ': 全部节点有坐标', pos.size === wf.nodes.length, pos.size + '/' + wf.nodes.length)
+    }
+    const chain = layoutPositions(wf, 'chain')
+    check(section, 'chain: 子节点跟随父容器', Math.abs(chain.get('a').x - (chain.get('p1').x + 120)) < 1)
+    check(section, 'chain: 主干从左到右', chain.get('p2').x > chain.get('p1').x)
+    check(section, 'chain: 孤岛在主干之后', chain.get('z').x > chain.get('p2').x)
+    const uniq = new Set([...chain.values()].map((p) => p.x + ',' + p.y))
+    check(section, 'chain: 无完全重叠坐标', uniq.size === wf.nodes.length)
+    const tb = layoutPositions(wf, 'tb')
+    check(section, 'tb: 主干从上到下', tb.get('p2').y > tb.get('p1').y)
+    check(section, 'tb: 孤岛在最后行', tb.get('z').y > tb.get('p2').y)
+    const star = layoutPositions(wf, 'star')
+    check(section, 'star: hub 子节点离开中心', Math.hypot(star.get('a').x - star.get('p1').x, star.get('a').y - star.get('p1').y) > 100)
+  }
+  const hostModel = readFileSync(join(root, 'src', 'host', 'flow', 'model.js'), 'utf8')
+  check(section, '宿主 FLOW_LAYOUTS 含四种布局', ['chain', 'tb', 'star', 'radial'].every((l) => hostModel.includes("'" + l + "'")))
+}
+
 // ── 6. 经验库防噪 ──
 {
   const section = 'experience'

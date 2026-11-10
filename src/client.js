@@ -169,7 +169,8 @@ window.__ModuleLoader__.load({
         statusOk: '已完成',
         statusFail: '失败',
         layout: '布局',
-        layout_chain: '链式',
+        layout_chain: '从左到右',
+        layout_tb: '从上到下',
         layout_star: '星形',
         layout_radial: '环形',
         layoutPinned: '手拖过的节点不参与自动布局',
@@ -363,7 +364,8 @@ window.__ModuleLoader__.load({
         statusOk: 'done',
         statusFail: 'failed',
         layout: 'Layout',
-        layout_chain: 'Chain',
+        layout_chain: 'Left to right',
+        layout_tb: 'Top to bottom',
         layout_star: 'Star',
         layout_radial: 'Radial',
         layoutPinned: 'Nodes you dragged stay put during auto layout',
@@ -1844,155 +1846,172 @@ window.__ModuleLoader__.load({
       return { ...workflow, layout, nodes }
     }
 
+    /**
+     * 统一布局引擎：先定结构，再投影。
+     *
+     * 第一步 分组：容器节点（阶段 / 组）与其子节点构成一个单元，单元整体参与排序
+     *         ——从属关系不再被遍历深度打散，子节点始终跟着父容器走。
+     * 第二步 排序：按连线方向给单元定层（单元级拓扑，环上单元放最后）；主干节点
+     *         按主干序号插队；同层按「主干序 → 标题」稳定排序。
+     * 第三步 投影：四种布局共享同一结构，只改坐标映射。
+     *         从左到右 / 从上到下是同构投影（仅交换轴）；星图按深度分环；辐射图整圈。
+     * 第四步 由调用方做重叠修复。
+     */
     function layoutPositions(workflow, layout) {
       const positions = new Map()
-      const phases = workflow.nodes
-        .filter((node) => node.kind === 'phase')
-        .sort((a, b) => (a.params?.order ?? 0) - (b.params?.order ?? 0) || a.pos.y - b.pos.y)
-      const childrenOf = (phaseId) => workflow.nodes.filter((node) => node.phaseId === phaseId)
-      if (phases.length > 0 && layout === 'chain') {
-        phases.forEach((phase, index) => {
-          const x = 70 + index * 320
-          positions.set(phase.id, { x, y: 70 })
-          childrenOf(phase.id).forEach((child, i) => positions.set(child.id, { x: x + 30, y: 180 + i * 100 }))
-        })
-      } else if (phases.length > 0 && layout === 'star') {
-        const cx = 560
-        const cy = 440
-        phases.forEach((phase) => {
-          const children = childrenOf(phase.id)
-          const radius = Math.max(190, 90 + children.length * 26)
-          positions.set(phase.id, { x: cx, y: cy })
-          children.forEach((child, i) => {
-            const angle = (Math.PI * 2 * i) / Math.max(1, children.length) - Math.PI / 2
-            positions.set(child.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-          })
-        })
-      } else if (phases.length > 0) {
-        const cx = 640
-        const cy = 480
-        const ring = Math.max(240, 120 + phases.length * 46)
-        phases.forEach((phase, index) => {
-          const angle = (Math.PI * 2 * index) / phases.length - Math.PI / 2
-          positions.set(phase.id, { x: Math.round(cx + Math.cos(angle) * ring), y: Math.round(cy + Math.sin(angle) * ring) })
-          const children = childrenOf(phase.id)
-          children.forEach((child, i) => {
-            const spread = (i - (children.length - 1) / 2) * 38
-            const outer = ring + 175
-            positions.set(child.id, {
-              x: Math.round(cx + Math.cos(angle) * outer - Math.sin(angle) * spread),
-              y: Math.round(cy + Math.sin(angle) * outer + Math.cos(angle) * spread),
-            })
-          })
-        })
-      } else if (layout === 'star') {
-        const hub = workflow.nodes.find((node) => node.id === workflow.entry) ?? workflow.nodes[0]
-        const cx = 560
-        const cy = 440
-        if (hub) {
-          positions.set(hub.id, { x: cx, y: cy })
-          const others = workflow.nodes.filter((node) => node.id !== hub.id)
-          const radius = Math.max(200, 80 + others.length * 26)
-          others.forEach((node, i) => {
-            const angle = (Math.PI * 2 * i) / Math.max(1, others.length) - Math.PI / 2
-            positions.set(node.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-          })
-        }
-      } else if (layout === 'radial') {
-        const cx = 560
-        const cy = 440
-        const radius = Math.max(240, 90 + workflow.nodes.length * 22)
-        workflow.nodes.forEach((node, i) => {
-          const angle = (Math.PI * 2 * i) / Math.max(1, workflow.nodes.length) - Math.PI / 2
-          positions.set(node.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-        })
+      if (!workflow) return positions
+      const nodes = workflow.nodes
+      const isContainer = (node) => node.kind === 'phase' || node.kind === 'group.steps'
+      const childrenOf = (id) => nodes.filter((node) => node.phaseId === id || node.parentId === id)
+
+      // ── 单元划分 ──
+      const containers = nodes.filter(isContainer)
+      const unitOf = new Map()
+      for (const container of containers) {
+        unitOf.set(container.id, container.id)
+        for (const child of childrenOf(container.id)) unitOf.set(child.id, container.id)
       }
-      const out = new Map(workflow.nodes.map((node) => [node.id, []]))
-      for (const edge of workflow.edges) out.get(edge.from)?.push(edge.to)
-      const layer = new Map([[workflow.entry, 0]])
-      const queue = [workflow.entry]
+      const units = [
+        ...containers.map((container) => ({ id: container.id, members: [container.id, ...childrenOf(container.id).map((child) => child.id)] })),
+        ...nodes.filter((node) => !unitOf.has(node.id)).map((node) => ({ id: node.id, members: [node.id] })),
+      ]
+      const unitByNode = new Map()
+      for (const unit of units) for (const member of unit.members) unitByNode.set(member, unit.id)
+
+      // ── 单元级拓扑分层 ──
+      const outEdges = new Map(units.map((unit) => [unit.id, []]))
+      const inDegree = new Map(units.map((unit) => [unit.id, 0]))
+      for (const edge of workflow.edges ?? []) {
+        const fromUnit = unitByNode.get(edge.from)
+        const toUnit = unitByNode.get(edge.to)
+        if (!fromUnit || !toUnit || fromUnit === toUnit) continue
+        outEdges.get(fromUnit).push(toUnit)
+        inDegree.set(toUnit, (inDegree.get(toUnit) ?? 0) + 1)
+      }
+      const depth = new Map()
+      const queue = units.filter((unit) => (inDegree.get(unit.id) ?? 0) === 0).map((unit) => unit.id)
+      for (const id of queue) depth.set(id, 0)
+      const seen = new Set(queue)
       while (queue.length > 0) {
         const id = queue.shift()
-        for (const next of out.get(id) ?? []) {
-          if (!layer.has(next)) {
-            layer.set(next, (layer.get(id) ?? 0) + 1)
-            queue.push(next)
-          }
+        for (const next of outEdges.get(id) ?? []) {
+          const candidate = (depth.get(id) ?? 0) + 1
+          if (candidate > (depth.get(next) ?? 0)) depth.set(next, candidate)
+          inDegree.set(next, (inDegree.get(next) ?? 0) - 1)
+          if ((inDegree.get(next) ?? 0) === 0 && !seen.has(next)) { seen.add(next); queue.push(next) }
         }
       }
-      // 轨道分类：回环节点 → 左轨；入口不可达的侧支 → 右轨；
-      // 主干（入口可达且非回环）留在中央列。简单线性流程完全不受影响（全部主干）。
-      const canReachSet = (start) => {
-        const seen = new Set()
-        const todo = [start]
+      // 环上的单元（入度永不为 0）与入口不可达的孤岛都排到最后——
+      // 否则无入边的孤岛会被当成根，挤进第一层与主干抢位置。
+      const entryUnit = workflow.entry ? unitByNode.get(workflow.entry) : null
+      const reachable = new Set()
+      if (entryUnit) {
+        const todo = [entryUnit]
         while (todo.length > 0) {
           const id = todo.pop()
-          for (const next of out.get(id) ?? []) {
-            if (seen.has(next)) continue
-            seen.add(next)
-            todo.push(next)
-          }
+          if (reachable.has(id)) continue
+          reachable.add(id)
+          for (const next of outEdges.get(id) ?? []) if (!reachable.has(next)) todo.push(next)
         }
-        return seen
       }
-      const reachCache = new Map()
-      const reachOf = (id) => {
-        if (!reachCache.has(id)) reachCache.set(id, canReachSet(id))
-        return reachCache.get(id)
+      for (const unit of units) if (!depth.has(unit.id) || !reachable.has(unit.id)) depth.set(unit.id, units.length)
+
+      // ── 层内稳定排序：主干序 → 标题 ──
+      const mainIndex = new Map((Array.isArray(workflow.mainPath) ? workflow.mainPath : []).map((id, index) => [id, index]))
+      const layers = new Map()
+      for (const unit of units) {
+        const d = depth.get(unit.id) ?? 0
+        if (!layers.has(d)) layers.set(d, [])
+        layers.get(d).push(unit)
       }
-      const fromEntry = reachOf(workflow.entry)
-      const cyclicIds = new Set()
-      for (const node of workflow.nodes) {
-        const back = reachOf(node.id)
-        if (back.has(node.id)) { cyclicIds.add(node.id); continue }
-        for (const other of back) {
-          if (other !== node.id && reachOf(other).has(node.id)) { cyclicIds.add(node.id); break }
+      const stableKey = (unit) => {
+        let mainOrder = Infinity
+        for (const id of unit.members) {
+          const index = mainIndex.get(id)
+          if (index !== undefined) mainOrder = Math.min(mainOrder, index)
         }
+        return { mainOrder: mainOrder === Infinity ? 1e9 : mainOrder, title: byId(unit.id)?.title ?? '' }
+      }
+      const byId = (id) => nodes.find((node) => node.id === id)
+      for (const [d, list] of layers) {
+        list.sort((a, b) => stableKey(a).mainOrder - stableKey(b).mainOrder || stableKey(a).title.localeCompare(stableKey(b).title))
+        layers.set(d, list)
       }
 
-      // 同格垂直居中：
-      // 按 (列) 分组 → total = Σh + gap*(n-1) → top = 轴心 - total/2，整组围绕轴心对称。
-      // 旧做法是从顶部逐行堆叠，同行节点一多主干就会偏离中心。
-      const COLUMN_GAP = 40
-      const AXIS_Y = 480
-      const baseX = phases.length > 0 ? 820 : 60
-      // 主干按序号占列：脊椎节点一列一步，保证主干在视觉上是一条直线；
-      // 支线仍用 BFS 深度。没有 mainPath 时退化为原有行为。
-      const mainIdx = new Map((Array.isArray(workflow.mainPath) ? workflow.mainPath : []).map((id, index) => [id, index]))
-      const columnOf = (id) => (mainIdx.has(id) ? mainIdx.get(id) : (layer.get(id) ?? 0))
-      const mainIds = []
-      const railLeft = []
-      const railRight = []
-      for (const node of workflow.nodes) {
-        if (positions.has(node.id) || node.kind === 'phase') continue
-        // 只有入口不可达的岛才分轨：线性流程与含环主干保持原有列布局（零回归）。
-        const unreachable = node.id !== workflow.entry && !fromEntry.has(node.id)
-        if (unreachable) (cyclicIds.has(node.id) ? railLeft : railRight).push(node.id)
-        else mainIds.push(node.id)
-      }
-      const columns = new Map()
-      let maxDepth = 0
-      for (const id of mainIds) {
-        const depth = columnOf(id)
-        maxDepth = Math.max(maxDepth, depth)
-        if (!columns.has(depth)) columns.set(depth, [])
-        columns.get(depth).push(id)
-      }
-      const placeColumn = (ids, x) => {
-        if (ids.length === 0) return
-        const total = ids.length * NODE_HEIGHT + COLUMN_GAP * Math.max(0, ids.length - 1)
-        let top = AXIS_Y - total / 2
-        for (const id of ids) {
-          positions.set(id, { x, y: Math.round(top) })
-          top += NODE_HEIGHT + COLUMN_GAP
+      // ── 投影 ──
+      const GAP = 40
+      const AXIS = 480
+      if (layout === 'chain' || layout === 'tb') {
+        // 从左到右 / 从上到下：同构投影，仅交换轴。
+        const horizontal = layout === 'chain'
+        const ALONG_STEP = horizontal ? 280 : NODE_HEIGHT + 140
+        const ORIGIN = 60
+        const CROSS_GAP = 40
+        const crossSize = horizontal ? NODE_HEIGHT : NODE_WIDTH
+        for (const [d, list] of layers) {
+          const totalSpan = list.reduce((sum, unit) => {
+            const members = horizontal ? unit.members.length : unit.members.length
+            return sum + members * crossSize + CROSS_GAP * Math.max(0, members - 1)
+          }, 0) + CROSS_GAP * Math.max(0, list.length - 1)
+          let cross = (horizontal ? AXIS : 640) - totalSpan / 2
+          for (const unit of list) {
+            // 子节点排在容器右侧（横向）或下侧（纵向）一格——从属关系在坐标上可见。
+            unit.members.forEach((id, memberIndex) => {
+              const memberOffset = memberIndex === 0 ? 0 : (horizontal ? 120 : NODE_HEIGHT + 20)
+              const along = ORIGIN + d * ALONG_STEP + memberOffset
+              if (horizontal) positions.set(id, { x: along, y: Math.round(cross + crossSize / 2) })
+              else positions.set(id, { x: Math.round(cross + crossSize / 2), y: along })
+              cross += crossSize + CROSS_GAP
+            })
+            cross += CROSS_GAP
+          }
         }
+        return positions
       }
-      for (const [depth, ids] of columns) placeColumn(ids, baseX + depth * 280)
-      // 左轨 = 回环（返回主干），右轨 = 入口不可达的侧支
-      placeColumn(railLeft, baseX - 300)
-      placeColumn(railRight, baseX + (maxDepth + 1) * 280)
+
+      if (layout === 'star') {
+        // 星图：入口（或首单元）居中，其余按深度分环；环内按稳定序排角度。
+        const hubUnit = layers.get(0)?.[0] ?? units[0]
+        const cx = 560, cy = 440
+        hubUnit.members.forEach((id, index) => {
+          if (index === 0) { positions.set(id, { x: cx, y: cy }); return }
+          // hub 的子节点小半径环绕中心，避免全部叠在中心点
+          const angle = (Math.PI * 2 * (index - 1)) / Math.max(1, hubUnit.members.length - 1) - Math.PI / 2
+          positions.set(id, { x: Math.round(cx + Math.cos(angle) * 130), y: Math.round(cy + Math.sin(angle) * 130) })
+        })
+        const byRing = new Map()
+        for (const unit of units) {
+          if (unit.id === hubUnit.id) continue
+          const ring = Math.max(0, (depth.get(unit.id) ?? 1) - 1)
+          if (!byRing.has(ring)) byRing.set(ring, [])
+          byRing.get(ring).push(unit)
+        }
+        for (const [ring, list] of byRing) {
+          const radius = 200 + ring * 170
+          const totalSlots = list.reduce((sum, unit) => sum + unit.members.length, 0)
+          let slot = 0
+          for (const unit of list) {
+            for (const id of unit.members) {
+              const angle = (Math.PI * 2 * slot) / Math.max(1, totalSlots) - Math.PI / 2
+              positions.set(id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
+              slot += 1
+            }
+          }
+        }
+        return positions
+      }
+
+      // 辐射图：全部节点按稳定序放一圈。
+      const cx = 560, cy = 440
+      const all = units.flatMap((unit) => unit.members)
+      const radius = Math.max(240, 90 + all.length * 22)
+      all.forEach((id, index) => {
+        const angle = (Math.PI * 2 * index) / Math.max(1, all.length) - Math.PI / 2
+        positions.set(id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
+      })
       return positions
     }
+
 
     function autoLayout(workflow) {
       return resolveOverlaps(layoutWorkflow(workflow, workflow?.layout ?? 'chain'))
@@ -3973,7 +3992,7 @@ window.__ModuleLoader__.load({
       const pinnedCount = (current?.nodes ?? []).filter((node) => node.pos?.pinned === true).length
 
       const nextLayoutName = () => {
-        const order = ['chain', 'star', 'radial']
+        const order = ['chain', 'tb', 'star', 'radial']
         const now = current?.layout ?? 'chain'
         return order[(order.indexOf(now) + 1) % order.length]
       }
@@ -4376,7 +4395,7 @@ window.__ModuleLoader__.load({
         h(Btn, { onClick: () => { setMoreOpen(false); void validate() }, disabled: busy || !current }, h(Icon, { name: 'check', size: 12 }), t.validate),
         h(Btn, { onClick: () => { setMoreOpen(false); if (current) mutate((wf) => autoLayout(wf)) }, disabled: !current, title: t.layoutPinned }, h(Icon, { name: 'refresh', size: 12 }), t.autoLayout),
         h('div', { className: 'daf-more-group', role: 'group', 'aria-label': t.layout },
-          ['chain', 'star', 'radial'].map((value) => h('button', {
+          ['chain', 'tb', 'star', 'radial'].map((value) => h('button', {
             key: value,
             type: 'button',
             className: `daf-layout-btn${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,

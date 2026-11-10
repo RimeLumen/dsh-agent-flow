@@ -21,7 +21,7 @@ export const NODE_KINDS = Object.freeze([
 
 export const WORKFLOW_MODES = Object.freeze(['task', 'design'])
 
-export const FLOW_LAYOUTS = Object.freeze(['chain', 'star', 'radial'])
+export const FLOW_LAYOUTS = Object.freeze(['chain', 'tb', 'star', 'radial'])
 
 export const EDGE_SIDES = Object.freeze([
   'top',

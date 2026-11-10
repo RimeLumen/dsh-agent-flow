@@ -79,6 +79,50 @@ export function workflowRoutes(deps) {
       },
     },
     {
+      // 批量操作：一次 mutate + 一次落盘。逐条调用会触发 N 次状态写盘，
+      // 批量删除几十条流程时这是实打实的开销。
+      method: 'POST',
+      pattern: '/workflows/batch',
+      handler: async ({ res, body }) => {
+        const action = readString(body, 'action')
+        if (!['archive', 'restore', 'delete'].includes(action)) {
+          writeError(res, 400, new SelectionError('validation', '批量操作只支持 archive / restore / delete'))
+          return
+        }
+        const ids = (Array.isArray(body?.ids) ? body.ids : [])
+          .filter((id) => typeof id === 'string' && id !== '')
+          .slice(0, 200)
+        if (ids.length === 0) {
+          writeError(res, 400, new SelectionError('validation', '需要至少一个流程 id'))
+          return
+        }
+        const result = await store.mutate((state) => {
+          const affected = []
+          const missing = []
+          const running = new Set((registry?.list?.() ?? []).filter((run) => run.status === 'running').map((run) => run.workflowId))
+          const blocked = []
+          for (const id of ids) {
+            const index = state.workflows.findIndex((item) => item.id === id)
+            if (index < 0) { missing.push(id); continue }
+            // 永久删除时不删正在运行的流程（会让运行中的画布指向不存在的图）
+            if (action === 'delete' && running.has(id)) { blocked.push(id); continue }
+            if (action === 'delete') {
+              state.workflows.splice(index, 1)
+            } else if (action === 'archive') {
+              state.workflows[index] = { ...state.workflows[index], archivedAt: new Date().toISOString() }
+            } else {
+              const next = { ...state.workflows[index] }
+              delete next.archivedAt
+              state.workflows[index] = next
+            }
+            affected.push(id)
+          }
+          return { affected: affected.length, missing: missing.length, blocked: blocked.length, total: state.workflows.length }
+        })
+        writeJson(res, 200, { ok: true, action, ...result })
+      },
+    },
+    {
       method: 'GET',
       pattern: '/workflows/:id',
       handler: async ({ res, params }) => {
