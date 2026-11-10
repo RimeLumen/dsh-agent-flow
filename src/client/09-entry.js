@@ -1,4 +1,21 @@
 /* @client-shard: 09-entry */
+                            : 'var(--dsw-alias-border-l2)',
+                      opacity: 0.9,
+                    },
+                  }))
+                })()),
+              h('div', { className: 'daf-thumb-viewlayer', 'aria-hidden': 'true' },
+                h('span', { ref: thumbViewRef, className: 'daf-thumb-viewrect' })),
+              tourIndex >= 0
+                ? h('div', { className: 'daf-tour' },
+                  h(Btn, { onClick: () => tourGo(tourIndex - 1), title: t.tourPrev }, '←'),
+                  h('span', { className: 'daf-tour-count', title: tourStops[tourIndex]?.title }, String(tourIndex + 1) + '/' + String(tourStops.length)),
+                  h(Btn, { onClick: () => tourGo(tourIndex + 1), title: t.tourNext }, '→'),
+                  h(Btn, { onClick: () => tourGo(-1), title: t.tourExit }, t.close))
+                : null,
+              outlineOpen
+                ? h('div', { className: 'daf-outline' },
+                  h('div', { className: 'daf-outline-head' },
                     h('strong', null, t.outline),
                     h('button', { type: 'button', className: 'daf-dock-switch', onClick: () => setOutlineOpen(false) }, t.close)),
                   h('div', { className: 'daf-outline-body' }, outlineRows))

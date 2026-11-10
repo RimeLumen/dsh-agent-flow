@@ -1388,8 +1388,25 @@
             }
           }
         }
+        // 交叉候选预筛（性能审计 P-C）：每条边的包围盒入网格，只有同格的边对
+        // 才进入逐段精确判定——把 O(E²) 的两两组合降为 O(同格对数)。
+        const crossGrid = createSpatialGrid(320)
+        traced.forEach((item, index) => {
+          const xs = item.points.map((point) => point.x)
+          const ys = item.points.map((point) => point.y)
+          crossGrid.insert(
+            { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) },
+            index,
+          )
+        })
+        const bboxOf = (index) => {
+          const xs = traced[index].points.map((point) => point.x)
+          const ys = traced[index].points.map((point) => point.y)
+          return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
+        }
         for (let i = 0; i < traced.length; i += 1) {
-          for (let j = i + 1; j < traced.length; j += 1) {
+          const candidates = crossGrid.query(bboxOf(i)).filter((j) => j > i)
+          for (const j of candidates) {
             const left = traced[i], right = traced[j]
             if (left.edge.from === right.edge.from || left.edge.to === right.edge.to) continue
             let crossed = false
@@ -2128,20 +2145,3 @@
                           ? 'var(--dsw-alias-state-success-primary)'
                           : statusOf(node.id) === 'failed'
                             ? 'var(--dsw-alias-state-error-primary)'
-                            : 'var(--dsw-alias-border-l2)',
-                      opacity: 0.9,
-                    },
-                  }))
-                })()),
-              h('div', { className: 'daf-thumb-viewlayer', 'aria-hidden': 'true' },
-                h('span', { ref: thumbViewRef, className: 'daf-thumb-viewrect' })),
-              tourIndex >= 0
-                ? h('div', { className: 'daf-tour' },
-                  h(Btn, { onClick: () => tourGo(tourIndex - 1), title: t.tourPrev }, '←'),
-                  h('span', { className: 'daf-tour-count', title: tourStops[tourIndex]?.title }, String(tourIndex + 1) + '/' + String(tourStops.length)),
-                  h(Btn, { onClick: () => tourGo(tourIndex + 1), title: t.tourNext }, '→'),
-                  h(Btn, { onClick: () => tourGo(-1), title: t.tourExit }, t.close))
-                : null,
-              outlineOpen
-                ? h('div', { className: 'daf-outline' },
-                  h('div', { className: 'daf-outline-head' },

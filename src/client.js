@@ -4882,8 +4882,25 @@ window.__ModuleLoader__.load({
             }
           }
         }
+        // 交叉候选预筛（性能审计 P-C）：每条边的包围盒入网格，只有同格的边对
+        // 才进入逐段精确判定——把 O(E²) 的两两组合降为 O(同格对数)。
+        const crossGrid = createSpatialGrid(320)
+        traced.forEach((item, index) => {
+          const xs = item.points.map((point) => point.x)
+          const ys = item.points.map((point) => point.y)
+          crossGrid.insert(
+            { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) },
+            index,
+          )
+        })
+        const bboxOf = (index) => {
+          const xs = traced[index].points.map((point) => point.x)
+          const ys = traced[index].points.map((point) => point.y)
+          return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
+        }
         for (let i = 0; i < traced.length; i += 1) {
-          for (let j = i + 1; j < traced.length; j += 1) {
+          const candidates = crossGrid.query(bboxOf(i)).filter((j) => j > i)
+          for (const j of candidates) {
             const left = traced[i], right = traced[j]
             if (left.edge.from === right.edge.from || left.edge.to === right.edge.to) continue
             let crossed = false
