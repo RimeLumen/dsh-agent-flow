@@ -615,18 +615,21 @@ export function apply(ctx, config) {
       if (store.loadError) log(`state load error: ${store.loadError}`)
       for (const note of store.loadNotes) log(`state: ${note}`)
       log(`state loaded from ${store.file} (${store.state.profiles.length} profiles, ${store.state.workflows.length} flows)`)
-      await refresh().catch((error) => log(`initial catalog refresh failed: ${error instanceof Error ? error.message : String(error)}`))
+      // 启动并行（性能审计 S-A）：目录构建与逐会话恢复互不依赖，串行会让
+      // 大目录场景的会话恢复被线性拖后。allSettled 保证互不影响，失败各自留痕。
+      // registerPlanFirst 必须同步先行（计划协议注册先于恢复）。
       const agents = ctx.get('agents')
-      if (agents && typeof agents.list === 'function') {
-        for (const agent of agents.list()) {
-          try {
-            await lifecycle.reapply(agent.id)
-          } catch (error) {
-            log(`reapply failed for ${agent.id}: ${error instanceof Error ? error.message : String(error)}`)
-          }
+      const reapplyTasks = agents && typeof agents.list === 'function'
+        ? agents.list().map((agent) => {
           registerPlanFirst(agent)
-        }
-      }
+          return lifecycle.reapply(agent.id)
+            .catch((error) => log(`reapply failed for ${agent.id}: ${error instanceof Error ? error.message : String(error)}`))
+        })
+        : []
+      await Promise.allSettled([
+        refresh().catch((error) => log(`initial catalog refresh failed: ${error instanceof Error ? error.message : String(error)}`)),
+        ...reapplyTasks,
+      ])
     })
     .catch((error) => log(`state load failed: ${error instanceof Error ? error.message : String(error)}`))
 }

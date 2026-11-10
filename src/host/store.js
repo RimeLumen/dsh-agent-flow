@@ -142,7 +142,9 @@ export class Store {
   }
 
   flush() {
-    const payload = JSON.stringify(this.state, null, 2)
+    // 紧凑序列化：pretty-print 的缩进让每次写盘体积与耗时 +~30%（state 是机器态，
+    // 人读性由 /diagnostics 端点与本文件头注释承担）。
+    const payload = JSON.stringify(this.state)
     const dir = this.dir
     const file = this.file
     const write = this._queue.then(async () => {
