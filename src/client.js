@@ -2219,6 +2219,21 @@ window.__ModuleLoader__.load({
         hint ? h('span', { className: 'daf-muted' }, hint) : null)
     }
 
+    /** 贴屏右侧、与画布等高的抽屉容器（Mermaid 导入 / 流程管理共用）。 */
+    function RightDrawer({ title, children, onClose }) {
+      useEffect(() => {
+        const onKey = (event) => { if (event.key === 'Escape') onClose?.() }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [onClose])
+      return h('div', { className: 'daf-drawer-backdrop', onMouseDown: (event) => { if (event.target === event.currentTarget) onClose?.() } },
+        h('div', { className: 'daf-drawer-right', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+          h('div', { className: 'daf-drawer-head' },
+            h('strong', { style: { flex: 1 } }, title),
+            h(Btn, { onClick: onClose }, '✕')),
+          children))
+    }
+
     function Modal({ title, children, onClose, footer }) {
       useEffect(() => {
         const onKey = (event) => {
@@ -3249,7 +3264,8 @@ window.__ModuleLoader__.load({
           hh('span', { className: 'daf-spacer' }),
           hh('button', {
             type: 'button',
-            className: 'daf-dock-switch',
+            className: 'daf-dock-switch daf-tip',
+            'data-tip': inRecycle ? t.backToList : t.recycleTitle,
             onClick: switchView,
           }, inRecycle ? t.backToList : t.recycleTitle)),
         inRecycle && selectable.length > 0
@@ -4518,6 +4534,8 @@ window.__ModuleLoader__.load({
             className: `daf-layout-btn${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
             title: `${t.layout}: ${t[`layout_${value}`] ?? value}`,
             disabled: !current,
+            className: `daf-layout-btn daf-tip${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
+            'data-tip': `${t.layout}: ${t[`layout_${value}`] ?? value}`,
             onClick: () => applyLayout(value),
           }, t[`layout_${value}`] ?? value))),
         h(Btn, { onClick: () => { setMoreOpen(false); void copyMermaid() }, disabled: !current }, t.mermaidCopy),
@@ -4769,6 +4787,8 @@ window.__ModuleLoader__.load({
       // mutate 产生新 current，缓存自然失效重算。
       // 标号定位（修复漂移）：不再用数学近似（edgeMidpoint 与实际折线/贝塞尔脱节），
       // 渲染后对每条可见路径调 getPointAtLength(len/2) 取**真实线上的中点**。
+      // 路由缓存（key=edge.id，current 换代即弃）：节点多时不再每渲染重跑 Dijkstra
+      const routeCacheRef = useRef(null)
       const edgePathEls = useRef(new Map())
       const [edgeMids, setEdgeMids] = useState(() => new Map())
       useEffect(() => {
@@ -5396,6 +5416,7 @@ window.__ModuleLoader__.load({
             run.status === 'running' && !paused ? h(Btn, { onClick: () => control('pause'), title: t.pause }, h(Icon, { name: 'pause', size: 15 })) : run.status === 'running' && paused ? h(Btn, { onClick: () => control('resume'), title: t.resume }, h(Icon, { name: 'play', size: 15 })) : h(Btn, { variant: 'primary', onClick: startRun, disabled: busy || !current, title: t.run }, h(Icon, { name: 'play', size: 15 })),
             runId && run.status === 'running' ? h(Btn, { variant: 'danger', onClick: () => control('cancel'), title: t.cancelRun }, h(Icon, { name: 'cross', size: 15 })) : null,
             h(Btn, { onClick: validate, disabled: busy || !current, title: t.validate }, h(Icon, { name: 'check', size: 15 })),
+            h(Btn, { onClick: () => current && mutate((wf) => autoLayout(wf)), disabled: !current, title: t.autoLayout }, h(Icon, { name: 'refresh', size: 15 })),
             h(Btn, { onClick: () => void copyMermaid(), disabled: !current, title: t.mermaidCopy }, h(Icon, { name: 'copy', size: 15 })),
             h(Btn, { onClick: () => setMermaidOpen(true), title: t.mermaidImport }, h(Icon, { name: 'layers', size: 15 }))
             ),
@@ -5424,7 +5445,7 @@ window.__ModuleLoader__.load({
             notice ? h('span', { className: 'daf-muted' }, notice) : null,
             error ? h('span', { className: 'daf-error', title: error }, error.slice(0, 60)) : null,
             edgeMenuView,
-            mermaidOpen ? h(Modal, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
+            mermaidOpen ? h(RightDrawer, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
               h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                 h('textarea', {
                   className: 'daf-textarea',
@@ -5460,7 +5481,7 @@ window.__ModuleLoader__.load({
                   }, t.composeCopy)))) : null,
             h('span', { className: 'daf-spacer' }),
               h('span', { className: 'daf-zoom', title: t.zoomHint },
-                h('button', { type: 'button', onClick: () => cameraZoom(zoom / 1.15, { smooth: true }), 'aria-label': t.zoomOut }, '−'),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomOut, onClick: () => cameraZoom(zoom / 1.15, { smooth: true }), 'aria-label': t.zoomOut }, '−'),
                 h('input', {
                   value: `${Math.round(zoom * 100)}%`,
                   'aria-label': t.zoom,
@@ -5469,9 +5490,9 @@ window.__ModuleLoader__.load({
                     if (Number.isFinite(parsed) && parsed > 0) cameraZoom(parsed / 100, { smooth: true })
                   },
                 }),
-                h('button', { type: 'button', onClick: () => cameraZoom(zoom * 1.15, { smooth: true }), 'aria-label': t.zoomIn }, '+'),
-                h('button', { type: 'button', onClick: fitToContent, title: t.zoomFit }, t.zoomFitLabel),
-                h('button', { type: 'button', onClick: () => cameraZoom(1, { smooth: true }), title: t.zoomReset }, '1:1')),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomIn, onClick: () => cameraZoom(zoom * 1.15, { smooth: true }), 'aria-label': t.zoomIn }, '+'),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomFit, onClick: fitToContent, 'aria-label': t.zoomFit }, t.zoomFitLabel),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomReset, onClick: () => cameraZoom(1, { smooth: true }), 'aria-label': t.zoomReset }, '1:1')),
             h('span', { className: 'daf-flow-cell' },
               h(Btn, { onClick: () => setMoreOpen((value) => !value), title: t.more, 'aria-expanded': String(Boolean(moreOpen)), 'data-more-toggle': 'true' }, h(Icon, { name: 'more', size: 14 })),
               moreOpen ? moreMenu : null)),

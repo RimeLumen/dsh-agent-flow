@@ -188,6 +188,11 @@ function check(section, label, ok, extra) {
     if (route) for (let i = 1; i < route.length; i += 1) if (segmentHitsRect(route[i - 1], route[i], blocker, 0)) crosses = true
     check(section, '绕行不穿障碍', crosses === false)
     check(section, '垂直方向路由可用', Array.isArray(orthogonalRoute({ x: 0, y: 0, w: 220, h: 96 }, { x: 40, y: 400, w: 220, h: 96 }, 'bottom', 'top', [], { clear: 10, clearance: 10 })))
+  // 补丁吞行防回归：此前一条替换把 useRef 声明吞掉，真机上 routeCacheRef 未定义直接渲染失败。
+  const routeRefDecl = lines.findIndex((l) => l.includes('const routeCacheRef = useRef'))
+  const routeRefUse = lines.findIndex((l) => l.includes('routeCacheRef.current?.for'))
+  check(section, '路由缓存声明存在', routeRefDecl >= 0)
+  check(section, '路由缓存声明在使用之前（同作用域）', routeRefDecl >= 0 && routeRefUse > routeRefDecl)
   }
 }
 
