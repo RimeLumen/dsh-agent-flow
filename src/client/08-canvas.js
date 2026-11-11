@@ -97,6 +97,8 @@
       }, [current])
       const [selectedEdgeId, setSelectedEdgeId] = useState(null)
       const [edgeMenu, setEdgeMenu] = useState(null)
+      // 连线拖动：按住连线的一端拖到新锚点，松手更新该端的 fromSide/toSide。
+      const [edgeDrag, setEdgeDrag] = useState(null)
       const [mermaidOpen, setMermaidOpen] = useState(false)
       const [mermaidText, setMermaidText] = useState('')
       // 反向组合：组合出的提示词与弹窗开关
@@ -827,7 +829,6 @@
       const sideAbbr = (side) => String(side)
         .replace('top-right', 'TR').replace('top-left', 'TL')
         .replace('bottom-right', 'BR').replace('bottom-left', 'BL')
-        .replace('-q1', '1').replace('-q3', '3')
         .replace('top', 'T').replace('bottom', 'B').replace('right', 'R').replace('left', 'L')
       const selectedEdge = selectedEdgeId ? (current?.edges ?? []).find((item) => item.id === selectedEdgeId) : null
       const selectedEdgeView = (() => {
@@ -836,7 +837,7 @@
         const toNode = nodesById.get(selectedEdge.to)
         if (!fromNode || !toNode) return null
         const mid = edgeMidpoint(rectOfNode(fromNode), rectOfNode(toNode), selectedEdge)
-        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left', 'right-q1', 'right-q3', 'left-q1', 'left-q3', 'top-q1', 'top-q3', 'bottom-q1', 'bottom-q3']
+        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left']
         const sideRow = (which) => h('div', { className: 'daf-edge-editor-row' },
           h('span', { className: 'daf-muted' }, which === 'from' ? t.edgeFrom : t.edgeTo),
           sides.map((side) => {
@@ -1300,6 +1301,82 @@
       // 路由结果缓存（key=edge.id，current 换代即弃）：节点多时每渲染重跑几百次
       // Dijkstra 是连线高频卡顿/闪烁的直接来源；命中直接复用 d，节点挪动后
       // mutate 产生新 current，缓存自然失效重算。
+      // 连线拖动：move 时把被拖端吸附到最近锚点（仅视觉预览，pointerup 才提交 mutate）。
+      const [pointerSnapTarget, setPointerSnapTarget] = useState(null)
+      useEffect(() => {
+        if (!edgeDrag) return undefined
+        const onMove = (event) => {
+          const el = surfaceRef.current
+          if (!el) return
+          const rect = el.getBoundingClientRect()
+          const canvasPoint = {
+            x: (event.clientX - rect.left) / zoom,
+            y: (event.clientY - rect.top) / zoom,
+          }
+          setPointerPos(canvasPoint)
+          // 预览吸附目标：靠近节点（24px 邻域）即取其最近锚点
+          const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
+          const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
+          let snap = null
+          for (const node of current?.nodes ?? []) {
+            if (node.id === fixedId) continue
+            const nodeRect = rectOfNode(node)
+            const dx = Math.max(nodeRect.x - canvasPoint.x, 0, canvasPoint.x - (nodeRect.x + nodeRect.w))
+            const dy = Math.max(nodeRect.y - canvasPoint.y, 0, canvasPoint.y - (nodeRect.y + nodeRect.h))
+            const distance = Math.hypot(dx, dy)
+            if (distance > 24) continue
+            const anchor = nearestAnchor(nodeRect, canvasPoint, Infinity)
+            if (anchor && (!snap || distance < snap.distance)) snap = { nodeId: node.id, side: anchor.side, distance }
+          }
+          setPointerSnapTarget(snap)
+        }
+        const onUp = (event) => {
+          const el = surfaceRef.current
+          const rect = el?.getBoundingClientRect()
+          if (!el || !rect) { setEdgeDrag(null); return }
+          const canvasPoint = {
+            x: (event.clientX - rect.left) / zoom,
+            y: (event.clientY - rect.top) / zoom,
+          }
+          // 吸附判定：靠近节点（矩形 24px 邻域内最近者）即绑定——不必精确点中锚点，
+          // 锚点自动取该节点上离指针最近的一面。固定端自身的节点不参与。
+          const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
+          const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
+          let best = null
+          for (const node of current?.nodes ?? []) {
+            if (node.id === fixedId) continue
+            const rect = rectOfNode(node)
+            const dx = Math.max(rect.x - canvasPoint.x, 0, canvasPoint.x - (rect.x + rect.w))
+            const dy = Math.max(rect.y - canvasPoint.y, 0, canvasPoint.y - (rect.y + rect.h))
+            const distance = Math.hypot(dx, dy)
+            if (distance > 24) continue
+            const anchor = nearestAnchor(rect, canvasPoint, Infinity)
+            if (anchor && (!best || distance < best.distance)) best = { nodeId: node.id, side: anchor.side, distance }
+          }
+          if (best) {
+            mutate((wf) => {
+              wf.edges = wf.edges.map((item) => {
+                if (item.id !== edgeDrag.id) return item
+                if (edgeDrag.end === 'from') {
+                  // 拖 from 端：换来源节点与出射面
+                  return { ...item, from: best.nodeId, fromSide: best.side, customPath: undefined }
+                }
+                return { ...item, to: best.nodeId, toSide: best.side, customPath: undefined }
+              })
+              return wf
+            })
+          }
+          setEdgeDrag(null)
+          setPointerPos(null)
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        return () => {
+          window.removeEventListener('pointermove', onMove)
+          window.removeEventListener('pointerup', onUp)
+        }
+      }, [edgeDrag, current, zoom])
+
       // 标号定位（修复漂移）：不再用数学近似（edgeMidpoint 与实际折线/贝塞尔脱节），
       // 渲染后对每条可见路径调 getPointAtLength(len/2) 取**真实线上的中点**。
       // 路由缓存（key=edge.id，current 换代即弃）：节点多时不再每渲染重跑 Dijkstra
@@ -1489,6 +1566,23 @@
               event.stopPropagation()
               suppressEdgeClickRef.current = Date.now()
               setEdgeMenu({ id: edge.id, x: event.clientX, y: event.clientY })
+            },
+            onPointerDown: (event) => {
+              // 连线拖动：按下即判定拖哪一端（距两端锚点近者被拖动）。
+              event.preventDefault()
+              event.stopPropagation()
+              suppressEdgeClickRef.current = Date.now()
+              const from = nodesById.get(edge.from)
+              const to = nodesById.get(edge.to)
+              if (!from || !to) return
+              const canvasPoint = {
+                x: (event.clientX - surfaceRef.current.getBoundingClientRect().left) / zoom,
+                y: (event.clientY - surfaceRef.current.getBoundingClientRect().top) / zoom,
+              }
+              const dFrom = Math.hypot(canvasPoint.x - (rectOfNode(from).x + rectOfNode(from).w / 2), canvasPoint.y - (rectOfNode(from).y + rectOfNode(from).h / 2))
+              const dTo = Math.hypot(canvasPoint.x - (rectOfNode(to).x + rectOfNode(to).w / 2), canvasPoint.y - (rectOfNode(to).y + rectOfNode(to).h / 2))
+              setEdgeDrag({ id: edge.id, end: dFrom < dTo ? 'from' : 'to' })
+              setEdgeMenu(null)
             },
           }),
           h('path', {
@@ -1728,6 +1822,28 @@
               : null,
         )
       })
+
+      // 连线拖动预览：从固定端锚点画到指针（吸附时画到目标锚点）
+      const edgeDragPreview = (() => {
+        if (!edgeDrag || !pointerPos || !current) return null
+        const dragEdge = (current.edges ?? []).find((item) => item.id === edgeDrag.id)
+        if (!dragEdge) return null
+        const anchorNodeId = edgeDrag.end === 'from' ? dragEdge.from : dragEdge.to
+        const anchorNode = nodesById.get(anchorNodeId)
+        if (!anchorNode) return null
+        const anchorSide = edgeDrag.end === 'from' ? (dragEdge.fromSide ?? 'right') : (dragEdge.toSide ?? 'left')
+        const sourceRect = rectOfNode(anchorNode)
+        const target = pointerSnapTarget
+          ? (() => {
+            const node = nodesById.get(pointerSnapTarget.nodeId)
+            if (!node) return { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
+            const anchor = anchorPoint(rectOfNode(node), pointerSnapTarget.side)
+            return { x: anchor.x, y: anchor.y, w: 0, h: 0 }
+          })()
+          : { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
+        const d = edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, [], 0, 0)
+        return h('path', { className: 'daf-connect-preview', d })
+      })()
 
       const previewPath = connecting && pointerPos && nodesById.get(connecting.nodeId)
         ? h('path', {
@@ -2029,119 +2145,3 @@
               h(Btn, { onClick: () => setMoreOpen((value) => !value), title: t.more, 'aria-expanded': String(Boolean(moreOpen)), 'data-more-toggle': 'true' }, h(Icon, { name: 'more', size: 14 })),
               moreOpen ? moreMenu : null)),
           plan.status === 'awaiting'
-            ? h('div', { className: 'daf-plan daf-glass' },
-              h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' } },
-                h('strong', null, `${t.planAsk}`),
-                h('span', { className: 'daf-muted' }, `${plan.workflowName ?? ''} · ${(plan.steps ?? []).length} ${t.stepsUnit} · ${t.turnLabel} ${plan.turn ?? 1}`),
-                h('span', { className: 'daf-spacer' })),
-              h('div', { className: 'daf-muted' }, t.planHint),
-              plan.mode === 'design'
-                ? h('span', { className: 'daf-tag daf-tag-ai', style: { marginBottom: 4, display: 'inline-block' } }, t.designMode)
-                : null,
-              (plan.warnings ?? []).length > 0
-                ? h('div', { className: 'daf-muted', style: { color: 'var(--dsw-alias-state-warn-primary)' } },
-                  `${t.planWarnings}: ${(plan.warnings ?? []).slice(0, 3).map((warning) => warning.message ?? warning.ref ?? '').join('；')}`)
-                : null,
-              experienceCards,
-              plan.turn > 0 && plan.turn % 10 === 0
-                ? h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' } },
-                  h('span', { className: 'daf-muted' }, `${t.experienceHint}（${t.turnLabel} ${plan.turn}）`),
-                  h(Btn, { onClick: () => void saveExperience(), disabled: busy }, t.experienceSave))
-                : null,
-              h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-                h(Btn, { variant: 'primary', onClick: () => resolvePlanNow('confirm', true) }, t.planConfirm),
-                h(Btn, { onClick: loadPlanWorkflow }, t.planAdjust),
-                h(Btn, { onClick: () => void relayoutPlan(), disabled: !current }, t.planRelayout),
-                h(Btn, { onClick: () => resolvePlanNow('skip') }, t.planSkip)))
-            : null,
-          !current
-            ? h('div', { className: 'daf-muted', style: { padding: 12 } }, t.canvasEmpty)
-            : h('div', { className: 'daf-canvas-main', 'data-dev': String(Boolean(showDevPanels)) },
-              h('div', { className: 'daf-surface-wrap', ref: surfaceRef },
-                h('div', {
-                  className: 'daf-surface',
-                  ref: surfaceInnerRef,
-                  style: { transform: `scale(${zoom})` },
-                  onPointerMove: (event) => {
-                    if (!connecting) return
-                    const rect = surfaceInnerRef.current?.getBoundingClientRect()
-                    if (!rect) return
-                    setPointerPos({ x: (event.clientX - rect.left) / zoom, y: (event.clientY - rect.top) / zoom })
-                  },
-                  onPointerUp: () => {
-                    if (!connecting) return
-                    if (Date.now() - lastConnectRef.current < 80) {
-                      setConnecting(null)
-                      setPointerPos(null)
-                      return
-                    }
-                    const point = pointerPos
-                    if (point) {
-                      // 落点必须是锚点：未落在任何锚点半径内就不建立连线（矩形不是吸附目标）。
-                      let best = null
-                      for (const node of current?.nodes ?? []) {
-                        if (node.id === connecting.nodeId) continue
-                        const hit = nearestAnchor(rectOfNode(node), point, ANCHOR_SNAP_PX / (zoom || 1))
-                        if (hit && (!best || hit.distance < best.distance)) best = { nodeId: node.id, side: hit.side, distance: hit.distance }
-                      }
-                      if (best) {
-                        completeConnection(best.nodeId, point, best.side)
-                        return
-                      }
-                    }
-                    setConnecting(null)
-                    setPointerPos(null)
-                  },
-                },
-                  h('svg', { className: 'daf-edges' },
-                    h('defs', null,
-                      h('marker', {
-                        id: 'daf-arrow',
-                        viewBox: '0 0 8 8',
-                        refX: 7,
-                        refY: 4,
-                        markerWidth: 6,
-                        markerHeight: 6,
-                        orient: 'auto-start-reverse',
-                      }, h('path', { d: 'M0,0 L8,4 L0,8 z', fill: 'var(--dsw-alias-brand-primary)' }))),
-                    edgesView,
-                    previewPath),
-                  selectedEdgeView,
-                  (diff?.removed ?? []).map((ghost) => h('div', {
-                    key: `ghost:${ghost.id}`,
-                    className: 'daf-node daf-node-ghost daf-glass',
-                    style: { transform: `translate3d(${ghost.x}px, ${ghost.y}px, 0)` },
-                    title: `${t.diffRemoved}: ${ghost.title}`,
-                  }, h('span', { className: 'daf-node-ghost-title' }, ghost.title))),
-                  phaseFramesView,
-                  nodesView))),
-              h('div', { className: 'daf-legend-box' },
-                h('span', { className: 'daf-legend-item' },
-                  h('span', { className: 'daf-legend-swatch', style: { borderTop: '2px dashed var(--dsw-alias-border-l2)', height: 0 } }),
-                  t.legendSeq),
-                h('span', { className: 'daf-legend-item' },
-                  h('span', { className: 'daf-legend-swatch', style: { borderTop: '2px solid var(--dsw-alias-brand-primary)', height: 0 } }),
-                  t.legendDep),
-                pinnedCount > 0 ? h('span', { className: 'daf-legend-item', title: t.layoutPinned }, `${pinnedCount}`) : null,
-                diff
-                  ? h('span', { className: 'daf-legend-item' }, `+${diff.added.size} / -${diff.removed.length} / ~${diff.moved.size}`)
-                  : null),
-              h('div', { className: 'daf-thumb', 'aria-hidden': 'true' },
-                (() => {
-                  const bounds = contentBounds()
-                  const scale = Math.min(124 / bounds.w, 84 / bounds.h)
-                  return (current?.nodes ?? []).map((node) => h('span', {
-                    key: `thumb:${node.id}`,
-                    style: {
-                      position: 'absolute',
-                      left: (node.pos.x - bounds.x) * scale + 4,
-                      top: (node.pos.y - bounds.y) * scale + 4,
-                      width: Math.max(3, NODE_WIDTH * scale),
-                      height: Math.max(2, NODE_HEIGHT * scale),
-                      borderRadius: 2,
-                      background: statusOf(node.id) === 'running'
-                        ? 'var(--dsw-alias-brand-primary)'
-                        : statusOf(node.id) === 'succeeded'
-                          ? 'var(--dsw-alias-state-success-primary)'
-                          : statusOf(node.id) === 'failed'
-                            ? 'var(--dsw-alias-state-error-primary)'

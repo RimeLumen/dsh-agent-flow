@@ -1,4 +1,121 @@
 /* @client-shard: 09-entry */
+            ? h('div', { className: 'daf-plan daf-glass' },
+              h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' } },
+                h('strong', null, `${t.planAsk}`),
+                h('span', { className: 'daf-muted' }, `${plan.workflowName ?? ''} · ${(plan.steps ?? []).length} ${t.stepsUnit} · ${t.turnLabel} ${plan.turn ?? 1}`),
+                h('span', { className: 'daf-spacer' })),
+              h('div', { className: 'daf-muted' }, t.planHint),
+              plan.mode === 'design'
+                ? h('span', { className: 'daf-tag daf-tag-ai', style: { marginBottom: 4, display: 'inline-block' } }, t.designMode)
+                : null,
+              (plan.warnings ?? []).length > 0
+                ? h('div', { className: 'daf-muted', style: { color: 'var(--dsw-alias-state-warn-primary)' } },
+                  `${t.planWarnings}: ${(plan.warnings ?? []).slice(0, 3).map((warning) => warning.message ?? warning.ref ?? '').join('；')}`)
+                : null,
+              experienceCards,
+              plan.turn > 0 && plan.turn % 10 === 0
+                ? h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' } },
+                  h('span', { className: 'daf-muted' }, `${t.experienceHint}（${t.turnLabel} ${plan.turn}）`),
+                  h(Btn, { onClick: () => void saveExperience(), disabled: busy }, t.experienceSave))
+                : null,
+              h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                h(Btn, { variant: 'primary', onClick: () => resolvePlanNow('confirm', true) }, t.planConfirm),
+                h(Btn, { onClick: loadPlanWorkflow }, t.planAdjust),
+                h(Btn, { onClick: () => void relayoutPlan(), disabled: !current }, t.planRelayout),
+                h(Btn, { onClick: () => resolvePlanNow('skip') }, t.planSkip)))
+            : null,
+          !current
+            ? h('div', { className: 'daf-muted', style: { padding: 12 } }, t.canvasEmpty)
+            : h('div', { className: 'daf-canvas-main', 'data-dev': String(Boolean(showDevPanels)) },
+              h('div', { className: 'daf-surface-wrap', ref: surfaceRef },
+                h('div', {
+                  className: 'daf-surface',
+                  ref: surfaceInnerRef,
+                  style: { transform: `scale(${zoom})` },
+                  onPointerMove: (event) => {
+                    if (!connecting) return
+                    const rect = surfaceInnerRef.current?.getBoundingClientRect()
+                    if (!rect) return
+                    setPointerPos({ x: (event.clientX - rect.left) / zoom, y: (event.clientY - rect.top) / zoom })
+                  },
+                  onPointerUp: () => {
+                    if (!connecting) return
+                    if (Date.now() - lastConnectRef.current < 80) {
+                      setConnecting(null)
+                      setPointerPos(null)
+                      return
+                    }
+                    const point = pointerPos
+                    if (point) {
+                      // 落点必须是锚点：未落在任何锚点半径内就不建立连线（矩形不是吸附目标）。
+                      let best = null
+                      for (const node of current?.nodes ?? []) {
+                        if (node.id === connecting.nodeId) continue
+                        const hit = nearestAnchor(rectOfNode(node), point, ANCHOR_SNAP_PX / (zoom || 1))
+                        if (hit && (!best || hit.distance < best.distance)) best = { nodeId: node.id, side: hit.side, distance: hit.distance }
+                      }
+                      if (best) {
+                        completeConnection(best.nodeId, point, best.side)
+                        return
+                      }
+                    }
+                    setConnecting(null)
+                    setPointerPos(null)
+                  },
+                },
+                  h('svg', { className: 'daf-edges' },
+                    h('defs', null,
+                      h('marker', {
+                        id: 'daf-arrow',
+                        viewBox: '0 0 8 8',
+                        refX: 7,
+                        refY: 4,
+                        markerWidth: 6,
+                        markerHeight: 6,
+                        orient: 'auto-start-reverse',
+                      }, h('path', { d: 'M0,0 L8,4 L0,8 z', fill: 'var(--dsw-alias-brand-primary)' }))),
+                    edgesView,
+                    previewPath,
+                    edgeDragPreview),
+                  selectedEdgeView,
+                  (diff?.removed ?? []).map((ghost) => h('div', {
+                    key: `ghost:${ghost.id}`,
+                    className: 'daf-node daf-node-ghost daf-glass',
+                    style: { transform: `translate3d(${ghost.x}px, ${ghost.y}px, 0)` },
+                    title: `${t.diffRemoved}: ${ghost.title}`,
+                  }, h('span', { className: 'daf-node-ghost-title' }, ghost.title))),
+                  phaseFramesView,
+                  nodesView))),
+              h('div', { className: 'daf-legend-box' },
+                h('span', { className: 'daf-legend-item' },
+                  h('span', { className: 'daf-legend-swatch', style: { borderTop: '2px dashed var(--dsw-alias-border-l2)', height: 0 } }),
+                  t.legendSeq),
+                h('span', { className: 'daf-legend-item' },
+                  h('span', { className: 'daf-legend-swatch', style: { borderTop: '2px solid var(--dsw-alias-brand-primary)', height: 0 } }),
+                  t.legendDep),
+                pinnedCount > 0 ? h('span', { className: 'daf-legend-item', title: t.layoutPinned }, `${pinnedCount}`) : null,
+                diff
+                  ? h('span', { className: 'daf-legend-item' }, `+${diff.added.size} / -${diff.removed.length} / ~${diff.moved.size}`)
+                  : null),
+              h('div', { className: 'daf-thumb', 'aria-hidden': 'true' },
+                (() => {
+                  const bounds = contentBounds()
+                  const scale = Math.min(124 / bounds.w, 84 / bounds.h)
+                  return (current?.nodes ?? []).map((node) => h('span', {
+                    key: `thumb:${node.id}`,
+                    style: {
+                      position: 'absolute',
+                      left: (node.pos.x - bounds.x) * scale + 4,
+                      top: (node.pos.y - bounds.y) * scale + 4,
+                      width: Math.max(3, NODE_WIDTH * scale),
+                      height: Math.max(2, NODE_HEIGHT * scale),
+                      borderRadius: 2,
+                      background: statusOf(node.id) === 'running'
+                        ? 'var(--dsw-alias-brand-primary)'
+                        : statusOf(node.id) === 'succeeded'
+                          ? 'var(--dsw-alias-state-success-primary)'
+                          : statusOf(node.id) === 'failed'
+                            ? 'var(--dsw-alias-state-error-primary)'
                             : 'var(--dsw-alias-border-l2)',
                       opacity: 0.9,
                     },

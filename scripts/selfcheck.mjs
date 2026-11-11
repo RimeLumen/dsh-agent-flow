@@ -222,7 +222,7 @@ function check(section, label, ok, extra) {
     const { EDGE_SIDES, anchorPoint, nearestAnchor } = fn()
     const rect = { x: 0, y: 0, w: 220, h: 96 }
     const R = 16
-    check(section, '锚点集为 16 个', EDGE_SIDES.length === 16, String(EDGE_SIDES.length))
+    check(section, '锚点集为 8 个', EDGE_SIDES.length === 8, String(EDGE_SIDES.length))
 
     const right = anchorPoint(rect, 'right')
     check(section, '正落在 right 锚点上 → 命中 right', nearestAnchor(rect, right, R)?.side === 'right')
@@ -288,9 +288,9 @@ function check(section, label, ok, extra) {
   const hostSides = sidesFrom(hostModel)
   check(section, '端口集两边一致且同序', clientSides.length > 0 && clientSides.join(',') === hostSides.join(','),
     clientSides.length + ' vs ' + hostSides.length)
-  check(section, '端口集为 16 项', clientSides.length === 16, String(clientSides.length))
+  check(section, '端口集为 8 项（四正 + 四角）', clientSides.length === 8, String(clientSides.length))
   check(section, '端口集含四角锚点', ['top-left', 'top-right', 'bottom-left', 'bottom-right'].every((s) => clientSides.includes(s)))
-  check(section, '端口集含四象限锚点', ['top-q1', 'top-q3', 'right-q1', 'right-q3', 'bottom-q1', 'bottom-q3', 'left-q1', 'left-q3'].every((s) => clientSides.includes(s)))
+  check(section, '象限锚点已移除', !['top-q1', 'right-q1', 'bottom-q1', 'left-q1'].some((s) => clientSides.includes(s)))
 }
 
 // ── 5d. 接线完整性（声明了就必须真的接上）──

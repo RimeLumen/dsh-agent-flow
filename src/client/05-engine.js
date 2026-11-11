@@ -145,7 +145,7 @@
 
     const EDGE_SIDES = [
       'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left',
-      'top-q1', 'top-q3', 'right-q1', 'right-q3', 'bottom-q1', 'bottom-q3', 'left-q1', 'left-q3',
+
     ]
     const FACE_OF = (side) => {
       const s = String(side || '')
