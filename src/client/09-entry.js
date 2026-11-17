@@ -66,6 +66,7 @@
                     setPointerPos(null)
                   },
                 },
+                  laneBandsView,
                   h('svg', { className: 'daf-edges' },
                     h('defs', null,
                       h('marker', {

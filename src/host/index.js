@@ -177,8 +177,54 @@ export function apply(ctx, config) {
     }
   }
 
+  // 子代理画布继承（用户指令②）：子代理（session.parentSession 有值）创建时，
+  // 复制父会话最新活动画布为子会话画布（origin='inherit'，lanes.main=父级快照）。
+  // 子代理后续 flow_plan 的产出由 plan.js 的追加分支写进 sub 泳道，父级节点永保留。
+  const inheritParentCanvas = (agent) => {
+    try {
+      const sessionId = agent?.id ?? ''
+      const parentSessionId = agent?.session?.parentSession ?? null
+      if (!sessionId || !parentSessionId) return
+      if (store.state.workflows.some((item) => item.sessionId === sessionId && !item.archivedAt)) return
+      const parent = [...store.state.workflows].reverse().find((item) => item.sessionId === parentSessionId && !item.archivedAt)
+      if (!parent) return
+      const makeId = () => `n_${Math.random().toString(36).slice(2, 8)}`
+      const workflow = normalizeWorkflow({
+        ...JSON.parse(JSON.stringify(parent)),
+        id: `wf_${Math.random().toString(36).slice(2, 10)}`,
+        sessionId,
+        origin: 'inherit',
+        inheritedFrom: parentSessionId,
+        archivedAt: undefined,
+        updatedAt: undefined,
+      })
+      const idMap = new Map()
+      for (const node of workflow.nodes) {
+        const nextId = makeId()
+        idMap.set(node.id, nextId)
+        node.id = nextId
+      }
+      workflow.entry = idMap.get(parent.entry) ?? workflow.nodes[0]?.id ?? ''
+      for (const edge of workflow.edges) {
+        edge.from = idMap.get(edge.from) ?? edge.from
+        edge.to = idMap.get(edge.to) ?? edge.to
+        edge.id = `e_${edge.from}_${edge.to}`
+      }
+      workflow.lanes = [{ id: 'main', label: '父级', nodeIds: workflow.nodes.map((node) => node.id) }]
+      void store.mutate((state) => {
+        if (!state.workflows.some((item) => item.sessionId === sessionId)) state.workflows.push(workflow)
+      }).catch((error) => {
+        log(`inherit canvas was not persisted: ${error instanceof Error ? error.message : String(error)}`)
+      })
+      log(`inherit canvas for subagent ${sessionId.slice(-6)} from ${parentSessionId.slice(-6)} (${workflow.nodes.length} nodes)`)
+    } catch (error) {
+      log(`inherit canvas failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
   ctx.on('agent/created', (payload) => {
     registerPlanFirst(payload?.agent)
+    inheritParentCanvas(payload?.agent)
   })
 
   // 插件自主拆解（Q1/Q4）：用户消息进入 inbox 时，插件自己把提示词拆成阶段+子任务，

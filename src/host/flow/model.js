@@ -199,6 +199,19 @@ export function normalizeWorkflow(input, options = {}) {
     sessionId: typeof input.sessionId === 'string' && input.sessionId !== '' ? input.sessionId.slice(0, 120) : undefined,
     archivedAt: typeof input.archivedAt === 'string' && input.archivedAt !== '' ? input.archivedAt.slice(0, 40) : undefined,
     origin: typeof input.origin === 'string' && input.origin !== '' ? input.origin.slice(0, 40) : 'user',
+    // 子代理画布继承：来源父会话 id（origin='inherit' 时有值）。
+    inheritedFrom: typeof input.inheritedFrom === 'string' && input.inheritedFrom !== '' ? input.inheritedFrom.slice(0, 120) : undefined,
+    // 泳道：[{ id, label, nodeIds }]。渲染按 nodeIds 包围盒画背景条，辨别节点归属。
+    lanes: Array.isArray(input.lanes)
+      ? input.lanes
+        .filter((lane) => lane && typeof lane === 'object' && typeof lane.id === 'string' && lane.id !== '')
+        .slice(0, 4)
+        .map((lane) => ({
+          id: lane.id.slice(0, 40),
+          label: typeof lane.label === 'string' && lane.label !== '' ? lane.label.slice(0, 60) : lane.id,
+          nodeIds: Array.isArray(lane.nodeIds) ? lane.nodeIds.filter((id) => typeof id === 'string' && id !== '').slice(0, 500) : [],
+        }))
+      : undefined,
     updatedAt: new Date().toISOString(),
   }
 }

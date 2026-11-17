@@ -586,6 +586,25 @@
         }
       }
 
+      // 手动合并（用户指令①）：把选中的 ≥2 个流程串成一张新画布；源画布保留。
+      const mergeFlows = async (ids) => {
+        if (!Array.isArray(ids) || ids.length < 2) {
+          setNotice(t.mergeNeedTwo)
+          return
+        }
+        try {
+          const result = await api.mergeWorkflows(ids)
+          await loadFlows(true)
+          if (result?.workflow) {
+            setCurrent(result.workflow)
+            setSelectedId(result.workflow.id)
+          }
+          setNotice(t.mergeDone)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
+
       useEffect(() => {
         let closed = false
         const tick = async () => {
@@ -1039,7 +1058,7 @@
               flows, current, sessionId, t, h, Icon, Btn,
               pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
               flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
-              showArchived, setShowArchived, batchOperation,
+              showArchived, setShowArchived, batchOperation, mergeFlows,
             }))
         : null
 
@@ -1978,6 +1997,37 @@
         setTourIndex(next)
         if (next >= 0) focusNode(tourStops[next])
       }, [tourStops, focusNode])
+
+      // 泳道背景带（用户指令②）：按 lanes.nodeIds 包围盒画条带，辨别节点归属。
+      // main 泳道不画（保持画布干净），只画 sub 等附加泳道。
+      const laneBandsView = (() => {
+        const lanes = Array.isArray(current?.lanes) ? current.lanes : []
+        const all = current?.nodes ?? []
+        const bands = []
+        for (const lane of lanes) {
+          if (lane.id === 'main') continue
+          const memberSet = new Set(Array.isArray(lane.nodeIds) ? lane.nodeIds : [])
+          const members = all.filter((node) => memberSet.has(node.id))
+          if (members.length === 0) continue
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          for (const member of members) {
+            const rect = rectOf(member)
+            minX = Math.min(minX, rect.x); minY = Math.min(minY, rect.y)
+            maxX = Math.max(maxX, rect.x + rect.w); maxY = Math.max(maxY, rect.y + rect.h)
+          }
+          const PAD = 26
+          bands.push(h('div', {
+            key: 'laneband:' + lane.id,
+            className: 'daf-lane-band',
+            style: {
+              transform: 'translate3d(' + (minX - PAD) + 'px, ' + (minY - PAD) + 'px, 0)',
+              width: (maxX - minX + PAD * 2) + 'px',
+              height: (maxY - minY + PAD * 2) + 'px',
+            },
+          }, h('span', { className: 'daf-lane-band-label' }, lane.label)))
+        }
+        return bands.length > 0 ? bands : null
+      })()
 
       // 阶段容器框。
       // 把阶段节点与其子节点一起框起来，阶段节点就是框内的标题。

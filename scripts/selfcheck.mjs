@@ -25,6 +25,7 @@ const plan = await import(new URL('file://' + join(hostDir, 'plan.js').replace(/
 const compose = await import(new URL('file://' + join(hostDir, 'compose.js').replace(/\\/g, '/')))
 const experience = await import(new URL('file://' + join(hostDir, 'experience.js').replace(/\\/g, '/')))
 const textfit = await import(new URL('file://' + join(hostDir, 'flow', 'textfit.js').replace(/\\/g, '/')))
+const merger = await import(new URL('file://' + join(hostDir, 'flow', 'merge.js').replace(/\\/g, '/')))
 
 let passed = 0
 let failed = 0
@@ -485,6 +486,40 @@ function check(section, label, ok, extra) {
   const big = { experiences: [] }
   for (let i = 0; i < 40; i += 1) experience.autoCaptureExperience(big, makeFlow('批量' + i, i % 3, 'sess' + i), {})
   check(section, '跨任务受全局上限约束', big.experiences.length <= experience.EXPERIENCE_LIMIT, big.experiences.length + ' / ' + experience.EXPERIENCE_LIMIT)
+}
+
+// ── 13. 手动合并 + 子代理泳道（用户指令①②）──
+{
+  const section = 'merge-lane'
+  const sourceA = { id: 'wf_a', name: '流程A', nodes: [
+    { id: 'a1', kind: 'agent.task', title: '任务1', pos: { x: 0, y: 0 } },
+    { id: 'a2', kind: 'tool.call', title: '任务2', pos: { x: 1, y: 1 } },
+  ], edges: [{ id: 'e1', from: 'a1', to: 'a2' }] }
+  const sourceB = { id: 'wf_b', name: '流程B', nodes: [
+    { id: 'b1', kind: 'phase', title: '容器', pos: { x: 0, y: 0 } },
+    { id: 'b2', kind: 'agent.task', title: '子步', phaseId: 'b1', pos: { x: 1, y: 1 } },
+  ], edges: [] }
+  const merged = merger.mergeWorkflows([sourceA, sourceB], { name: '合并测试' })
+  check(section, '两个流程合并成功', Boolean(merged.workflow), merged.error)
+  check(section, '源容器节点被扁平化（不嵌套）', merged.workflow?.nodes.every((n) => n.kind !== 'phase' || merged.workflow.phases.some((p) => p.id === n.id)))
+  check(section, '合并产物无重复边', merged.workflow ? new Set(merged.workflow.edges.map((e) => e.from + '>' + e.to)).size === merged.workflow.edges.length : false)
+  check(section, '合并产物 origin=merge', merged.workflow?.origin === 'merge')
+  check(section, '单流程拒绝合并', merger.mergeWorkflows([sourceA], {}).workflow === null)
+  const lanesWf = model.normalizeWorkflow({
+    name: '带泳道', nodes: [], edges: [], vars: {},
+    inheritedFrom: 'sess-parent',
+    lanes: [{ id: 'main', label: '父级', nodeIds: ['n1'] }, { id: 'sub', label: '子代理', nodeIds: [] }],
+  })
+  check(section, 'lanes 元数据可持久化', Array.isArray(lanesWf.lanes) && lanesWf.lanes.length === 2)
+  check(section, 'inheritedFrom 可持久化', lanesWf.inheritedFrom === 'sess-parent')
+  const lanesHost = readFileSync(join(hostDir, 'index.js'), 'utf8')
+  const lanesPlan = readFileSync(join(hostDir, 'plan.js'), 'utf8')
+  const lanesClient = readFileSync(join(root, 'src', 'client', '08-canvas.js'), 'utf8')
+  const lanesEntry = readFileSync(join(root, 'src', 'client', '09-entry.js'), 'utf8')
+  check(section, '子代理继承监听存在', lanesHost.includes('inheritParentCanvas') && lanesHost.includes('parentSession'))
+  check(section, 'flow_plan 泳道追加分支存在', lanesPlan.includes('publishIntoLane') && lanesPlan.includes("id: 'sub'"))
+  check(section, '泳道背景带渲染存在', lanesClient.includes('laneBandsView') && lanesEntry.includes('laneBandsView'))
+  check(section, 'main 泳道不画背景带', lanesClient.includes("if (lane.id === 'main') continue"))
 }
 
 // ── 汇总 ──

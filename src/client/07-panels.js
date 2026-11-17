@@ -787,7 +787,7 @@
         flows, current, sessionId, t, h: hh, Icon: Ic, Btn: Bt,
         pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
         flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
-        showArchived, setShowArchived, batchOperation,
+        showArchived, setShowArchived, batchOperation, mergeFlows,
       } = props
       const [selectedIds, setSelectedIds] = useState(() => new Set())
       const [batchBusy, setBatchBusy] = useState(false)
@@ -857,6 +857,8 @@
             'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
             'data-archived': flow.archivedAt ? 'true' : undefined,
             'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
+            'data-inherit': flow.origin === 'inherit' ? 'true' : undefined,
+            'data-merge': flow.origin === 'merge' ? 'true' : undefined,
             title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
             onClick: (event) => {
               // 批量模式下点击行 = 切换选中；未在批量模式时点击 = 打开画布
@@ -893,6 +895,10 @@
               inRecycle
                 ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
                 : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
+              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用
+              !inRecycle && selectedIds.size >= 2
+                ? hh(Bt, { onClick: () => void mergeFlows([...selectedIds]), disabled: batchBusy }, t.mergeSelected)
+                : null,
               hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
           : null,
         flows.length === 0

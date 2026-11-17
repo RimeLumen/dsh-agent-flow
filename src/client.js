@@ -156,6 +156,13 @@ window.__ModuleLoader__.load({
         restoreSelected: '复原所选',
         deleteSelected: '删除所选',
         archiveSelected: '归档所选',
+        mergeSelected: '合并所选',
+        mergeDone: '已合并为新流程',
+        mergeNeedTwo: '合并至少需要选择两个流程',
+        laneParent: '父级',
+        laneSub: '子代理',
+        originInherit: '父级延续',
+        originMerge: '合并产物',
         selectFlow: '选择该流程',
         batchDone: '批量操作完成',
         compose: '组合为提示词',
@@ -362,6 +369,13 @@ window.__ModuleLoader__.load({
         restoreSelected: 'Restore selected',
         deleteSelected: 'Delete selected',
         archiveSelected: 'Archive selected',
+        mergeSelected: 'Merge selected',
+        mergeDone: 'Merged into a new flow',
+        mergeNeedTwo: 'Select at least two flows to merge',
+        laneParent: 'Parent',
+        laneSub: 'Subagent',
+        originInherit: 'Inherited from parent',
+        originMerge: 'Merged',
         selectFlow: 'Select this flow',
         batchDone: 'Batch done',
         compose: 'Compose prompt',
@@ -488,6 +502,7 @@ window.__ModuleLoader__.load({
       saveWorkflow: (id, workflow) => request('PUT', `/workflows/${encodeURIComponent(id)}`, { workflow }),
       deleteWorkflow: (id) => request('DELETE', `/workflows/${encodeURIComponent(id)}`),
       batchWorkflows: (action, ids) => request('POST', '/workflows/batch', { action, ids }),
+      mergeWorkflows: (ids, name) => request('POST', '/workflows/merge', { ids, name }),
       archiveWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/archive`),
       restoreWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/restore`),
       experiences: (workspaceId, cwd) => request('GET', `/experiences?workspaceId=${encodeURIComponent(workspaceId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),
@@ -700,6 +715,10 @@ window.__ModuleLoader__.load({
 .daf-chip[data-archived="true"] { opacity: .55; border-style: dashed; }
 .daf-chip[data-draft="true"] { border-style: dotted; border-color: var(--dsw-alias-state-warn-primary); }
 .daf-chip[data-draft="true"]::after { content: "草稿"; font-size: 9px; color: var(--dsw-alias-state-warn-primary); margin-left: 4px; }
+.daf-chip[data-inherit="true"] { border-style: dashed; border-color: var(--dsw-alias-state-info-primary, #4a90d9); }
+.daf-chip[data-inherit="true"]::after { content: "父级延续"; font-size: 9px; color: var(--dsw-alias-state-info-primary, #4a90d9); margin-left: 4px; }
+.daf-chip[data-merge="true"] { border-style: dashed; border-color: var(--dsw-alias-brand-primary); }
+.daf-chip[data-merge="true"]::after { content: "合并"; font-size: 9px; color: var(--dsw-alias-brand-primary); margin-left: 4px; }
 
 .daf-toolbar { gap: 8px; }
 .daf-btn-lg { padding: 6px 14px; font-size: 12.5px; font-weight: 600; }
@@ -1004,6 +1023,12 @@ window.__ModuleLoader__.load({
 .daf-outline-dot[data-st="succeeded"] { background: var(--dsw-alias-state-success-primary); }
 .daf-outline-dot[data-st="failed"] { background: var(--dsw-alias-state-error-primary); }
 /* 阶段容器框 */
+.daf-lane-band { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-state-info-primary, #4a90d9);
+  background: color-mix(in srgb, var(--dsw-alias-state-info-primary, #4a90d9) 6%, transparent);
+  border-radius: 12px; pointer-events: none; z-index: 0; }
+.daf-lane-band-label { position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+  font-size: 11px; color: var(--dsw-alias-state-info-primary, #4a90d9);
+  background: var(--dsw-alias-bg-layer-1); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
 .daf-phase-frame { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-border-l2);
   border-radius: 14px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 35%, transparent);
   pointer-events: none; }
@@ -3181,7 +3206,7 @@ window.__ModuleLoader__.load({
         flows, current, sessionId, t, h: hh, Icon: Ic, Btn: Bt,
         pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
         flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
-        showArchived, setShowArchived, batchOperation,
+        showArchived, setShowArchived, batchOperation, mergeFlows,
       } = props
       const [selectedIds, setSelectedIds] = useState(() => new Set())
       const [batchBusy, setBatchBusy] = useState(false)
@@ -3251,6 +3276,8 @@ window.__ModuleLoader__.load({
             'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
             'data-archived': flow.archivedAt ? 'true' : undefined,
             'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
+            'data-inherit': flow.origin === 'inherit' ? 'true' : undefined,
+            'data-merge': flow.origin === 'merge' ? 'true' : undefined,
             title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
             onClick: (event) => {
               // 批量模式下点击行 = 切换选中；未在批量模式时点击 = 打开画布
@@ -3287,6 +3314,10 @@ window.__ModuleLoader__.load({
               inRecycle
                 ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
                 : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
+              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用
+              !inRecycle && selectedIds.size >= 2
+                ? hh(Bt, { onClick: () => void mergeFlows([...selectedIds]), disabled: batchBusy }, t.mergeSelected)
+                : null,
               hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
           : null,
         flows.length === 0
@@ -4080,6 +4111,25 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // 手动合并（用户指令①）：把选中的 ≥2 个流程串成一张新画布；源画布保留。
+      const mergeFlows = async (ids) => {
+        if (!Array.isArray(ids) || ids.length < 2) {
+          setNotice(t.mergeNeedTwo)
+          return
+        }
+        try {
+          const result = await api.mergeWorkflows(ids)
+          await loadFlows(true)
+          if (result?.workflow) {
+            setCurrent(result.workflow)
+            setSelectedId(result.workflow.id)
+          }
+          setNotice(t.mergeDone)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
+
       useEffect(() => {
         let closed = false
         const tick = async () => {
@@ -4533,7 +4583,7 @@ window.__ModuleLoader__.load({
               flows, current, sessionId, t, h, Icon, Btn,
               pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
               flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
-              showArchived, setShowArchived, batchOperation,
+              showArchived, setShowArchived, batchOperation, mergeFlows,
             }))
         : null
 
@@ -5473,6 +5523,37 @@ window.__ModuleLoader__.load({
         if (next >= 0) focusNode(tourStops[next])
       }, [tourStops, focusNode])
 
+      // 泳道背景带（用户指令②）：按 lanes.nodeIds 包围盒画条带，辨别节点归属。
+      // main 泳道不画（保持画布干净），只画 sub 等附加泳道。
+      const laneBandsView = (() => {
+        const lanes = Array.isArray(current?.lanes) ? current.lanes : []
+        const all = current?.nodes ?? []
+        const bands = []
+        for (const lane of lanes) {
+          if (lane.id === 'main') continue
+          const memberSet = new Set(Array.isArray(lane.nodeIds) ? lane.nodeIds : [])
+          const members = all.filter((node) => memberSet.has(node.id))
+          if (members.length === 0) continue
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          for (const member of members) {
+            const rect = rectOf(member)
+            minX = Math.min(minX, rect.x); minY = Math.min(minY, rect.y)
+            maxX = Math.max(maxX, rect.x + rect.w); maxY = Math.max(maxY, rect.y + rect.h)
+          }
+          const PAD = 26
+          bands.push(h('div', {
+            key: 'laneband:' + lane.id,
+            className: 'daf-lane-band',
+            style: {
+              transform: 'translate3d(' + (minX - PAD) + 'px, ' + (minY - PAD) + 'px, 0)',
+              width: (maxX - minX + PAD * 2) + 'px',
+              height: (maxY - minY + PAD * 2) + 'px',
+            },
+          }, h('span', { className: 'daf-lane-band-label' }, lane.label)))
+        }
+        return bands.length > 0 ? bands : null
+      })()
+
       // 阶段容器框。
       // 把阶段节点与其子节点一起框起来，阶段节点就是框内的标题。
       const phaseFramesView = (() => {
@@ -5706,6 +5787,7 @@ window.__ModuleLoader__.load({
                     setPointerPos(null)
                   },
                 },
+                  laneBandsView,
                   h('svg', { className: 'daf-edges' },
                     h('defs', null,
                       h('marker', {

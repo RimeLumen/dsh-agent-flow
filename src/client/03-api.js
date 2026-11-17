@@ -16,6 +16,7 @@
       saveWorkflow: (id, workflow) => request('PUT', `/workflows/${encodeURIComponent(id)}`, { workflow }),
       deleteWorkflow: (id) => request('DELETE', `/workflows/${encodeURIComponent(id)}`),
       batchWorkflows: (action, ids) => request('POST', '/workflows/batch', { action, ids }),
+      mergeWorkflows: (ids, name) => request('POST', '/workflows/merge', { ids, name }),
       archiveWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/archive`),
       restoreWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/restore`),
       experiences: (workspaceId, cwd) => request('GET', `/experiences?workspaceId=${encodeURIComponent(workspaceId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),

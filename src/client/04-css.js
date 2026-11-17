@@ -17,6 +17,10 @@
 .daf-chip[data-archived="true"] { opacity: .55; border-style: dashed; }
 .daf-chip[data-draft="true"] { border-style: dotted; border-color: var(--dsw-alias-state-warn-primary); }
 .daf-chip[data-draft="true"]::after { content: "草稿"; font-size: 9px; color: var(--dsw-alias-state-warn-primary); margin-left: 4px; }
+.daf-chip[data-inherit="true"] { border-style: dashed; border-color: var(--dsw-alias-state-info-primary, #4a90d9); }
+.daf-chip[data-inherit="true"]::after { content: "父级延续"; font-size: 9px; color: var(--dsw-alias-state-info-primary, #4a90d9); margin-left: 4px; }
+.daf-chip[data-merge="true"] { border-style: dashed; border-color: var(--dsw-alias-brand-primary); }
+.daf-chip[data-merge="true"]::after { content: "合并"; font-size: 9px; color: var(--dsw-alias-brand-primary); margin-left: 4px; }
 
 .daf-toolbar { gap: 8px; }
 .daf-btn-lg { padding: 6px 14px; font-size: 12.5px; font-weight: 600; }
@@ -321,6 +325,12 @@
 .daf-outline-dot[data-st="succeeded"] { background: var(--dsw-alias-state-success-primary); }
 .daf-outline-dot[data-st="failed"] { background: var(--dsw-alias-state-error-primary); }
 /* 阶段容器框 */
+.daf-lane-band { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-state-info-primary, #4a90d9);
+  background: color-mix(in srgb, var(--dsw-alias-state-info-primary, #4a90d9) 6%, transparent);
+  border-radius: 12px; pointer-events: none; z-index: 0; }
+.daf-lane-band-label { position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+  font-size: 11px; color: var(--dsw-alias-state-info-primary, #4a90d9);
+  background: var(--dsw-alias-bg-layer-1); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
 .daf-phase-frame { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-border-l2);
   border-radius: 14px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 35%, transparent);
   pointer-events: none; }

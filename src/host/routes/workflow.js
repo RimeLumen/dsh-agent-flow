@@ -1,6 +1,7 @@
 /*! dsh-agent-flow v0.1.0 | Copyright (c) 2026 RimeLumen | MIT License */
 import { SelectionError } from '../selection.js'
 import { createEmptyWorkflow, normalizeWorkflow, validateWorkflow } from '../flow/model.js'
+import { mergeWorkflows } from '../flow/merge.js'
 import { toMermaid, fromMermaid } from '../mermaid.js'
 import { composePrompt } from '../compose.js'
 import { queryParam, readString, shortId, writeError, writeJson } from './http.js'
@@ -76,6 +77,39 @@ export function workflowRoutes(deps) {
           state.workflows.push(workflow)
         })
         writeJson(res, 200, { workflow })
+      },
+    },
+    {
+      // 手动合并：把 ≥2 个画布按传入顺序串成一张新画布（每个源 = 一个 phase）。
+      // 源画布保留不动；合并产物 origin='merge'。
+      method: 'POST',
+      pattern: '/workflows/merge',
+      handler: async ({ res, body }) => {
+        const ids = (Array.isArray(body?.ids) ? body.ids : [])
+          .filter((id) => typeof id === 'string' && id !== '')
+          .slice(0, 12)
+        if (ids.length < 2) {
+          writeError(res, 400, new SelectionError('validation', '合并至少需要两个流程'))
+          return
+        }
+        const sources = []
+        for (const id of ids) {
+          const workflow = store.state.workflows.find((item) => item.id === id)
+          if (!workflow) {
+            writeError(res, 404, new SelectionError('not-found', `找不到流程 ${id}`))
+            return
+          }
+          sources.push(workflow)
+        }
+        const { workflow, warnings, error } = mergeWorkflows(sources, { sessionId: sources[0]?.sessionId, name: readString(body, 'name') })
+        if (!workflow || error) {
+          writeError(res, 400, new SelectionError('validation', error ?? '合并失败'))
+          return
+        }
+        await store.mutate((state) => {
+          state.workflows.push(workflow)
+        })
+        writeJson(res, 200, { workflow, warnings })
       },
     },
     {
