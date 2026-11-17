@@ -1,4 +1,7 @@
 /* @client-shard: 08-canvas */
+                  : null,
+                h('div', { className: 'daf-col-head' }, h('span', null, t.logs)),
+                h('div', { className: 'daf-log' },
                   (run.logs ?? []).slice(-80).map((line, index) => h('div', {
                     key: `${line.ts}-${index}`,
                     className: 'daf-log-line',
@@ -2142,6 +2145,3 @@
                 h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomFit, onClick: fitToContent, 'aria-label': t.zoomFit }, t.zoomFitLabel),
                 h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomReset, onClick: () => cameraZoom(1, { smooth: true }), 'aria-label': t.zoomReset }, '1:1')),
             h('span', { className: 'daf-flow-cell' },
-              h(Btn, { onClick: () => setMoreOpen((value) => !value), title: t.more, 'aria-expanded': String(Boolean(moreOpen)), 'data-more-toggle': 'true' }, h(Icon, { name: 'more', size: 14 })),
-              moreOpen ? moreMenu : null)),
-          plan.status === 'awaiting'

@@ -1,4 +1,6 @@
 /* @client-shard: 05-engine */
+`
+
     const POLL_MAX = 30000
     const pollDelay = (base, failures) => {
       if (typeof document !== 'undefined' && document.hidden) return POLL_MAX
@@ -762,5 +764,3 @@
         for (const next of out.get(id) ?? []) {
           if (seen.has(next)) continue
           seen.set(next, (seen.get(id) ?? 0) + 1)
-          queue.push(next)
-        }

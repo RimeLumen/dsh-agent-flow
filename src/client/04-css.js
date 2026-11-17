@@ -1,4 +1,6 @@
 /* @client-shard: 04-css */
+    }
+
     const BASE_CSS = `
 .daf-scope, .daf-scope * { box-sizing: border-box; }
 .daf-scope { color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.5; }
@@ -637,5 +639,3 @@
 @media (prefers-reduced-motion: reduce) {
   .daf-node[data-status="running"]::after, .daf-edge-anim, .daf-run-ring, .daf-checkpoint { animation: none !important; }
 }
-`
-

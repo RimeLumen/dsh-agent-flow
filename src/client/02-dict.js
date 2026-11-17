@@ -143,6 +143,7 @@
         selectedCount: '已选',
         restoreSelected: '复原所选',
         deleteSelected: '删除所选',
+        archiveSelected: '归档所选',
         selectFlow: '选择该流程',
         batchDone: '批量操作完成',
         compose: '组合为提示词',
@@ -348,6 +349,7 @@
         selectedCount: 'Selected',
         restoreSelected: 'Restore selected',
         deleteSelected: 'Delete selected',
+        archiveSelected: 'Archive selected',
         selectFlow: 'Select this flow',
         batchDone: 'Batch done',
         compose: 'Compose prompt',
@@ -457,5 +459,3 @@
       if (diagnosticsCache.promise && now - diagnosticsCache.at < 5000) return diagnosticsCache.promise
       diagnosticsCache = { at: now, promise: api.diagnostics() }
       return diagnosticsCache.promise
-    }
-

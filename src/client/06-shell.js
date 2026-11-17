@@ -1,4 +1,6 @@
 /* @client-shard: 06-shell */
+          queue.push(next)
+        }
       }
       return [...workflow.nodes].sort((a, b) => {
         const la = seen.get(a.id) ?? 0
@@ -303,5 +305,3 @@
       return h('button', {
         type: 'button',
         className: 'daf-tri',
-        'data-state': state,
-        role: 'switch',

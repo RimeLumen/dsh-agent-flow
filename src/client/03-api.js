@@ -1,4 +1,6 @@
 /* @client-shard: 03-api */
+    }
+
     const api = {
       catalog: (sessionId, cwd) => request('GET', `/catalog?sessionId=${encodeURIComponent(sessionId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),
       selection: () => request('GET', '/selection'),
@@ -208,5 +210,3 @@
         }
       }, [runId])
       return state
-    }
-

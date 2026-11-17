@@ -1,4 +1,6 @@
 /* @client-shard: 07-panels */
+        'data-state': state,
+        role: 'switch',
         'aria-checked': state === 'all',
         'aria-label': label,
         onClick: (event) => {
@@ -841,15 +843,13 @@
                   : null)
             : null
         return hh('div', { key: flow.id, className: 'daf-flow-row' },
-          inRecycle && Boolean(flow.archivedAt)
-            ? hh('input', {
-              type: 'checkbox',
-              className: 'daf-flow-check',
-              'aria-label': t.selectFlow,
-              checked: selectedIds.has(flow.id),
-              onChange: () => toggleOne(flow.id),
-            })
-            : null,
+          hh('input', {
+            type: 'checkbox',
+            className: 'daf-flow-check',
+            'aria-label': t.selectFlow,
+            checked: selectedIds.has(flow.id),
+            onChange: () => toggleOne(flow.id),
+          }),
           hh('button', {
             type: 'button',
             className: 'daf-chip daf-flow-row-chip',
@@ -858,8 +858,9 @@
             'data-archived': flow.archivedAt ? 'true' : undefined,
             'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
             title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
-            onClick: () => {
-              if (inRecycle && Boolean(flow.archivedAt)) { toggleOne(flow.id); return }
+            onClick: (event) => {
+              // 批量模式下点击行 = 切换选中；未在批量模式时点击 = 打开画布
+              if (selectedIds.size > 0 || event.ctrlKey || event.metaKey || event.shiftKey) { toggleOne(flow.id); return }
               if (flow.id !== current?.id) void pickFlow(flow.id)
             },
             onContextMenu: (event) => {
@@ -883,13 +884,15 @@
             'data-tip': inRecycle ? t.backToList : t.recycleTitle,
             onClick: switchView,
           }, inRecycle ? t.backToList : t.recycleTitle)),
-        inRecycle && selectable.length > 0
+        selectable.length > 0
           ? hh('div', { className: 'daf-batch-bar' },
               hh('button', { type: 'button', className: 'daf-dock-switch', onClick: toggleAll },
                 allSelected ? t.clearSelection : t.selectAll),
               hh('span', { className: 'daf-muted' }, `${t.selectedCount}: ${selectedIds.size}`),
               hh('span', { className: 'daf-spacer' }),
-              hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected),
+              inRecycle
+                ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
+                : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
               hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
           : null,
         flows.length === 0
@@ -1096,6 +1099,3 @@
                         variant: 'primary',
                         onClick: () => control('answer', { nodeId: checkpoint.nodeId, answer: option }),
                       }, option))))
-                  : null,
-                h('div', { className: 'daf-col-head' }, h('span', null, t.logs)),
-                h('div', { className: 'daf-log' },

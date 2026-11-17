@@ -1,4 +1,7 @@
 /* @client-shard: 09-entry */
+              h(Btn, { onClick: () => setMoreOpen((value) => !value), title: t.more, 'aria-expanded': String(Boolean(moreOpen)), 'data-more-toggle': 'true' }, h(Icon, { name: 'more', size: 14 })),
+              moreOpen ? moreMenu : null)),
+          plan.status === 'awaiting'
             ? h('div', { className: 'daf-plan daf-glass' },
               h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' } },
                 h('strong', null, `${t.planAsk}`),
