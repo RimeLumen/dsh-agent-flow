@@ -284,6 +284,8 @@ export function createPlanManager(deps) {
         { id: 'sub', label: '子代理', nodeIds: subLaneIds },
       ]
       live.turn = turn
+      // 追加后节点 pos 是 stepsToWorkflow 的初始值（小范围堆叠），标记客户端重新布局。
+      live.needsLayout = true
       live.updatedAt = new Date().toISOString()
       return live
     })

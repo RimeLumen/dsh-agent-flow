@@ -107,7 +107,15 @@ export function workflowRoutes(deps) {
           return
         }
         await store.mutate((state) => {
-          state.workflows.push(workflow)
+          // 置顶（用户指令）：合并产物插到列表最前；原流程进回收站可复原，
+          // 运行中的源画布不归档（避免打断执行），照常参与合并。
+          state.workflows.unshift(workflow)
+          const now = new Date().toISOString()
+          const mergedIds = new Set(ids)
+          for (const item of state.workflows) {
+            if (!mergedIds.has(item.id) || item.archivedAt) continue
+            if (!activeRun(item.id)) item.archivedAt = item.archivedAt ?? now
+          }
         })
         writeJson(res, 200, { workflow, warnings })
       },

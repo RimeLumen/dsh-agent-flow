@@ -895,9 +895,9 @@
               inRecycle
                 ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
                 : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
-              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用
+              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用；合并后源流程进回收站，清空选择
               !inRecycle && selectedIds.size >= 2
-                ? hh(Bt, { onClick: () => void mergeFlows([...selectedIds]), disabled: batchBusy }, t.mergeSelected)
+                ? hh(Bt, { onClick: () => { const ids = [...selectedIds]; setSelectedIds(new Set()); void mergeFlows(ids) }, disabled: batchBusy }, t.mergeSelected)
                 : null,
               hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
           : null,

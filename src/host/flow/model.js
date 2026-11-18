@@ -201,6 +201,9 @@ export function normalizeWorkflow(input, options = {}) {
     origin: typeof input.origin === 'string' && input.origin !== '' ? input.origin.slice(0, 40) : 'user',
     // 子代理画布继承：来源父会话 id（origin='inherit' 时有值）。
     inheritedFrom: typeof input.inheritedFrom === 'string' && input.inheritedFrom !== '' ? input.inheritedFrom.slice(0, 120) : undefined,
+    // 泳道追加/合并产物标记：宿主不实现布局（布局在客户端），追加/合并后节点 pos
+    // 可能堆叠；客户端加载到 needsLayout===true 的画布时自动跑一次 autoLayout 并清除标记。
+    needsLayout: input.needsLayout === true ? true : undefined,
     // 泳道：[{ id, label, nodeIds }]。渲染按 nodeIds 包围盒画背景条，辨别节点归属。
     lanes: Array.isArray(input.lanes)
       ? input.lanes

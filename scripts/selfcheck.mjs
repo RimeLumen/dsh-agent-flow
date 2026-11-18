@@ -505,6 +505,10 @@ function check(section, label, ok, extra) {
   check(section, '合并产物无重复边', merged.workflow ? new Set(merged.workflow.edges.map((e) => e.from + '>' + e.to)).size === merged.workflow.edges.length : false)
   check(section, '合并产物 origin=merge', merged.workflow?.origin === 'merge')
   check(section, '单流程拒绝合并', merger.mergeWorkflows([sourceA], {}).workflow === null)
+  const mergeRoute = readFileSync(join(hostDir, 'routes', 'workflow.js'), 'utf8')
+  check(section, '合并产物置顶（unshift）', mergeRoute.includes('state.workflows.unshift(workflow)'))
+  check(section, '合并后源画布进回收站', mergeRoute.includes('item.archivedAt = item.archivedAt ?? now'))
+  check(section, '运行中的源画布不归档', mergeRoute.includes('if (!activeRun(item.id)) item.archivedAt'))
   const lanesWf = model.normalizeWorkflow({
     name: '带泳道', nodes: [], edges: [], vars: {},
     inheritedFrom: 'sess-parent',
@@ -520,6 +524,13 @@ function check(section, label, ok, extra) {
   check(section, 'flow_plan 泳道追加分支存在', lanesPlan.includes('publishIntoLane') && lanesPlan.includes("id: 'sub'"))
   check(section, '泳道背景带渲染存在', lanesClient.includes('laneBandsView') && lanesEntry.includes('laneBandsView'))
   check(section, 'main 泳道不画背景带', lanesClient.includes("if (lane.id === 'main') continue"))
+  check(section, 'needsLayout 宿主透传', lanesWf.needsLayout === undefined && model.normalizeWorkflow({ name: 'x', nodes: [], edges: [], vars: {}, needsLayout: true }).needsLayout === true)
+  check(section, '泳道追加打 needsLayout', lanesPlan.includes('live.needsLayout = true'))
+  check(section, '合并产物打 needsLayout', readFileSync(join(hostDir, 'flow', 'merge.js'), 'utf8').includes('needsLayout: true'))
+  check(section, '客户端 adoptWorkflow 消费标记', lanesClient.includes('adoptWorkflow') && lanesClient.includes('needsLayout === true'))
+  const dragCtx = lanesClient
+  check(section, '连线拖拽用内层缩放面坐标（滚动补偿）', !dragCtx.includes('surfaceRef.current.getBoundingClientRect()') && (dragCtx.match(/surfaceInnerRef\.current/g) ?? []).length >= 3)
+  check(section, 'edgeDCached 不再自递归', dragCtx.includes('const d = edgePath(fromRect, toRect, edge, oA, oB)'))
 }
 
 // ── 汇总 ──

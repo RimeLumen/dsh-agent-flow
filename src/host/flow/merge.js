@@ -90,6 +90,8 @@ export function mergeWorkflows(sources, context = {}) {
     name: typeof context.name === 'string' && context.name.trim() !== '' ? context.name.trim().slice(0, 80) : `合并流程 ${new Date().toLocaleString('zh-CN')}`,
     description: `由 ${list.length} 个流程合并：${list.map((item) => item.name ?? '').join(' → ')}`.slice(0, 1000),
     origin: 'merge',
+    // 多个源画布的 pos 空间互相重叠，标记客户端重新布局。
+    needsLayout: true,
     phases,
     entry: nodes[0]?.id ?? '',
     nodes,

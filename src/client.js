@@ -3314,9 +3314,9 @@ window.__ModuleLoader__.load({
               inRecycle
                 ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
                 : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
-              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用
+              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用；合并后源流程进回收站，清空选择
               !inRecycle && selectedIds.size >= 2
-                ? hh(Bt, { onClick: () => void mergeFlows([...selectedIds]), disabled: batchBusy }, t.mergeSelected)
+                ? hh(Bt, { onClick: () => { const ids = [...selectedIds]; setSelectedIds(new Set()); void mergeFlows(ids) }, disabled: batchBusy }, t.mergeSelected)
                 : null,
               hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
           : null,
@@ -3664,7 +3664,7 @@ window.__ModuleLoader__.load({
         try {
           const result = await api.mermaidImport(mermaidText)
           await loadFlows(true)
-          setCurrent(result.workflow)
+          adoptWorkflow(result.workflow)
           setSelectedId(result.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
           const skipped = (result.issues ?? []).length
@@ -3751,7 +3751,7 @@ window.__ModuleLoader__.load({
         if (!plan.workflowId) return
         try {
           const full = await api.workflow(plan.workflowId)
-          setCurrent(full.workflow)
+          adoptWorkflow(full.workflow)
           setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
         } catch (problem) {
@@ -4111,6 +4111,20 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // needsLayout 消费：宿主不做布局（布局只在客户端），泳道追加/合并产物会带
+      // needsLayout 标记；加载到标记画布时自动整理一次并清除标记。
+      // 同一 updatedAt 只布局一次——避免轮询反复重排，用户拖动位置被重置。
+      const laidOutRef = useRef(new Map())
+      const adoptWorkflow = (wf) => {
+        if (!wf) return
+        if (wf.needsLayout === true && laidOutRef.current.get(wf.id) !== wf.updatedAt) {
+          laidOutRef.current.set(wf.id, wf.updatedAt)
+          setCurrent({ ...autoLayout(wf), needsLayout: false })
+          return
+        }
+        setCurrent(wf)
+      }
+
       // 手动合并（用户指令①）：把选中的 ≥2 个流程串成一张新画布；源画布保留。
       const mergeFlows = async (ids) => {
         if (!Array.isArray(ids) || ids.length < 2) {
@@ -4121,7 +4135,7 @@ window.__ModuleLoader__.load({
           const result = await api.mergeWorkflows(ids)
           await loadFlows(true)
           if (result?.workflow) {
-            setCurrent(result.workflow)
+            adoptWorkflow(result.workflow)
             setSelectedId(result.workflow.id)
           }
           setNotice(t.mergeDone)
@@ -4151,7 +4165,7 @@ window.__ModuleLoader__.load({
             if (!target) return
             const full = await api.workflow(target.id)
             if (closed) return
-            setCurrent(full.workflow)
+            adoptWorkflow(full.workflow)
             setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
             setDirty(false)
           } catch {
@@ -4189,7 +4203,7 @@ window.__ModuleLoader__.load({
             const active = sessionIdRef.current
             const preferred = (active ? items.find((item) => item.sessionId === active && !item.archivedAt) : undefined) ?? items[0]
             const full = await api.workflow(preferred.id)
-            setCurrent(full.workflow)
+            adoptWorkflow(full.workflow)
             setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
             setDirty(false)
             setIssues([])
@@ -4208,7 +4222,7 @@ window.__ModuleLoader__.load({
         if (dirty && !window.confirm(t.confirmDiscard)) return
         try {
           const full = await api.workflow(id)
-          setCurrent(full.workflow)
+          adoptWorkflow(full.workflow)
           setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
           setIssues([])
@@ -4853,7 +4867,7 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         if (!edgeDrag) return undefined
         const onMove = (event) => {
-          const el = surfaceRef.current
+          const el = surfaceInnerRef.current
           if (!el) return
           const rect = el.getBoundingClientRect()
           const canvasPoint = {
@@ -4878,7 +4892,7 @@ window.__ModuleLoader__.load({
           setPointerSnapTarget(snap)
         }
         const onUp = (event) => {
-          const el = surfaceRef.current
+          const el = surfaceInnerRef.current
           const rect = el?.getBoundingClientRect()
           if (!el || !rect) { setEdgeDrag(null); return }
           const canvasPoint = {
@@ -4954,7 +4968,9 @@ window.__ModuleLoader__.load({
       const edgeDCached = (fromRect, toRect, edge, oA, oB) => {
         const hit = routeCache.get(edge.id)
         if (typeof hit === 'string') return hit
-        const d = edgeDCached(fromRect, toRect, edge, oA, oB)
+        // 此前写成调用 edgeDCached 自己 → 任何调用即无限递归；缓存 key 相同的前提下
+        // 这里应调用真实的 edgePath 计算并写入缓存。
+        const d = edgePath(fromRect, toRect, edge, oA, oB)
         routeCache.set(edge.id, d)
         return d
       }
@@ -5122,9 +5138,13 @@ window.__ModuleLoader__.load({
               const from = nodesById.get(edge.from)
               const to = nodesById.get(edge.to)
               if (!from || !to) return
+              const dragRect = surfaceInnerRef.current?.getBoundingClientRect()
+              if (!dragRect) return
               const canvasPoint = {
-                x: (event.clientX - surfaceRef.current.getBoundingClientRect().left) / zoom,
-                y: (event.clientY - surfaceRef.current.getBoundingClientRect().top) / zoom,
+                // 用内层缩放面的 rect（含滚动补偿）；外层 wrap 的 rect 会差出 scrollLeft/zoom，
+                // 124% 缩放下偏差数百 px，导致端点判定与 24px 吸附全部失效。
+                x: (event.clientX - dragRect.left) / zoom,
+                y: (event.clientY - dragRect.top) / zoom,
               }
               const dFrom = Math.hypot(canvasPoint.x - (rectOfNode(from).x + rectOfNode(from).w / 2), canvasPoint.y - (rectOfNode(from).y + rectOfNode(from).h / 2))
               const dTo = Math.hypot(canvasPoint.x - (rectOfNode(to).x + rectOfNode(to).w / 2), canvasPoint.y - (rectOfNode(to).y + rectOfNode(to).h / 2))
