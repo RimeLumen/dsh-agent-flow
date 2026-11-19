@@ -1904,12 +1904,12 @@
         const target = pointerSnapTarget
           ? (() => {
             const node = nodesById.get(pointerSnapTarget.nodeId)
+            // 吸附中用真实节点矩形 + 障碍网格：预览与松手提交后的路由效果 1:1（含绕行折线）
             if (!node) return { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
-            const anchor = anchorPoint(rectOfNode(node), pointerSnapTarget.side)
-            return { x: anchor.x, y: anchor.y, w: 0, h: 0 }
+            return rectOfNode(node)
           })()
           : { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
-        const d = edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, [], 0, 0)
+        const d = edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, obstacleGrid, 0, 0)
         return h('path', { className: 'daf-connect-preview', d })
       })()
 

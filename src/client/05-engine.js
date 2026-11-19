@@ -493,6 +493,10 @@
           let polyline = 0
           for (let i = 1; i < route.length; i += 1) polyline += Math.hypot(route[i].x - route[i - 1].x, route[i].y - route[i - 1].y)
           if (polyline / straight <= 2.5) return polylineToPath(route)
+          // 回退前复查：直线若穿节点本体，宁要绕行折线也不要穿模直线（正确性优先于美观）
+          const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))
+          if (!stillBlocked) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
+          return polylineToPath(route)
         }
         return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
       }
