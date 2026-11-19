@@ -389,43 +389,24 @@
     function anchorPoint(rect, side) {
       const midX = rect.x + rect.w / 2
       const midY = rect.y + rect.h / 2
-      const qx1 = rect.x + rect.w * 0.25
-      const qx3 = rect.x + rect.w * 0.75
-      const qy1 = rect.y + rect.h * 0.25
-      const qy3 = rect.y + rect.h * 0.75
       const right = rect.x + rect.w
       const bottom = rect.y + rect.h
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限分支已随 16→8 锚点裁决移除
       switch (side) {
         case 'top':
           return { x: midX, y: rect.y, dir: 'up' }
-        case 'top-q1':
-          return { x: qx1, y: rect.y, dir: 'up' }
-        case 'top-q3':
-          return { x: qx3, y: rect.y, dir: 'up' }
         case 'top-right':
           return { x: right, y: rect.y, dir: 'right' }
         case 'right':
           return { x: right, y: midY, dir: 'right' }
-        case 'right-q1':
-          return { x: right, y: qy1, dir: 'right' }
-        case 'right-q3':
-          return { x: right, y: qy3, dir: 'right' }
         case 'bottom-right':
           return { x: right, y: bottom, dir: 'right' }
         case 'bottom':
           return { x: midX, y: bottom, dir: 'down' }
-        case 'bottom-q1':
-          return { x: qx1, y: bottom, dir: 'down' }
-        case 'bottom-q3':
-          return { x: qx3, y: bottom, dir: 'down' }
         case 'bottom-left':
           return { x: rect.x, y: bottom, dir: 'left' }
         case 'left':
           return { x: rect.x, y: midY, dir: 'left' }
-        case 'left-q1':
-          return { x: rect.x, y: qy1, dir: 'left' }
-        case 'left-q3':
-          return { x: rect.x, y: qy3, dir: 'left' }
         case 'top-left':
         default:
           return { x: rect.x, y: rect.y, dir: 'left' }
@@ -433,22 +414,15 @@
     }
 
     function anchorStyle(side) {
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限位已随 16→8 锚点裁决移除
       const positions = {
         top: { left: '50%', top: -10, transform: 'translateX(-50%)' },
-        'top-q1': { left: '25%', top: -10, transform: 'translateX(-50%)' },
-        'top-q3': { left: '75%', top: -10, transform: 'translateX(-50%)' },
         'top-right': { right: -10, top: -10 },
         right: { right: -10, top: '50%', transform: 'translateY(-50%)' },
-        'right-q1': { right: -10, top: '25%', transform: 'translateY(-50%)' },
-        'right-q3': { right: -10, top: '75%', transform: 'translateY(-50%)' },
         'bottom-right': { right: -10, bottom: -10 },
         bottom: { left: '50%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q1': { left: '25%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q3': { left: '75%', bottom: -10, transform: 'translateX(-50%)' },
         'bottom-left': { left: -10, bottom: -10 },
         left: { left: -10, top: '50%', transform: 'translateY(-50%)' },
-        'left-q1': { left: -10, top: '25%', transform: 'translateY(-50%)' },
-        'left-q3': { left: -10, top: '75%', transform: 'translateY(-50%)' },
         'top-left': { left: -10, top: -10 },
       }
       return positions[side] ?? positions.left

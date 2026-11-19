@@ -531,6 +531,18 @@ function check(section, label, ok, extra) {
   const dragCtx = lanesClient
   check(section, '连线拖拽用内层缩放面坐标（滚动补偿）', !dragCtx.includes('surfaceRef.current.getBoundingClientRect()') && (dragCtx.match(/surfaceInnerRef\.current/g) ?? []).length >= 3)
   check(section, 'edgeDCached 不再自递归', dragCtx.includes('const d = edgePath(fromRect, toRect, edge, oA, oB)'))
+  // 交互重构（P0/P1）：预览=提交、僵死 customPath 移除、缓存接入、Delete 键、半径统一、手势互斥、换锚高亮、容器跟随、死表清理
+  const engineSrc = readFileSync(join(root, 'src', 'client', '05-engine.js'), 'utf8')
+  const dictSrc = readFileSync(join(root, 'src', 'client', '02-dict.js'), 'utf8')
+  check(section, '新建连线松手采用吸附面（预览=提交）', dragCtx.includes('completeConnection(node.id, pointerPos, previewSnap?.nodeId === node.id ? previewSnap.side : null)'))
+  check(section, '松手建线不再写 customPath', dragCtx.includes('customPath: undefined,') && !dragCtx.includes('controlOf'))
+  check(section, '路由缓存接入主渲染', dragCtx.includes('edgeDCached(fromRect, toRect, edge, obstacleGrid,'))
+  check(section, 'Delete 键删除选中边', dragCtx.includes("event.key === 'Delete'") && dictSrc.includes('删除这条连线'))
+  check(section, '抓取半径统一屏幕感知', (dragCtx.match(/24 \/ \(zoom \|\| 1\)/g) ?? []).length >= 2)
+  check(section, '节点与边拖拽只响应左键', (dragCtx.match(/if \(event\.button !== 0\) return/g) ?? []).length >= 2)
+  check(section, '换锚拖拽接入锚点高亮', dragCtx.includes('pointerSnapTarget.nodeId === node.id && pointerSnapTarget.side === side'))
+  check(section, '组容器拖动带未钉住子节点', dragCtx.includes("childIds?.has(item.id) && item.pos?.pinned !== true"))
+  check(section, 'anchorStyle 死位置表已清理', !engineSrc.includes("'top-q1'") && engineSrc.includes("8 锚点（EDGE_SIDES 同源）"))
 }
 
 // ── 汇总 ──

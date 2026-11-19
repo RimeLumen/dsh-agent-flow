@@ -95,7 +95,7 @@ window.__ModuleLoader__.load({
         targetSubagent: '子代理',
         dangerousAllowed: '危险已允许',
         confirmDiscard: '有未保存的改动，切换后丢失。继续？',
-        deleteEdge: '双击删除这条连线',
+        deleteEdge: '删除这条连线',
         setEntry: '设为起点',
         vars: '变量',
         errorBadge: '错误',
@@ -308,7 +308,7 @@ window.__ModuleLoader__.load({
         targetSubagent: 'subagent',
         dangerousAllowed: 'dangerous allowed',
         confirmDiscard: 'Unsaved changes will be lost. Continue?',
-        deleteEdge: 'Double-click to delete this edge',
+        deleteEdge: 'Delete this edge',
         setEntry: 'Set as entry',
         vars: 'Vars',
         errorBadge: 'error',
@@ -1737,43 +1737,24 @@ window.__ModuleLoader__.load({
     function anchorPoint(rect, side) {
       const midX = rect.x + rect.w / 2
       const midY = rect.y + rect.h / 2
-      const qx1 = rect.x + rect.w * 0.25
-      const qx3 = rect.x + rect.w * 0.75
-      const qy1 = rect.y + rect.h * 0.25
-      const qy3 = rect.y + rect.h * 0.75
       const right = rect.x + rect.w
       const bottom = rect.y + rect.h
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限分支已随 16→8 锚点裁决移除
       switch (side) {
         case 'top':
           return { x: midX, y: rect.y, dir: 'up' }
-        case 'top-q1':
-          return { x: qx1, y: rect.y, dir: 'up' }
-        case 'top-q3':
-          return { x: qx3, y: rect.y, dir: 'up' }
         case 'top-right':
           return { x: right, y: rect.y, dir: 'right' }
         case 'right':
           return { x: right, y: midY, dir: 'right' }
-        case 'right-q1':
-          return { x: right, y: qy1, dir: 'right' }
-        case 'right-q3':
-          return { x: right, y: qy3, dir: 'right' }
         case 'bottom-right':
           return { x: right, y: bottom, dir: 'right' }
         case 'bottom':
           return { x: midX, y: bottom, dir: 'down' }
-        case 'bottom-q1':
-          return { x: qx1, y: bottom, dir: 'down' }
-        case 'bottom-q3':
-          return { x: qx3, y: bottom, dir: 'down' }
         case 'bottom-left':
           return { x: rect.x, y: bottom, dir: 'left' }
         case 'left':
           return { x: rect.x, y: midY, dir: 'left' }
-        case 'left-q1':
-          return { x: rect.x, y: qy1, dir: 'left' }
-        case 'left-q3':
-          return { x: rect.x, y: qy3, dir: 'left' }
         case 'top-left':
         default:
           return { x: rect.x, y: rect.y, dir: 'left' }
@@ -1781,22 +1762,15 @@ window.__ModuleLoader__.load({
     }
 
     function anchorStyle(side) {
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限位已随 16→8 锚点裁决移除
       const positions = {
         top: { left: '50%', top: -10, transform: 'translateX(-50%)' },
-        'top-q1': { left: '25%', top: -10, transform: 'translateX(-50%)' },
-        'top-q3': { left: '75%', top: -10, transform: 'translateX(-50%)' },
         'top-right': { right: -10, top: -10 },
         right: { right: -10, top: '50%', transform: 'translateY(-50%)' },
-        'right-q1': { right: -10, top: '25%', transform: 'translateY(-50%)' },
-        'right-q3': { right: -10, top: '75%', transform: 'translateY(-50%)' },
         'bottom-right': { right: -10, bottom: -10 },
         bottom: { left: '50%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q1': { left: '25%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q3': { left: '75%', bottom: -10, transform: 'translateX(-50%)' },
         'bottom-left': { left: -10, bottom: -10 },
         left: { left: -10, top: '50%', transform: 'translateY(-50%)' },
-        'left-q1': { left: -10, top: '25%', transform: 'translateY(-50%)' },
-        'left-q3': { left: -10, top: '75%', transform: 'translateY(-50%)' },
         'top-left': { left: -10, top: -10 },
       }
       return positions[side] ?? positions.left
@@ -4010,6 +3984,17 @@ window.__ModuleLoader__.load({
             setPointerPos(null)
             return
           }
+          // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
+          const keyTag = event.target?.tagName
+          if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId && keyTag !== 'INPUT' && keyTag !== 'TEXTAREA') {
+            event.preventDefault()
+            mutate((wf) => {
+              wf.edges = wf.edges.filter((item) => item.id !== selectedEdgeId)
+              return wf
+            })
+            setSelectedEdgeId(null)
+            return
+          }
           if (!(event.ctrlKey || event.metaKey)) return
           if (event.key === '0') {
             event.preventDefault()
@@ -4035,7 +4020,7 @@ window.__ModuleLoader__.load({
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-      }, [connecting, fitToContent, cameraZoom, zoom, current, frameNodes, tourStops, tourIndex])
+      }, [connecting, fitToContent, cameraZoom, zoom, current, frameNodes, tourStops, tourIndex, selectedEdgeId])
 
       useEffect(() => {
         if (!flowMenu) return undefined
@@ -4691,7 +4676,18 @@ window.__ModuleLoader__.load({
             if (!prev) return prev
             const node = prev.nodes.find((item) => item.id === drag.id)
             if (!node) return prev
-            return { ...prev, nodes: prev.nodes.map((item) => (item.id === drag.id ? { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(drag.x + dx)), y: Math.max(0, Math.round(drag.y + dy)), pinned: true } } : item)) }
+            // 组容器（group.steps/phase）拖动时未钉住的子节点跟随位移，保持「框住孩子」语义
+            const isContainer = node.kind === 'group.steps' || node.kind === 'phase'
+            const childIds = isContainer
+              ? new Set(prev.nodes.filter((item) => item.parentId === drag.id || item.phaseId === drag.id).map((item) => item.id))
+              : null
+            return { ...prev, nodes: prev.nodes.map((item) => {
+              if (item.id === drag.id) return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(drag.x + dx)), y: Math.max(0, Math.round(drag.y + dy)), pinned: true } }
+              if (childIds?.has(item.id) && item.pos?.pinned !== true) {
+                return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(item.pos.x + dx)), y: Math.max(0, Math.round(item.pos.y + dy)) } }
+              }
+              return item
+            }) }
           })
           setDirty(true)
         }
@@ -4783,15 +4779,6 @@ window.__ModuleLoader__.load({
             const used = new Set(wf.edges.map((edge) => Number(edge.color)).filter((value) => Number.isFinite(value)))
             let color = 0
             while (used.has(color) && color < EDGE_PALETTE_SIZE - 1) color += 1
-            const aFrom = anchorPoint(rectOfNode(source), fromSide)
-            const reach = Math.max(40, Math.min(160, Math.hypot((pointer?.x ?? aFrom.x) - aFrom.x, (pointer?.y ?? aFrom.y) - aFrom.y) * 0.45))
-            const controlOf = (point, direction) => {
-              if (direction === 'right') return { x: point.x + reach, y: point.y }
-              if (direction === 'left') return { x: point.x - reach, y: point.y }
-              if (direction === 'up') return { x: point.x, y: point.y - reach }
-              return { x: point.x, y: point.y + reach }
-            }
-            const bTarget = anchorPoint(rectOfNode(target), toSide)
             wf.edges.push({
               id: `e_${connecting.nodeId}_${targetId}_${Math.random().toString(36).slice(2, 6)}`,
               from: connecting.nodeId,
@@ -4800,7 +4787,9 @@ window.__ModuleLoader__.load({
               fromSide,
               toSide,
               color,
-              customPath: pointer ? { c1: controlOf(aFrom, fromSide), c2: controlOf(bTarget, toSide) } : undefined,
+              // 不再写 customPath（绝对坐标控制点在节点移动后僵死不重算）——
+              // 曲线一律走 edgePath 实时路由；自定义造型未来用「拖中点」实现。
+              customPath: undefined,
             })
           }
           return wf
@@ -4875,7 +4864,8 @@ window.__ModuleLoader__.load({
             y: (event.clientY - rect.top) / zoom,
           }
           setPointerPos(canvasPoint)
-          // 预览吸附目标：靠近节点（24px 邻域）即取其最近锚点
+          // 预览吸附目标：靠近节点（抓取半径 24 屏幕px，除 zoom 换算逻辑距离，缩放下手感一致）
+          const grabRadius = 24 / (zoom || 1)
           const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
           const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
           let snap = null
@@ -4885,7 +4875,7 @@ window.__ModuleLoader__.load({
             const dx = Math.max(nodeRect.x - canvasPoint.x, 0, canvasPoint.x - (nodeRect.x + nodeRect.w))
             const dy = Math.max(nodeRect.y - canvasPoint.y, 0, canvasPoint.y - (nodeRect.y + nodeRect.h))
             const distance = Math.hypot(dx, dy)
-            if (distance > 24) continue
+            if (distance > grabRadius) continue
             const anchor = nearestAnchor(nodeRect, canvasPoint, Infinity)
             if (anchor && (!snap || distance < snap.distance)) snap = { nodeId: node.id, side: anchor.side, distance }
           }
@@ -4899,6 +4889,7 @@ window.__ModuleLoader__.load({
             x: (event.clientX - rect.left) / zoom,
             y: (event.clientY - rect.top) / zoom,
           }
+          const grabRadius = 24 / (zoom || 1)
           // 吸附判定：靠近节点（矩形 24px 邻域内最近者）即绑定——不必精确点中锚点，
           // 锚点自动取该节点上离指针最近的一面。固定端自身的节点不参与。
           const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
@@ -4910,7 +4901,7 @@ window.__ModuleLoader__.load({
             const dx = Math.max(rect.x - canvasPoint.x, 0, canvasPoint.x - (rect.x + rect.w))
             const dy = Math.max(rect.y - canvasPoint.y, 0, canvasPoint.y - (rect.y + rect.h))
             const distance = Math.hypot(dx, dy)
-            if (distance > 24) continue
+            if (distance > grabRadius) continue
             const anchor = nearestAnchor(rect, canvasPoint, Infinity)
             if (anchor && (!best || distance < best.distance)) best = { nodeId: node.id, side: anchor.side, distance }
           }
@@ -5097,7 +5088,8 @@ window.__ModuleLoader__.load({
         const toRect = rectOfNode(to)
         const fk = `${edge.from}|${edge.fromSide ?? 'right'}`
         const tk = `${edge.to}|${edge.toSide ?? 'left'}`
-        const d = edgePath(fromRect, toRect, edge, obstacleGrid,
+        // 路由缓存接入：同一边在同画布内只算一次（缓存随 current 引用失效）
+        const d = edgeDCached(fromRect, toRect, edge, obstacleGrid,
           (fromLaneTotal.get(fk) ?? 1) > 1 ? ((fromLaneSeen.get(fk) ?? 0) - ((fromLaneTotal.get(fk) ?? 1) - 1) / 2) * 8 : 0,
           (toLaneTotal.get(tk) ?? 1) > 1 ? ((toLaneSeen.get(tk) ?? 0) - ((toLaneTotal.get(tk) ?? 1) - 1) / 2) * 8 : 0)
         fromLaneSeen.set(fk, (fromLaneSeen.get(fk) ?? 0) + 1)
@@ -5132,6 +5124,8 @@ window.__ModuleLoader__.load({
             },
             onPointerDown: (event) => {
               // 连线拖动：按下即判定拖哪一端（距两端锚点近者被拖动）。
+              // 只响应左键：右键交给 onContextMenu 开菜单（手势互斥）
+              if (event.button !== 0) return
               event.preventDefault()
               event.stopPropagation()
               suppressEdgeClickRef.current = Date.now()
@@ -5271,12 +5265,15 @@ window.__ModuleLoader__.load({
           onPointerDown: (event) => {
             // 起点只能从锚点按钮发起（见下面的 .daf-anchor 渲染）。
             // 节点矩形体一律用于拖动——矩形不再是起线区域。
+            // 只响应左键：中键留给画布平移，右键留给上下文菜单（手势互斥）
+            if (event.button !== 0) return
             if (event.target.closest('.daf-anchor') || event.target.closest('.daf-port') || event.target.closest('button')) return
             dragRef.current = { id: node.id, px: event.clientX, py: event.clientY, x: node.pos.x, y: node.pos.y, zoom }
             setSelectedId(node.id)
           },
           onPointerUp: () => {
-            if (connecting) completeConnection(node.id, pointerPos)
+            // 预览=提交：吸附高亮承诺的面必须与实际绑定面一致；未吸附时才退回方向推算
+            if (connecting) completeConnection(node.id, pointerPos, previewSnap?.nodeId === node.id ? previewSnap.side : null)
           },
           onContextMenu: (event) => {
             if (!connecting) return
@@ -5292,7 +5289,10 @@ window.__ModuleLoader__.load({
             className: 'daf-anchor',
             'data-side': side,
             'data-armed': String(connecting?.nodeId === node.id && connecting?.side === side),
-            'data-snap': String(Boolean(previewSnap && previewSnap.nodeId === node.id && previewSnap.side === side)),
+            // data-snap 高亮「会绑到哪一个」：新建连线看 previewSnap，换锚拖拽看 pointerSnapTarget
+            'data-snap': String(Boolean(
+              (previewSnap && previewSnap.nodeId === node.id && previewSnap.side === side)
+              || (edgeDrag && pointerSnapTarget && pointerSnapTarget.nodeId === node.id && pointerSnapTarget.side === side))),
             style: anchorStyle(side),
             title: `${t.connectHint} (${side})`,
             'aria-label': `${t.connectHint} ${side}`,
