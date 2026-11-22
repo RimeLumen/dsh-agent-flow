@@ -32,6 +32,21 @@ export function buildStepParams(raw, kind, title) {
   return { ...(raw.params && typeof raw.params === 'object' ? raw.params : {}) }
 }
 
+// R6.3 依赖引用校验（两模式共用）：reliesOn 引用不存在的 id/标题时产警告，不再静默丢箭头
+export function checkReliesOn(workflow) {
+  const knownIds = new Set(workflow.nodes.map((node) => node.id))
+  const titleIds = new Map()
+  for (const node of workflow.nodes) if (!titleIds.has(node.title)) titleIds.set(node.title, node.id)
+  const warnings = []
+  for (const node of workflow.nodes) {
+    for (const ref of Array.isArray(node.reliesOn) ? node.reliesOn : []) {
+      if (knownIds.has(ref) || titleIds.has(ref)) continue
+      warnings.push({ code: 'PHASE_REF_MISSING', message: `「${node.title}」依赖的「${ref}」在图里找不到`, nodeId: node.id, ref })
+    }
+  }
+  return warnings
+}
+
 export function phasesToWorkflow(input, context = {}) {
   const makeId = () => `n_${Math.random().toString(36).slice(2, 8)}`
   const phasesIn = (Array.isArray(input?.phases) ? input.phases : []).filter((phase) => phase && typeof phase === 'object')
@@ -111,16 +126,7 @@ export function phasesToWorkflow(input, context = {}) {
     vars: {},
   })
   const knownIds = new Set(workflow.nodes.map((node) => node.id))
-  const titleIds = new Map()
-  for (const node of workflow.nodes) if (!titleIds.has(node.title)) titleIds.set(node.title, node.id)
-  const warnings = []
-  for (const node of workflow.nodes) {
-    for (const ref of Array.isArray(node.reliesOn) ? node.reliesOn : []) {
-      if (knownIds.has(ref) || titleIds.has(ref)) continue
-      warnings.push({ code: 'PHASE_REF_MISSING', message: `「${node.title}」依赖的「${ref}」在图里找不到`, nodeId: node.id, ref })
-    }
-  }
-  return { workflow, index, warnings, phases }
+  return { workflow, index, warnings: checkReliesOn(workflow), phases }
 }
 
 export function stepsToWorkflow(input, context = {}) {
@@ -198,23 +204,24 @@ export function stepsToWorkflow(input, context = {}) {
     y += 130
   }
   const entry = index[0]?.id
+  const workflow = normalizeWorkflow({
+    id: context.workflowId,
+    sessionId: context.sessionId,
+    mode: input?.mode,
+    layout: input?.layout,
+    turn: context.turn,
+    name: typeof input?.title === 'string' && input.title !== '' ? input.title.slice(0, 80) : `本轮流程 ${new Date().toLocaleTimeString('zh-CN')}`,
+    description: typeof input?.summary === 'string' ? input.summary.slice(0, 1000) : undefined,
+    origin: 'agent-plan',
+    entry,
+    nodes,
+    edges,
+    vars: {},
+  })
   return {
-    workflow: normalizeWorkflow({
-      id: context.workflowId,
-      sessionId: context.sessionId,
-      mode: input?.mode,
-      layout: input?.layout,
-      turn: context.turn,
-      name: typeof input?.title === 'string' && input.title !== '' ? input.title.slice(0, 80) : `本轮流程 ${new Date().toLocaleTimeString('zh-CN')}`,
-      description: typeof input?.summary === 'string' ? input.summary.slice(0, 1000) : undefined,
-      origin: 'agent-plan',
-      entry,
-      nodes,
-      edges,
-      vars: {},
-    }),
+    workflow,
     index,
-    warnings: [],
+    warnings: checkReliesOn(workflow),
     phases: [],
   }
 }
