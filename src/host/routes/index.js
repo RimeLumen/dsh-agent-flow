@@ -37,7 +37,8 @@ export function registerRoutes(deps) {
     ...workflowRoutes(shared),
     ...runsRoutes(shared),
     ...dataRoutes(shared),
-    ...planRoutes(shared),
+    // R6.4 最小注入面首步：planRoutes 只声明它实际消费的依赖（plans/planFirst/planTimeoutMs/logger/store）
+    ...planRoutes({ store, plans: deps.plans, planFirst: deps.planFirst, planTimeoutMs: deps.planTimeoutMs, logger: log }),
     ...errorRoutes(shared),
     ...experienceRoutes(shared),
   ]
