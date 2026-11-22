@@ -72,7 +72,8 @@ export function normalizeWorkflow(input, options = {}) {
         y: Number.isFinite(Number(raw.pos?.y)) ? Number(raw.pos.y) : 40,
         ...(raw.pos?.pinned === true ? { pinned: true } : {}),
       },
-      params: raw.params !== null && typeof raw.params === 'object' ? raw.params : {},
+      // R3.7 浅拷贝 params：此前直接引用调用方对象，重复规范化时别名共享互相影响
+      params: raw.params !== null && typeof raw.params === 'object' ? { ...raw.params } : {},
       onError: raw.onError === 'skip' || raw.onError === 'fallback' ? raw.onError : 'fail',
       fallbackTo: typeof raw.fallbackTo === 'string' && raw.fallbackTo !== '' ? raw.fallbackTo : undefined,
       retry: raw.retry !== null && typeof raw.retry === 'object' ? {
@@ -128,6 +129,13 @@ export function normalizeWorkflow(input, options = {}) {
     existing.params = { ...(existing.params ?? {}) }
     if (existing.params.goal === undefined && phase.goal !== undefined) existing.params.goal = phase.goal
     if (existing.params.order === undefined) existing.params.order = phase.order
+    // R3.3 单一事实源：phases 数组为准，回写容器节点——此前只单向补缺，
+    // title 两处可漂移、params.order 已有值时不回写 phase.order（排序键不一致）。
+    if (existing.title !== phase.title) existing.title = phase.title
+    if (existing.params.order !== phase.order) {
+      existing.params.order = phase.order
+      phase.order = existing.params.order
+    }
   }
   phases.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
 
@@ -251,8 +259,9 @@ export function buildGraph(workflow) {
   return { nodes, out, inc }
 }
 
-export function reachableFrom(workflow, startId) {
-  const { out } = buildGraph(workflow)
+export function reachableFrom(workflow, startId, graph) {
+  // R3.1 可选 graph 参数：validateWorkflow/scheduler 建图一次复用（此前每调用重建，校验 3 次/运行 4 次）
+  const { out } = graph ?? buildGraph(workflow)
   const seen = new Set()
   const stack = [startId]
   while (stack.length > 0) {
@@ -264,8 +273,8 @@ export function reachableFrom(workflow, startId) {
   return seen
 }
 
-export function findCycle(workflow) {
-  const { out } = buildGraph(workflow)
+export function findCycle(workflow, graph) {
+  const { out } = graph ?? buildGraph(workflow)
   const state = new Map()
   const stack = []
   let found = null
@@ -296,7 +305,8 @@ export function edgesFromPort(workflow, nodeId, port) {
   return workflow.edges.filter((edge) => edge.from === nodeId && edge.fromPort === port)
 }
 
-export function validateWorkflow(workflow, context = {}) {
+export function validateWorkflow(workflow, context = {}, graph) {
+  // R3.1 可选 graph：调用方（scheduler.executeRun）已建图时传入，省一次重建
 
   const issues = []
   const add = (level, code, message, where = {}) => issues.push({ level, code, message, ...where })
@@ -315,8 +325,10 @@ export function validateWorkflow(workflow, context = {}) {
     add('error', 'bad-entry', '起始节点不存在')
   }
 
-  const { out, inc } = buildGraph(workflow)
-  const reachable = workflow.entry && ids.has(workflow.entry) ? reachableFrom(workflow, workflow.entry) : new Set()
+  // R3.1 建图一次，reachable/cycle/孤立检测三处复用（此前 validate 共建图 3 次）
+  const localGraph = graph ?? buildGraph(workflow)
+  const { out, inc } = localGraph
+  const reachable = workflow.entry && ids.has(workflow.entry) ? reachableFrom(workflow, workflow.entry, localGraph) : new Set()
 
   const knownTools = Array.isArray(context.knownToolNames) ? new Set(context.knownToolNames) : null
   const knownSkills = Array.isArray(context.knownSkillNames) ? new Set(context.knownSkillNames) : null
@@ -341,8 +353,11 @@ export function validateWorkflow(workflow, context = {}) {
   }
 
   const childCount = new Map()
+  const phaseChildCount = new Map()
   for (const node of workflow.nodes) {
     if (node.parentId) childCount.set(node.parentId, (childCount.get(node.parentId) ?? 0) + 1)
+    // R3.2 phase 子节点计数预聚合（此前 per-node 循环里 filter 全节点 → O(N×P)）
+    if (node.phaseId) phaseChildCount.set(node.phaseId, (phaseChildCount.get(node.phaseId) ?? 0) + 1)
   }
 
   for (const node of workflow.nodes) {
@@ -353,13 +368,14 @@ export function validateWorkflow(workflow, context = {}) {
       if (!parent) add('error', 'orphan-child', '子步骤的父级节点不存在', { nodeId: node.id })
       continue
     }
-    if (workflow.entry && !reachable.has(node.id)) {
+    // R3.4 phase 容器节点（normalize 为 phases 数组合成、无连线）不再吃 unreachable/orphan 噪声
+    if (node.kind !== 'phase' && workflow.entry && !reachable.has(node.id)) {
       add('warn', 'unreachable', '从起始节点走不到这个节点', { nodeId: node.id })
     }
     if (outs.length === 0 && !TERMINAL_KINDS.has(node.kind) && node.kind !== 'group.steps' && node.kind !== 'phase') {
       add('warn', 'dead-end', '没有下游连线，执行到这里就结束', { nodeId: node.id })
     }
-    if (ins.length === 0 && node.id !== workflow.entry) {
+    if (node.kind !== 'phase' && ins.length === 0 && node.id !== workflow.entry) {
       add('warn', 'orphan', '没有任何上游连线', { nodeId: node.id })
     }
     if (node.kind === 'group.steps' && (childCount.get(node.id) ?? 0) === 0) {
@@ -457,15 +473,11 @@ export function validateWorkflow(workflow, context = {}) {
         break
       }
       case 'phase': {
-        const children = workflow.nodes.filter((item) => item.phaseId === node.id)
-        if (children.length === 0) add('warn', 'PHASE_EMPTY', '这个 Phase 下还没有子工作', { nodeId: node.id })
+        if ((phaseChildCount.get(node.id) ?? 0) === 0) add('warn', 'PHASE_EMPTY', '这个 Phase 下还没有子工作', { nodeId: node.id })
         break
       }
       case 'group.steps': {
-        const children = workflow.nodes.filter((item) => item.parentId === node.id)
-        if (children.length === 0) {
-          add('warn', 'no-steps', '父级流程没有子步骤：加几个子步骤（a/b/c）后再运行', { nodeId: node.id })
-        }
+        // 空 group 的 no-steps 告警已在上方通用检查（childCount 查表）发出——删除此处重复告警
         break
       }
       case 'subflow.call': {
@@ -489,7 +501,7 @@ export function validateWorkflow(workflow, context = {}) {
     }
   }
 
-  const cycle = findCycle(workflow)
+  const cycle = findCycle(workflow, localGraph)
   if (cycle) {
     add('warn', 'cycle', `图里存在环：${cycle.join(' → ')}（只有 flow.loop 的循环是被支持的）`)
   }
@@ -520,16 +532,16 @@ export function validateWorkflow(workflow, context = {}) {
   // 越界：负坐标会让节点渲染到内容区外，用户看不到但图里有
   for (const node of workflow.nodes) {
     if (node.pos.x < 0 || node.pos.y < 0) {
-      add('warning', 'node-out-of-bounds', `节点坐标为负：「${node.title}」在 (${Math.round(node.pos.x)}, ${Math.round(node.pos.y)})`, { nodeId: node.id })
+      add('warn', 'node-out-of-bounds', `节点坐标为负：「${node.title}」在 (${Math.round(node.pos.x)}, ${Math.round(node.pos.y)})`, { nodeId: node.id })
     }
   }
 
-  // 孤立节点：既不出发也不到达，说明它不会被执行
+  // 孤立节点：既不出发也不到达，说明它不会被执行（R3.1：查邻接表 O(1)，此前 edges.some O(E)）
   for (const node of workflow.nodes) {
     if (node.kind === 'phase') continue
-    const touched = workflow.edges.some((edge) => edge.from === node.id || edge.to === node.id)
+    const touched = (localGraph.out.get(node.id)?.length ?? 0) > 0 || (localGraph.inc.get(node.id)?.length ?? 0) > 0
     if (!touched && workflow.nodes.length > 1) {
-      add('warning', 'node-isolated', `节点未接入流程：「${node.title}」没有任何连线`, { nodeId: node.id })
+      add('warn', 'node-isolated', `节点未接入流程：「${node.title}」没有任何连线`, { nodeId: node.id })
     }
   }
 
