@@ -306,8 +306,10 @@ function check(section, label, ok, extra) {
     .map((n) => readFileSync(join(root, 'src', 'host', 'routes', n + '.js'), 'utf8')).join('\n')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
 
+  // R6.1 后工具定义在 flow-tools.js（index.js 只留注册循环）
+  const flowTools = readFileSync(join(root, 'src', 'host', 'flow-tools.js'), 'utf8')
   for (const tool of ['flow_plan', 'flow_progress', 'flow_compose', 'flow_status']) {
-    check(section, `工具 ${tool} 已注册`, hostIndex.includes(`name: '${tool}'`))
+    check(section, `工具 ${tool} 已注册`, flowTools.includes(`name: '${tool}'`) && hostIndex.includes('setupFlowTools'))
   }
   check(section, '收件箱监听已接上（插件自主拆解）', hostIndex.includes("ctx.on('agent/inbox/inserted'"))
   check(section, '拆解器被真正调用', hostIndex.includes('decomposePrompt('))
@@ -552,10 +554,11 @@ function check(section, label, ok, extra) {
   check(section, '质检回退前复查直线穿模', engineSrc.includes('const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))'))
   // flow_progress Token 优化（用户指令）：nodeId 锚定 + items 批量 + 返回极短化
   const indexSrc = readFileSync(join(hostDir, 'index.js'), 'utf8')
-  check(section, 'flow_plan 返回带节点 id', indexSrc.includes('- [${step.id}] ${step.title}'))
-  check(section, 'flow_progress 支持 nodeId 优先', indexSrc.includes('nodeId ? workflow.nodes.find((item) => item.id === nodeId) : null'))
-  check(section, 'flow_progress 支持批量 items', indexSrc.includes('args.items.slice(0, 20)'))
-  check(section, '进度返回文本极短化', indexSrc.includes("entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok'") && indexSrc.includes("return { text: parts.join('；') || 'no-op' }"))
+  const flowToolsSrc = readFileSync(join(hostDir, 'flow-tools.js'), 'utf8')
+  check(section, 'flow_plan 返回带节点 id', flowToolsSrc.includes('- [${step.id}] ${step.title}'))
+  check(section, 'flow_progress 支持 nodeId 优先', flowToolsSrc.includes('nodeId ? workflow.nodes.find((item) => item.id === nodeId) : null'))
+  check(section, 'flow_progress 支持批量 items', flowToolsSrc.includes('args.items.slice(0, 20)'))
+  check(section, '进度返回文本极短化', flowToolsSrc.includes("entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok'") && flowToolsSrc.includes("return { text: parts.join('；') || 'no-op' }"))
   check(section, '注入文本引导 nodeId 与批量', indexSrc.includes('优先传 flow_plan 返回的节点 id') && indexSrc.includes('items 批量上报'))
 }
 
@@ -568,7 +571,8 @@ function check(section, label, ok, extra) {
   const planRoute = readFileSync(join(hostDir, 'routes', 'plan.js'), 'utf8')
   check(section, 'normalizeWorkflow 已导入（子代理继承复活）', idx.includes("import { createEmptyWorkflow, normalizeWorkflow } from './flow/model.js'"))
   check(section, 'exit 钩子无 require（ESM 兼容）', !/= require\(/.test(sto) && sto.includes("import { mkdirSync, renameSync, writeFileSync } from 'node:fs'"))
-  check(section, '四工具统一 disposers 回收', (idx.match(/disposers\.push\(dispose/g) ?? []).length >= 4 && idx.includes('return disposeAll'))
+  const r1Tools = readFileSync(join(hostDir, 'flow-tools.js'), 'utf8')
+  check(section, '四工具统一 disposers 回收', (r1Tools.match(/disposers\.push\(dispose/g) ?? []).length >= 4 && r1Tools.includes('return disposeAll'))
   check(section, 'SVG 导出转义实体恢复', canvas.includes("replace(/&/g, '&amp;')") && canvas.includes("replace(/</g, '&lt;')"))
   check(section, '轮询 userOverride 防拽回', canvas.includes('canvasOverrideRef.current && sessionFlow') && canvas.includes('canvasOverrideRef.current ='))
   check(section, '自动入库走 mutate 落盘', planRoute.includes('await store.mutate((state) => {') && planRoute.includes('autoCaptureExperience(state, active, {})'))
