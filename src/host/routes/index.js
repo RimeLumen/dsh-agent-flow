@@ -50,6 +50,14 @@ export function registerRoutes(deps) {
         writeError(res, 403, new FlowError(ERROR_CODES.HTTP_LOOPBACK_ONLY, 'agent-flow 只接受本机回环请求', { kind: 'permission', source: 'route' }))
         return
       }
+      // 就绪门（批次 6）：state 未加载完就先等一下，避免首帧读到空 state 而显示"没有流程"。
+      if (deps.store && typeof deps.store.ready === 'function') {
+        try {
+          await deps.store.ready()
+        } catch (error) {
+          deps.logger?.('store readiness gate failed: ' + (error instanceof Error ? error.message : String(error)))
+        }
+      }
       const url = new URL(req.url ?? '/', 'http://127.0.0.1')
       const path = url.pathname.replace(/^\/api\/agent-flow/, '') || '/'
       const pathMatches = compiled.filter((route) => route.re.test(path))

@@ -28,10 +28,13 @@ export function phasesToWorkflow(input, context = {}) {
 
   const index = []
   const phases = []
+  // 主干收集：push 的先后顺序就是流程脊椎，即 mainPath。
+  const mainIds = []
   let previous = null
   const push = (node) => {
     nodes.push(node)
     index.push({ id: node.id, title: node.title, phaseId: node.phaseId, reliesOn: node.reliesOn })
+    mainIds.push(node.id)
     if (previous) {
       edges.push({ id: `e_${previous}_${node.id}`, from: previous, fromPort: 'out', to: node.id, fromSide: 'right', toSide: 'left' })
     }
@@ -87,7 +90,7 @@ export function phasesToWorkflow(input, context = {}) {
     sessionId: context.sessionId,
     name: typeof input?.title === 'string' && input.title !== '' ? input.title.slice(0, 80) : `本轮流程 ${new Date().toLocaleTimeString('zh-CN')}`,
     description: typeof input?.summary === 'string' ? input.summary.slice(0, 1000) : undefined,
-    origin: 'agent-plan',
+    origin: context.origin ?? 'agent-plan',
     mode: input?.mode,
     layout: input?.layout,
     turn: context.turn,
@@ -95,6 +98,7 @@ export function phasesToWorkflow(input, context = {}) {
     entry: index[0]?.id,
     nodes,
     edges,
+    mainPath: mainIds.length > 1 ? mainIds : undefined,
     vars: {},
   })
   const knownIds = new Set(workflow.nodes.map((node) => node.id))
@@ -223,7 +227,94 @@ export function createPlanManager(deps) {
 
   const read = (sessionId) => plans.get(keyOf(sessionId)) ?? null
 
+  // 子代理泳道追加（用户指令②）：本会话存在 inherit 画布时，flow_plan 的产出
+  // 追加到该画布的 sub 泳道（每轮替换 sub 内容，父级 main 泳道永保留）。
+  // 衔接边 main 末节点 → sub 入口 + sub 入口 reliesOn，让布局引擎天然分列。
+  async function publishIntoLane(inherited, sessionId, input) {
+    const previous = read(sessionId)
+    const turn = Math.max(inherited.turn ?? 0, previous?.turn ?? 0) + 1
+    const built = stepsToWorkflow(input, { sessionId, turn })
+    const saved = await store.mutate((state) => {
+      const live = state.workflows.find((item) => item.id === inherited.id)
+      if (!live) return null
+      const mainLane = (Array.isArray(live.lanes) ? live.lanes : []).find((lane) => lane.id === 'main')
+      const mainIds = new Set(mainLane?.nodeIds ?? [])
+      // 1) 清掉旧 sub 泳道（非 main 泳道节点 + 关联边 + 空容器 phase）
+      const keepNodes = []
+      for (const node of live.nodes) {
+        if (!mainIds.has(node.id)) continue
+        keepNodes.push(node)
+      }
+      const keptIds = new Set(keepNodes.map((node) => node.id))
+      live.nodes = keepNodes
+      live.edges = (live.edges ?? []).filter((edge) => keptIds.has(edge.from) && keptIds.has(edge.to))
+      // 2) 克隆新计划全部节点与边（id 重映射）追加为 sub 泳道
+      const subLaneIds = []
+      const idMap = new Map()
+      for (const raw of built.workflow.nodes) {
+        const nextId = `n_${Math.random().toString(36).slice(2, 8)}`
+        idMap.set(raw.id, nextId)
+        subLaneIds.push(nextId)
+      }
+      const mainLast = mainLane?.nodeIds?.[mainLane.nodeIds.length - 1]
+      for (const raw of built.workflow.nodes) {
+        const nextId = idMap.get(raw.id)
+        live.nodes.push({
+          ...JSON.parse(JSON.stringify(raw)),
+          id: nextId,
+          sessionId: undefined,
+          // 入口节点挂 reliesOn 衔接父级末节点 → 拓扑深度上 sub 单元整体晚于 main
+          ...(raw.id === built.workflow.entry && mainLast ? { reliesOn: [mainLast] } : {}),
+        })
+      }
+      for (const raw of built.workflow.edges) {
+        const from = idMap.get(raw.from)
+        const to = idMap.get(raw.to)
+        if (!from || !to) continue
+        live.edges.push({ ...JSON.parse(JSON.stringify(raw)), id: `e_${from}_${to}`, from, to })
+      }
+      // 3) 衔接边：父级末节点 → sub 入口
+      const subEntry = idMap.get(built.workflow.entry)
+      if (mainLast && subEntry && !live.edges.some((edge) => edge.from === mainLast && edge.to === subEntry)) {
+        live.edges.push({ id: `e_${mainLast}_${subEntry}`, from: mainLast, fromPort: 'out', to: subEntry, fromSide: 'right', toSide: 'left' })
+      }
+      // 4) 泳道元数据：main 保留 + sub 替换为当前轮计划
+      live.lanes = [
+        { id: 'main', label: '父级', nodeIds: [...keptIds] },
+        { id: 'sub', label: '子代理', nodeIds: subLaneIds },
+      ]
+      live.turn = turn
+      // 追加后节点 pos 是 stepsToWorkflow 的初始值（小范围堆叠），标记客户端重新布局。
+      live.needsLayout = true
+      live.updatedAt = new Date().toISOString()
+      return live
+    })
+    if (!saved) {
+      // inherit 画布已被删除：回退为普通发布
+      return publish(sessionId, input)
+    }
+    const plan = {
+      sessionId,
+      workflowId: saved.id,
+      workflowName: saved.name,
+      turn,
+      status: PLAN_STATUS.AWAITING,
+      updatedAt: new Date().toISOString(),
+      steps: built.index,
+      mode: saved.mode,
+      layout: saved.layout,
+      phases: Array.isArray(built.workflow.phases) ? built.workflow.phases : [],
+      warnings: Array.isArray(built.warnings) ? built.warnings : [],
+      waiters: [],
+    }
+    plans.set(keyOf(sessionId), plan)
+    log(`plan appended into lane for session ${sessionId || '(none)'} turn ${turn} (workflow ${saved.id}, +${built.workflow.nodes.length} nodes)`)
+    return { plan, workflow: saved }
+  }
+
   async function publish(sessionId, input) {
+    const inherited = store.state.workflows.find((item) => item.sessionId === sessionId && item.origin === 'inherit' && !item.archivedAt)
+    if (inherited) return publishIntoLane(inherited, sessionId, input)
     const previous = read(sessionId)
     if (previous && previous.waiters.length > 0) {
       settle(sessionId, PLAN_STATUS.REPLACED, { reason: '被本轮的新计划替换' })

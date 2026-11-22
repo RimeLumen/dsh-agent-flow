@@ -1,5 +1,6 @@
 /*! dsh-agent-flow v0.1.0 | Copyright (c) 2026 RimeLumen | MIT License */
 import { parseExpr } from './expr.js'
+import { MIN_TITLE_FONT, NODE_HEIGHT, NODE_WIDTH, TITLE_AVAILABLE_WIDTH, minimumNodeTextWidth } from './textfit.js'
 
 export const NODE_KINDS = Object.freeze([
   'inject.context',
@@ -20,7 +21,7 @@ export const NODE_KINDS = Object.freeze([
 
 export const WORKFLOW_MODES = Object.freeze(['task', 'design'])
 
-export const FLOW_LAYOUTS = Object.freeze(['chain', 'star', 'radial'])
+export const FLOW_LAYOUTS = Object.freeze(['chain', 'tb', 'star', 'radial'])
 
 export const EDGE_SIDES = Object.freeze([
   'top',
@@ -31,14 +32,6 @@ export const EDGE_SIDES = Object.freeze([
   'bottom-left',
   'left',
   'top-left',
-  'top-q1',
-  'top-q3',
-  'right-q1',
-  'right-q3',
-  'bottom-q1',
-  'bottom-q3',
-  'left-q1',
-  'left-q3',
 ])
 
 export const EDGE_PALETTE_SIZE = 12
@@ -190,6 +183,13 @@ export function normalizeWorkflow(input, options = {}) {
     layout: FLOW_LAYOUTS.includes(input.layout) ? input.layout : 'chain',
     turn: Number.isFinite(Number(input.turn)) ? Math.max(0, Math.floor(Number(input.turn))) : 0,
     phases: phases.length > 0 ? phases : undefined,
+    // 主干：有序节点 id = 流程脊椎，其余节点为支线。
+    // 布局与视觉据此区分主次；不存在的 id 直接丢弃，避免悬空引用。
+    mainPath: Array.isArray(input.mainPath)
+      ? input.mainPath
+        .filter((id) => typeof id === 'string' && nodes.some((node) => node.id === id))
+        .slice(0, 500)
+      : undefined,
     // 节点实时状态（Agent 执行时经 flow_progress 上报）：{ [nodeId]: 'running'|'succeeded'|'failed' }
     nodeStatus: input.nodeStatus !== null && typeof input.nodeStatus === 'object' && !Array.isArray(input.nodeStatus)
       ? Object.fromEntries(Object.entries(input.nodeStatus)
@@ -199,6 +199,22 @@ export function normalizeWorkflow(input, options = {}) {
     sessionId: typeof input.sessionId === 'string' && input.sessionId !== '' ? input.sessionId.slice(0, 120) : undefined,
     archivedAt: typeof input.archivedAt === 'string' && input.archivedAt !== '' ? input.archivedAt.slice(0, 40) : undefined,
     origin: typeof input.origin === 'string' && input.origin !== '' ? input.origin.slice(0, 40) : 'user',
+    // 子代理画布继承：来源父会话 id（origin='inherit' 时有值）。
+    inheritedFrom: typeof input.inheritedFrom === 'string' && input.inheritedFrom !== '' ? input.inheritedFrom.slice(0, 120) : undefined,
+    // 泳道追加/合并产物标记：宿主不实现布局（布局在客户端），追加/合并后节点 pos
+    // 可能堆叠；客户端加载到 needsLayout===true 的画布时自动跑一次 autoLayout 并清除标记。
+    needsLayout: input.needsLayout === true ? true : undefined,
+    // 泳道：[{ id, label, nodeIds }]。渲染按 nodeIds 包围盒画背景条，辨别节点归属。
+    lanes: Array.isArray(input.lanes)
+      ? input.lanes
+        .filter((lane) => lane && typeof lane === 'object' && typeof lane.id === 'string' && lane.id !== '')
+        .slice(0, 4)
+        .map((lane) => ({
+          id: lane.id.slice(0, 40),
+          label: typeof lane.label === 'string' && lane.label !== '' ? lane.label.slice(0, 60) : lane.id,
+          nodeIds: Array.isArray(lane.nodeIds) ? lane.nodeIds.filter((id) => typeof id === 'string' && id !== '').slice(0, 500) : [],
+        }))
+      : undefined,
     updatedAt: new Date().toISOString(),
   }
 }
@@ -477,5 +493,45 @@ export function validateWorkflow(workflow, context = {}) {
   if (cycle) {
     add('warn', 'cycle', `图里存在环：${cycle.join(' → ')}（只有 flow.loop 的循环是被支持的）`)
   }
+  // ── 布局门禁──
+  // 客户端的 fittedFontSize 只负责"收缩到可读下限"；这里负责拒绝**收缩也救不了**的输入。
+  // 缺了这一半，超长标题会静默溢出/被截，而校验仍报干净——本项目此前正是这个状态。
+  const drawable = workflow.nodes.filter((node) => node.kind !== 'phase' || node.title !== '')
+  for (const node of drawable) {
+    const need = minimumNodeTextWidth(node.title, MIN_TITLE_FONT)
+    if (need > TITLE_AVAILABLE_WIDTH) {
+      add('error', 'layout-gate', `标题过长：${node.title.slice(0, 20)}… 收缩到 ${MIN_TITLE_FONT}px 仍需 ${Math.round(need)}px，可用仅 ${TITLE_AVAILABLE_WIDTH}px——请改短标题或拆分节点`, { nodeId: node.id, need: Math.round(need), available: TITLE_AVAILABLE_WIDTH })
+    }
+  }
+
+  // 重叠检测：按 x 排序后只在可能相交的窗口内两两比较（避免 O(N²) 全比）
+  const sorted = [...workflow.nodes].sort((a, b) => a.pos.x - b.pos.x)
+  for (let i = 0; i < sorted.length; i += 1) {
+    const a = sorted[i]
+    for (let j = i + 1; j < sorted.length; j += 1) {
+      const b = sorted[j]
+      if (b.pos.x >= a.pos.x + NODE_WIDTH) break
+      if (b.pos.y < a.pos.y + NODE_HEIGHT && b.pos.y + NODE_HEIGHT > a.pos.y) {
+        add('error', 'node-overlap', `节点重叠：「${a.title}」与「${b.title}」`, { nodeId: a.id, otherId: b.id })
+      }
+    }
+  }
+
+  // 越界：负坐标会让节点渲染到内容区外，用户看不到但图里有
+  for (const node of workflow.nodes) {
+    if (node.pos.x < 0 || node.pos.y < 0) {
+      add('warning', 'node-out-of-bounds', `节点坐标为负：「${node.title}」在 (${Math.round(node.pos.x)}, ${Math.round(node.pos.y)})`, { nodeId: node.id })
+    }
+  }
+
+  // 孤立节点：既不出发也不到达，说明它不会被执行
+  for (const node of workflow.nodes) {
+    if (node.kind === 'phase') continue
+    const touched = workflow.edges.some((edge) => edge.from === node.id || edge.to === node.id)
+    if (!touched && workflow.nodes.length > 1) {
+      add('warning', 'node-isolated', `节点未接入流程：「${node.title}」没有任何连线`, { nodeId: node.id })
+    }
+  }
+
   return issues
 }

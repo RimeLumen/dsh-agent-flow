@@ -14,7 +14,9 @@ import {
 } from './selection.js'
 import { RunRegistry } from './flow/scheduler.js'
 import { createEmptyWorkflow } from './flow/model.js'
-import { createPlanManager } from './plan.js'
+import { createPlanManager, phasesToWorkflow } from './plan.js'
+import { decomposePrompt } from './decompose.js'
+import { composePrompt } from './compose.js'
 import { registerRoutes } from './routes/index.js'
 
 export const PLAN_FIRST_TEXT = [
@@ -34,7 +36,9 @@ export const inject = []
 
 export const VERSION = (() => {
   try {
-    const url = new URL('../package.json', import.meta.url)
+    // 从 src/host/ 到仓库根是两级（此前写成一级 '../package.json'，
+    // 会解析到不存在的 src/package.json，被 catch 吞掉 → VERSION 恒为 unknown）
+    const url = new URL('../../package.json', import.meta.url)
     return JSON.parse(readFileSync(fileURLToPath(url), 'utf8')).version ?? 'unknown'
   } catch {
     return 'unknown'
@@ -173,8 +177,102 @@ export function apply(ctx, config) {
     }
   }
 
+  // 子代理画布继承（用户指令②）：子代理（session.parentSession 有值）创建时，
+  // 复制父会话最新活动画布为子会话画布（origin='inherit'，lanes.main=父级快照）。
+  // 子代理后续 flow_plan 的产出由 plan.js 的追加分支写进 sub 泳道，父级节点永保留。
+  const inheritParentCanvas = (agent) => {
+    try {
+      const sessionId = agent?.id ?? ''
+      const parentSessionId = agent?.session?.parentSession ?? null
+      if (!sessionId || !parentSessionId) return
+      if (store.state.workflows.some((item) => item.sessionId === sessionId && !item.archivedAt)) return
+      const parent = [...store.state.workflows].reverse().find((item) => item.sessionId === parentSessionId && !item.archivedAt)
+      if (!parent) return
+      const makeId = () => `n_${Math.random().toString(36).slice(2, 8)}`
+      const workflow = normalizeWorkflow({
+        ...JSON.parse(JSON.stringify(parent)),
+        id: `wf_${Math.random().toString(36).slice(2, 10)}`,
+        sessionId,
+        origin: 'inherit',
+        inheritedFrom: parentSessionId,
+        archivedAt: undefined,
+        updatedAt: undefined,
+      })
+      const idMap = new Map()
+      for (const node of workflow.nodes) {
+        const nextId = makeId()
+        idMap.set(node.id, nextId)
+        node.id = nextId
+      }
+      workflow.entry = idMap.get(parent.entry) ?? workflow.nodes[0]?.id ?? ''
+      for (const edge of workflow.edges) {
+        edge.from = idMap.get(edge.from) ?? edge.from
+        edge.to = idMap.get(edge.to) ?? edge.to
+        edge.id = `e_${edge.from}_${edge.to}`
+      }
+      workflow.lanes = [{ id: 'main', label: '父级', nodeIds: workflow.nodes.map((node) => node.id) }]
+      void store.mutate((state) => {
+        if (!state.workflows.some((item) => item.sessionId === sessionId)) state.workflows.push(workflow)
+      }).catch((error) => {
+        log(`inherit canvas was not persisted: ${error instanceof Error ? error.message : String(error)}`)
+      })
+      log(`inherit canvas for subagent ${sessionId.slice(-6)} from ${parentSessionId.slice(-6)} (${workflow.nodes.length} nodes)`)
+    } catch (error) {
+      log(`inherit canvas failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
   ctx.on('agent/created', (payload) => {
     registerPlanFirst(payload?.agent)
+    inheritParentCanvas(payload?.agent)
+  })
+
+  // 插件自主拆解（Q1/Q4）：用户消息进入 inbox 时，插件自己把提示词拆成阶段+子任务，
+  // 连好线（复用 phasesToWorkflow 的边生成），产出 'auto-draft' 草稿画布。
+  // 已有的 agent-plan 画布优先——不覆盖 Agent 自己画的流程。
+  const draftTurns = new Map()
+  ctx.on('agent/inbox/inserted', ({ agent, message } = {}) => {
+    try {
+      const sessionId = agent?.id ?? ''
+      if (!sessionId) return
+      // 防御式取文本：content 可能是字符串，也可能是内容块数组（DSH 实际为 ContentBlock[]）
+      const content = message?.content
+      const text = typeof content === 'string'
+        ? content
+        : (Array.isArray(content)
+          ? content.filter((block) => block && (block.type === 'text' || typeof block.text === 'string'))
+            .map((block) => String(block.text ?? '')).join(' ')
+          : '')
+      if (text.trim().length < 12) return
+      // 同一条消息只拆一次
+      const seen = draftTurns.get(sessionId)
+      if (seen === message?.id) return
+      draftTurns.set(sessionId, message?.id)
+      // Agent 已发布计划则不打扰
+      const existing = store.state.workflows.filter((item) => item.sessionId === sessionId && !item.archivedAt)
+      if (existing.some((item) => item.origin === 'agent-plan')) return
+      const toolNames = [...(store.catalogCache?.tools?.values() ?? [])].map((tool) => tool.name)
+      const draft = decomposePrompt(text, { tools: toolNames })
+      if (draft.isTrivial || draft.phases.length === 0) return
+      const built = phasesToWorkflow({
+        title: '草稿 · ' + draft.title,
+        phases: draft.phases.map((phase) => ({
+          title: phase.title,
+          subtasks: phase.subtasks.map((sub) => ({ title: sub.title, kind: sub.kind, prompt: sub.title, tool: sub.tool })),
+        })),
+      }, { sessionId, origin: 'auto-draft' })
+      const workflow = built.workflow
+      void store.mutate((state) => {
+        // 同会话已有草稿：替换（不堆积）
+        const before = state.workflows.length
+        state.workflows = state.workflows.filter((item) => !(item.sessionId === sessionId && item.origin === 'auto-draft'))
+        state.workflows.push(workflow)
+        return state.workflows.length - before
+      }).catch(() => {})
+      log('auto-draft canvas: ' + workflow.nodes.length + ' nodes, ' + workflow.edges.length + ' edges')
+    } catch (error) {
+      log('auto-draft failed: ' + (error instanceof Error ? error.message : String(error)))
+    }
   })
 
   // 执行氛围（用户反馈②）：Agent 工作状态全局可见，画布据此点亮执行中。
@@ -483,6 +581,44 @@ export function apply(ctx, config) {
         log(`flow_progress tool was not registered: ${error instanceof Error ? error.message : String(error)}`)
       }
 
+      // 反向组合（批次 3）：把当前画布组合成可执行的提示词，交回给 Agent。
+      try {
+        const disposeCompose = tools.register({
+          name: 'flow_compose',
+          description: 'Turn the current session\'s flow canvas into an executable prompt, so the arrangement on the canvas becomes work the agent can run. Use it after the user edits the canvas.',
+          parameters: {
+            type: 'object',
+            properties: {
+              goal: { type: 'string', description: 'Optional one-line goal placed at the top of the composed prompt.' },
+              workflowId: { type: 'string', description: 'Optional flow id; defaults to this session\'s active canvas.' },
+            },
+            additionalProperties: false,
+          },
+          output: {
+            schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] },
+            render: (_args, value) => [{ type: 'text', text: String(value?.text ?? '') }],
+          },
+          async execute(args = {}, exec) {
+            const sessionId = exec?.agent?.id ?? ''
+            const workflow = args.workflowId
+              ? store.state.workflows.find((item) => item.id === args.workflowId)
+              : (store.state.workflows.find((item) => item.sessionId === sessionId && !item.archivedAt)
+                ?? store.state.workflows.find((item) => item.sessionId === sessionId))
+            if (!workflow) return { text: '当前会话还没有画布：先用 flow_plan 画一张，或在画布上手工搭一个流程。' }
+            const result = composePrompt(workflow, { goal: args.goal })
+            const warns = result.warnings.length > 0
+              ? '\n\n> 图的结构提醒：' + result.warnings.map((item) => item.message).join('；')
+              : ''
+            return { text: result.text + warns }
+          },
+        })
+        toolRegistration.flow_compose = true
+        log('flow_compose tool registered')
+      } catch (error) {
+        toolRegistration.flow_compose = false
+        log(`flow_compose tool was not registered: ${error instanceof Error ? error.message : String(error)}`)
+      }
+
         return () => {
           try {
             disposePlan?.()
@@ -525,18 +661,21 @@ export function apply(ctx, config) {
       if (store.loadError) log(`state load error: ${store.loadError}`)
       for (const note of store.loadNotes) log(`state: ${note}`)
       log(`state loaded from ${store.file} (${store.state.profiles.length} profiles, ${store.state.workflows.length} flows)`)
-      await refresh().catch((error) => log(`initial catalog refresh failed: ${error instanceof Error ? error.message : String(error)}`))
+      // 启动并行（性能审计 S-A）：目录构建与逐会话恢复互不依赖，串行会让
+      // 大目录场景的会话恢复被线性拖后。allSettled 保证互不影响，失败各自留痕。
+      // registerPlanFirst 必须同步先行（计划协议注册先于恢复）。
       const agents = ctx.get('agents')
-      if (agents && typeof agents.list === 'function') {
-        for (const agent of agents.list()) {
-          try {
-            await lifecycle.reapply(agent.id)
-          } catch (error) {
-            log(`reapply failed for ${agent.id}: ${error instanceof Error ? error.message : String(error)}`)
-          }
+      const reapplyTasks = agents && typeof agents.list === 'function'
+        ? agents.list().map((agent) => {
           registerPlanFirst(agent)
-        }
-      }
+          return lifecycle.reapply(agent.id)
+            .catch((error) => log(`reapply failed for ${agent.id}: ${error instanceof Error ? error.message : String(error)}`))
+        })
+        : []
+      await Promise.allSettled([
+        refresh().catch((error) => log(`initial catalog refresh failed: ${error instanceof Error ? error.message : String(error)}`)),
+        ...reapplyTasks,
+      ])
     })
     .catch((error) => log(`state load failed: ${error instanceof Error ? error.message : String(error)}`))
 }
