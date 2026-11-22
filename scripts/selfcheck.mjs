@@ -543,6 +543,9 @@ function check(section, label, ok, extra) {
   check(section, '换锚拖拽接入锚点高亮', dragCtx.includes('pointerSnapTarget.nodeId === node.id && pointerSnapTarget.side === side'))
   check(section, '组容器拖动带未钉住子节点', dragCtx.includes("childIds?.has(item.id) && item.pos?.pinned !== true"))
   check(section, 'anchorStyle 死位置表已清理', !engineSrc.includes("'top-q1'") && engineSrc.includes("8 锚点（EDGE_SIDES 同源）"))
+  // 大角度绕行（用户指令）：预览与提交 1:1（真实 rect + 障碍网格）；质检回退前复查直线穿模
+  check(section, '换锚预览用真实节点矩形与障碍网格', dragCtx.includes('return rectOfNode(node)') && dragCtx.includes('edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, obstacleGrid, 0, 0)'))
+  check(section, '质检回退前复查直线穿模', engineSrc.includes('const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))'))
 }
 
 // ── 汇总 ──
