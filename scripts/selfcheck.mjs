@@ -546,6 +546,13 @@ function check(section, label, ok, extra) {
   // 大角度绕行（用户指令）：预览与提交 1:1（真实 rect + 障碍网格）；质检回退前复查直线穿模
   check(section, '换锚预览用真实节点矩形与障碍网格', dragCtx.includes('return rectOfNode(node)') && dragCtx.includes('edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, obstacleGrid, 0, 0)'))
   check(section, '质检回退前复查直线穿模', engineSrc.includes('const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))'))
+  // flow_progress Token 优化（用户指令）：nodeId 锚定 + items 批量 + 返回极短化
+  const indexSrc = readFileSync(join(hostDir, 'index.js'), 'utf8')
+  check(section, 'flow_plan 返回带节点 id', indexSrc.includes('- [${step.id}] ${step.title}'))
+  check(section, 'flow_progress 支持 nodeId 优先', indexSrc.includes('nodeId ? workflow.nodes.find((item) => item.id === nodeId) : null'))
+  check(section, 'flow_progress 支持批量 items', indexSrc.includes('args.items.slice(0, 20)'))
+  check(section, '进度返回文本极短化', indexSrc.includes("return { text: entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok' }"))
+  check(section, '注入文本引导 nodeId 与批量', indexSrc.includes('优先传 flow_plan 返回的节点 id') && indexSrc.includes('items 批量上报'))
 }
 
 // ── 汇总 ──

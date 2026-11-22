@@ -27,7 +27,7 @@ export const PLAN_FIRST_TEXT = [
   '2) flow_plan 的返回里 status 说明用户的选择：confirmed 或 adjusted → 按画布上的流程开始执行（adjust 后以返回的 steps 为准）；skipped → 用户不想等待，直接开始；timeout → 按你画的流程继续，并在回复里说明未获确认；',
   '3) 用户可能直接在画布上改流程或连线，执行时以流程节点为准，不要照抄最初的草稿；',
   '4) 每轮只画一次；本轮流程发生实质变化时重新调用 flow_plan 更新画布。',
-  '5) 用户确认计划后开始执行时：每开始一个步骤调用 flow_progress({ title: 步骤标题, status: "running" })，完成时 status: "succeeded"（失败 status: "failed"）——画布会实时点亮对应节点与连线，用户能看到你的进度。',
+  '5) 用户确认计划后开始执行时：用 flow_progress 上报进度——优先传 flow_plan 返回的节点 id（省 token）：{ nodeId, status: "running" }，完成 "succeeded"，失败 "failed"；连续多个状态变化可合并为一次 items 批量上报。画布会实时点亮对应节点与连线。',
 ].join('\n')
 
 export const name = 'agent-flow'
@@ -508,7 +508,8 @@ export function apply(ctx, config) {
             else lines.push('计划确认流程被中断：按你画的计划继续。')
             lines.push(`画布上的流程：${published.workflow.name}（${published.workflow.nodes.length} 个节点）`)
             for (const step of published.plan.steps) {
-              lines.push(`- ${step.title}${Array.isArray(step.children) && step.children.length > 0 ? `（含 ${step.children.length} 个子步骤）` : ''}`)
+              // 带 id 输出：模型后续用 nodeId 上报进度（比复述标题省 token 且精确命中）
+              lines.push(`- [${step.id}] ${step.title}${Array.isArray(step.children) && step.children.length > 0 ? `（含 ${step.children.length} 个子步骤）` : ''}`)
             }
             if (Array.isArray(published.plan.phases) && published.plan.phases.length > 0) {
               const modeLabel = published.plan.mode === 'design' ? '设计' : '任务'
@@ -529,14 +530,28 @@ export function apply(ctx, config) {
       try {
         const disposeProgress = tools.register({
           name: 'flow_progress',
-          description: 'Report step progress for this session\'s flow canvas while executing the confirmed plan. Call when a step starts (status "running"), succeeds ("succeeded") or fails ("failed"). The canvas lights up the matching node and its edges in real time.',
+          description: 'Report step status while executing: { nodeId, status }. Prefer nodeId from the flow_plan output (fewer tokens, exact match). Batch several status changes with items[] in one call. The canvas lights up nodes in real time.',
           parameters: {
             type: 'object',
             properties: {
-              title: { type: 'string', description: 'Step title exactly as drawn on the canvas (matches by title, first hit).' },
+              nodeId: { type: 'string', description: 'Node id from the flow_plan output (preferred over title).' },
+              title: { type: 'string', description: 'Fallback: step title exactly as drawn on the canvas (first unfinished match).' },
               status: { type: 'string', enum: ['running', 'succeeded', 'failed'], description: 'New status of the step.' },
+              items: {
+                type: 'array',
+                description: 'Batch mode: several status changes in one call (e.g. mark the previous step done together with the next one starting). Each item: { nodeId?, title?, status }. Use this instead of repeated single calls.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    nodeId: { type: 'string' },
+                    title: { type: 'string' },
+                    status: { type: 'string', enum: ['running', 'succeeded', 'failed'] },
+                  },
+                  required: ['status'],
+                  additionalProperties: false,
+                },
+              },
             },
-            required: ['title', 'status'],
             additionalProperties: false,
           },
           output: {
@@ -545,33 +560,57 @@ export function apply(ctx, config) {
           },
           async execute(args = {}, exec) {
             const sessionId = exec?.agent?.id ?? ''
-            const status = ['running', 'succeeded', 'failed'].includes(args.status) ? args.status : 'running'
-            const title = String(args.title ?? '')
+            // 批量优先：items[] 每项一条状态；单条模式取顶层 nodeId/title + status。
+            const entries = Array.isArray(args.items) && args.items.length > 0
+              ? args.items.slice(0, 20)
+              : [{ nodeId: args.nodeId, title: args.title, status: args.status }]
             const updated = await store.mutate((state) => {
               const workflow = state.workflows.find((item) => item.sessionId === sessionId && !item.archivedAt)
                 ?? state.workflows.find((item) => item.sessionId === sessionId)
               if (!workflow) return null
-              // 同名节点（用户手画可能撞名）：优先命中尚未完成的第一个，避免重复标题永远点亮同一个。
-              const node = workflow.nodes.find((item) => item.title === title && (workflow.nodeStatus?.[item.id] ?? 'idle') !== 'succeeded')
-                ?? workflow.nodes.find((item) => item.title.toLowerCase() === title.toLowerCase() && (workflow.nodeStatus?.[item.id] ?? 'idle') !== 'succeeded')
-                ?? workflow.nodes.find((item) => item.title === title)
-                ?? workflow.nodes.find((item) => item.title.toLowerCase() === title.toLowerCase())
-              if (!node) return null
               const nodeStatus = { ...(workflow.nodeStatus ?? {}) }
-              if (status === 'running') {
-                for (const [id, previous] of Object.entries(nodeStatus)) {
-                  if (previous === 'running' && id !== node.id) nodeStatus[id] = 'succeeded'
+              const okList = []
+              const missList = []
+              for (const raw of entries) {
+                const status = ['running', 'succeeded', 'failed'].includes(raw?.status) ? raw.status : 'running'
+                const nodeId = typeof raw?.nodeId === 'string' ? raw.nodeId : ''
+                const title = typeof raw?.title === 'string' ? raw.title : ''
+                // nodeId 精确命中（省 token 的主路径）；title 兜底（同名未完成优先，避免重复标题永远点亮同一个）。
+                const node = (nodeId ? workflow.nodes.find((item) => item.id === nodeId) : null)
+                  ?? (title
+                    ? workflow.nodes.find((item) => item.title === title && (nodeStatus[item.id] ?? 'idle') !== 'succeeded')
+                      ?? workflow.nodes.find((item) => item.title.toLowerCase() === title.toLowerCase() && (nodeStatus[item.id] ?? 'idle') !== 'succeeded')
+                      ?? workflow.nodes.find((item) => item.title === title)
+                      ?? workflow.nodes.find((item) => item.title.toLowerCase() === title.toLowerCase())
+                    : null)
+                if (!node) {
+                  missList.push(nodeId || title || '(空)')
+                  continue
                 }
+                if (status === 'running') {
+                  for (const [id, previous] of Object.entries(nodeStatus)) {
+                    if (previous === 'running' && id !== node.id) nodeStatus[id] = 'succeeded'
+                  }
+                }
+                nodeStatus[node.id] = status
+                okList.push(node.id)
               }
-              nodeStatus[node.id] = status
-              workflow.nodeStatus = nodeStatus
-              workflow.updatedAt = new Date().toISOString()
-              return { workflowId: workflow.id, nodeId: node.id, status }
+              if (okList.length > 0) {
+                workflow.nodeStatus = nodeStatus
+                workflow.updatedAt = new Date().toISOString()
+              }
+              return { okList, missList }
             })
-            const text = updated
-              ? `画布已更新：${title} → ${status}`
-              : `画布上没有找到步骤「${title}」——请用画布上真实存在的步骤标题。`
-            return { text }
+            if (!updated) return { text: '本会话还没有画布：先用 flow_plan 画一张。' }
+            // 返回极短化：进度上报是高频调用，每次的往返 token 都是执行期开销。
+            const { okList, missList } = updated
+            if (okList.length > 0 && missList.length === 0) {
+              return { text: entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok' }
+            }
+            const parts = []
+            if (okList.length > 0) parts.push(`ok ${okList.length}/${entries.length}`)
+            if (missList.length > 0) parts.push(`未找到: ${missList.join(', ')}——请用 flow_plan 返回的节点 id 或画布标题`)
+            return { text: parts.join('；') }
           },
         })
         toolRegistration.flow_progress = true
