@@ -212,7 +212,8 @@ export function workflowRoutes(deps) {
           writeError(res, 400, new SelectionError('validation', result.warnings[0]?.message ?? '画布为空'))
           return
         }
-        writeJson(res, 200, result)
+        // R5.4 Token 经济：sections（每阶段正文副本）全仓无消费方——不再随响应返回（体积近减半）
+        writeJson(res, 200, { text: result.text, warnings: result.warnings })
       },
     },
     {

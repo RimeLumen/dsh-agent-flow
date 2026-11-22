@@ -406,10 +406,20 @@ export function apply(ctx, config) {
             : args.includeDefinitions === true
               ? store.state.workflows
               : []
+          // R5.1 Token 经济：节点明细有上限——此前全库全节点逐行列出，大库一次调用吞数十 KB 上下文
+          let listed = 0
+          const MAX_NODE_LINES = 200
+          let truncated = false
           for (const workflow of wanted) {
             lines.push(`流程 ${workflow.id}「${workflow.name}」：${workflow.nodes.length} 个节点`)
-            for (const node of workflow.nodes) lines.push(`  - ${node.id} [${node.kind}] ${node.title}`)
+            for (const node of workflow.nodes) {
+              if (listed >= MAX_NODE_LINES) { truncated = true; break }
+              lines.push(`  - [${node.id}] ${node.title} (${node.kind})`)
+              listed += 1
+            }
+            if (truncated) break
           }
+          if (truncated) lines.push(`（已达 ${MAX_NODE_LINES} 行上限，已截断——用 workflowId 参数查看单个流程，或用具体流程的画布确认）`)
           return { text: lines.join('\n') }
         },
       })
@@ -562,7 +572,7 @@ export function apply(ctx, config) {
       try {
         const disposeProgress = tools.register({
           name: 'flow_progress',
-          description: 'Report step status while executing: { nodeId, status }. Prefer nodeId from the flow_plan output (fewer tokens, exact match). Batch several status changes with items[] in one call. The canvas lights up nodes in real time.',
+          description: 'Report step status: { nodeId, status } (nodeId from flow_plan output; batch with items[]).',
           parameters: {
             type: 'object',
             properties: {
