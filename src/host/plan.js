@@ -310,6 +310,11 @@ export function createPlanManager(deps) {
       warnings: Array.isArray(built.warnings) ? built.warnings : [],
       waiters: [],
     }
+    // R4.1 容量上限（LRU 50）：plans Map 此前只增不清，随会话数无界累积
+    if (plans.size >= 50) {
+      const oldest = plans.keys().next().value
+      if (oldest !== undefined && !plans.get(oldest)?.waiters?.length) plans.delete(oldest)
+    }
     plans.set(keyOf(sessionId), plan)
     log(`plan appended into lane for session ${sessionId || '(none)'} turn ${turn} (workflow ${saved.id}, +${built.workflow.nodes.length} nodes)`)
     return { plan, workflow: saved }
@@ -347,6 +352,11 @@ export function createPlanManager(deps) {
       warnings: Array.isArray(warnings) ? warnings : [],
 
       waiters: [],
+    }
+    // R4.1 容量上限（LRU 50）：plans Map 此前只增不清，随会话数无界累积
+    if (plans.size >= 50) {
+      const oldest = plans.keys().next().value
+      if (oldest !== undefined && !plans.get(oldest)?.waiters?.length) plans.delete(oldest)
     }
     plans.set(keyOf(sessionId), plan)
     log(`plan published for session ${sessionId || '(none)'} turn ${turn} (${index.length} steps, workflow ${saved.id})`)
@@ -422,6 +432,10 @@ export function createPlanManager(deps) {
       let timer
       const finish = (value) => {
         clearTimeout(timer)
+        // R4.3 abort 摘除：此前只 resolve 不摘 waiter——残留 waiter 让 describe().waiting
+        // 虚报 true，下次 settle 还会对已 resolve 的 finish 重放调用
+        const index = plan.waiters.indexOf(finish)
+        if (index >= 0) plan.waiters.splice(index, 1)
         resolve(value)
       }
       plan.waiters.push(finish)

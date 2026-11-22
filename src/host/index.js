@@ -227,6 +227,12 @@ export function apply(ctx, config) {
     inheritParentCanvas(payload?.agent)
   })
 
+  // R4.2 会话结束清理：draftTurns 按 sessionId 累积（长驻宿主缓慢泄漏），agent 离开注册表时摘除
+  ctx.on('agent/disposed', (payload) => {
+    const sessionId = payload?.agent?.id ?? ''
+    if (sessionId) draftTurns.delete(sessionId)
+  })
+
   // 插件自主拆解（Q1/Q4）：用户消息进入 inbox 时，插件自己把提示词拆成阶段+子任务，
   // 连好线（复用 phasesToWorkflow 的边生成），产出 'auto-draft' 草稿画布。
   // 已有的 agent-plan 画布优先——不覆盖 Agent 自己画的流程。
@@ -372,6 +378,8 @@ export function apply(ctx, config) {
         },
         async execute(args = {}, exec) {
           const sessionId = exec?.agent?.id ?? ''
+          // R4.5 就绪门：Store 构造即置空 state，load 完成前的早期调用会假阴性「还没有画布」
+          await store.ready()
           const lines = []
           const eff = effectiveFor(sessionId)
           lines.push(`当前注入：模式=${eff.mode} 预设=${eff.profileName ?? '（无）'} 作用域=${eff.source}`)
@@ -509,6 +517,8 @@ export function apply(ctx, config) {
           timeoutMs: configDefaults.planTimeoutMs + 15000,
           async execute(args = {}, exec) {
             const sessionId = exec?.agent?.id ?? ''
+            // R4.5 就绪门：Store 构造即置空 state，load 完成前的早期调用会假阴性「还没有画布」
+            await store.ready()
             const published = await plans.publish(sessionId, args)
             const timeoutMs = Number(store.state.prefs?.planTimeoutMs) > 0
               ? Number(store.state.prefs.planTimeoutMs)
@@ -582,6 +592,8 @@ export function apply(ctx, config) {
           },
           async execute(args = {}, exec) {
             const sessionId = exec?.agent?.id ?? ''
+            // R4.5 就绪门：Store 构造即置空 state，load 完成前的早期调用会假阴性「还没有画布」
+            await store.ready()
             // 批量优先：items[] 每项一条状态；单条模式取顶层 nodeId/title + status。
             const entries = Array.isArray(args.items) && args.items.length > 0
               ? args.items.slice(0, 20)
@@ -674,6 +686,8 @@ export function apply(ctx, config) {
           },
           async execute(args = {}, exec) {
             const sessionId = exec?.agent?.id ?? ''
+            // R4.5 就绪门：Store 构造即置空 state，load 完成前的早期调用会假阴性「还没有画布」
+            await store.ready()
             const workflow = args.workflowId
               ? store.state.workflows.find((item) => item.id === args.workflowId)
               : (store.state.workflows.find((item) => item.sessionId === sessionId && !item.archivedAt)

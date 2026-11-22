@@ -2195,7 +2195,19 @@ window.__ModuleLoader__.load({
         h(Btn, { onClick: () => openCanvas(ctx, sessionId), title: t.openCanvas }, `${t.tabTitle}`))
     }
 
+    // R4.4 单例注入：此前每个组件实例都渲染整份 <style>（8 处调用，同屏 2-3 份重复 ~52KB）。
+    // 首次调用把 css 写入 document.head 的单例节点；后续实例不再重复渲染。
     function StyleTag(props) {
+      if (typeof document !== 'undefined') {
+        let el = document.head.querySelector('style[data-dsh-plugin="dsh-agent-flow"]')
+        if (!el) {
+          el = document.createElement('style')
+          el.setAttribute('data-dsh-plugin', 'dsh-agent-flow')
+          el.textContent = props.css
+          document.head.appendChild(el)
+        }
+        return null
+      }
       return h('style', { 'data-dsh-plugin': 'dsh-agent-flow' }, props.css)
     }
 
