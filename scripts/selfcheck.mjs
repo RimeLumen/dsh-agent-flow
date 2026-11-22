@@ -191,9 +191,10 @@ function check(section, label, ok, extra) {
     check(section, '垂直方向路由可用', Array.isArray(orthogonalRoute({ x: 0, y: 0, w: 220, h: 96 }, { x: 40, y: 400, w: 220, h: 96 }, 'bottom', 'top', [], { clear: 10, clearance: 10 })))
   // 补丁吞行防回归：此前一条替换把 useRef 声明吞掉，真机上 routeCacheRef 未定义直接渲染失败。
   const routeRefDecl = lines.findIndex((l) => l.includes('const routeCacheRef = useRef'))
-  const routeRefUse = lines.findIndex((l) => l.includes('routeCacheRef.current?.for'))
+  const routeRefUse = lines.findIndex((l) => l.includes('routeCache.get(key)'))
   check(section, '路由缓存声明存在', routeRefDecl >= 0)
   check(section, '路由缓存声明在使用之前（同作用域）', routeRefDecl >= 0 && routeRefUse > routeRefDecl)
+  check(section, '路由缓存按结构签名失效（R2.3）', lines.some((l) => l.includes('const routeKey = (edge, fromRect, toRect, oA, oB)')) && !lines.some((l) => l.includes('routeCacheRef.current?.for')))
   }
 }
 

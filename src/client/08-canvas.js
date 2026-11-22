@@ -1173,34 +1173,50 @@
         }
       }
 
+      // R2.1 拖拽 DOM 直写：move 期间只写被拖节点（及容器子节点）的 transform，
+      // 不做 setCurrent——此前每 move 全量 setState 会重建 obstacleGrid/lane Map 并把
+      // routeCache 整体作废（O(E×路由)/move）。pointerup 一次 mutate 结算最终位置。
+      const nodeElsRef = useRef(new Map())
       useEffect(() => {
         const onMove = (event) => {
           const drag = dragRef.current
           if (!drag) return
           const dx = (event.clientX - drag.px) / drag.zoom
           const dy = (event.clientY - drag.py) / drag.zoom
+          drag.mx = Math.max(0, Math.round(drag.x + dx))
+          drag.my = Math.max(0, Math.round(drag.y + dy))
+          drag.mdx = dx
+          drag.mdy = dy
+          const el = nodeElsRef.current.get(drag.id)
+          if (el) el.style.transform = `translate3d(${drag.mx}px, ${drag.my}px, 0)`
+          for (const childId of drag.childIds ?? []) {
+            const child = drag.childStart.get(childId)
+            const childEl = nodeElsRef.current.get(childId)
+            if (child && childEl) childEl.style.transform = `translate3d(${Math.max(0, Math.round(child.x + dx))}px, ${Math.max(0, Math.round(child.y + dy))}px, 0)`
+          }
+          if (!drag.dirtySet) {
+            drag.dirtySet = true
+            setDirty(true)
+          }
+        }
+        const onUp = () => {
+          const drag = dragRef.current
+          dragRef.current = null
+          suppressEdgeClickRef.current = Date.now()
+          if (!drag || drag.mx === undefined) return
           setCurrent((prev) => {
             if (!prev) return prev
             const node = prev.nodes.find((item) => item.id === drag.id)
             if (!node) return prev
-            // 组容器（group.steps/phase）拖动时未钉住的子节点跟随位移，保持「框住孩子」语义
-            const isContainer = node.kind === 'group.steps' || node.kind === 'phase'
-            const childIds = isContainer
-              ? new Set(prev.nodes.filter((item) => item.parentId === drag.id || item.phaseId === drag.id).map((item) => item.id))
-              : null
             return { ...prev, nodes: prev.nodes.map((item) => {
-              if (item.id === drag.id) return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(drag.x + dx)), y: Math.max(0, Math.round(drag.y + dy)), pinned: true } }
-              if (childIds?.has(item.id) && item.pos?.pinned !== true) {
-                return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(item.pos.x + dx)), y: Math.max(0, Math.round(item.pos.y + dy)) } }
+              if (item.id === drag.id) return { ...item, pos: { ...item.pos, x: drag.mx, y: drag.my, pinned: true } }
+              if (drag.childIds?.has(item.id) && item.pos?.pinned !== true) {
+                const start = drag.childStart.get(item.id)
+                return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(start.x + drag.mdx)), y: Math.max(0, Math.round(start.y + drag.mdy)) } }
               }
               return item
             }) }
           })
-          setDirty(true)
-        }
-        const onUp = () => {
-          suppressEdgeClickRef.current = Date.now()
-          dragRef.current = null
         }
         window.addEventListener('pointermove', onMove)
         window.addEventListener('pointerup', onUp)
@@ -1241,11 +1257,22 @@
       const steps = useMemo(() => orderByLayer(current).filter((node) => !node.parentId), [current])
       const checkpoint = run.checkpoint
 
-      const childCountOf = (id) => (current?.nodes ?? []).filter((node) => node.parentId === id).length
+      // R2.2 预聚合：parentId→children 一次 O(N) 建 Map，rectOfNode/childrenOf 查表 O(1)
+      //（此前 childCountOf 每次 filter 全节点，被 allRects/nodesView 逐节点调用 → 每渲染 O(N²)）
+      const childrenByParent = useMemo(() => {
+        const map = new Map()
+        for (const node of current?.nodes ?? []) {
+          const pid = node.parentId
+          if (!pid) continue
+          if (!map.has(pid)) map.set(pid, [])
+          map.get(pid).push(node)
+        }
+        for (const list of map.values()) list.sort((a, b) => (Number(a.pos?.y) || 0) - (Number(b.pos?.y) || 0))
+        return map
+      }, [current])
+      const childCountOf = (id) => childrenByParent.get(id)?.length ?? 0
       const rectOfNode = (node) => rectOf(node, childCountOf(node.id))
-      const childrenOf = (id) => (current?.nodes ?? [])
-        .filter((node) => node.parentId === id)
-        .sort((a, b) => (Number(a.pos?.y) || 0) - (Number(b.pos?.y) || 0))
+      const childrenOf = (id) => childrenByParent.get(id) ?? []
 
       const completeConnection = (targetId, pointer, targetSide = null) => {
         if (!connecting || connecting.nodeId === targetId) return
@@ -1438,21 +1465,34 @@
 
       // 标号定位（修复漂移）：不再用数学近似（edgeMidpoint 与实际折线/贝塞尔脱节），
       // 渲染后对每条可见路径调 getPointAtLength(len/2) 取**真实线上的中点**。
-      // 路由缓存（key=edge.id，current 换代即弃）：节点多时不再每渲染重跑 Dijkstra
-      const routeCacheRef = useRef(null)
+      // 路由缓存（R2.3：key=边的结构签名，见 edgeDCached 处）——不再随 current 引用整体作废
+      const routeCacheRef = useRef(new Map())
       const edgePathEls = useRef(new Map())
       const [edgeMids, setEdgeMids] = useState(() => new Map())
+      // R2.4 增量测量：getTotalLength/getPointAtLength 会强制同步 layout（每边两次）。
+      // 缓存每边的 d 串，路径未变的边直接复用上次中点——拖拽/缩放时只测真正变形的边。
+      const midCacheRef = useRef({ ds: new Map(), mids: new Map() })
       useEffect(() => {
+        const cache = midCacheRef.current
         const next = new Map()
         for (const [edgeId, el] of edgePathEls.current) {
           try {
+            const d = el.getAttribute('d') ?? ''
+            if (cache.ds.get(edgeId) === d) {
+              const cachedMid = cache.mids.get(edgeId)
+              if (cachedMid) { next.set(edgeId, cachedMid); continue }
+            }
             const len = el.getTotalLength()
             if (len > 0) {
               const point = el.getPointAtLength(len / 2)
-              next.set(edgeId, { x: point.x, y: point.y })
+              const mid = { x: point.x, y: point.y }
+              next.set(edgeId, mid)
+              cache.ds.set(edgeId, d)
+              cache.mids.set(edgeId, mid)
             }
           } catch { /* 路径不可测（隐藏/无 d）时保留旧值 */ }
         }
+        if (cache.ds.size > 4000) { cache.ds.clear(); cache.mids.clear() }
         setEdgeMids((prev) => {
           if (prev.size === next.size && [...next.entries()].every(([id, point]) => {
             const old = prev.get(id)
@@ -1461,15 +1501,25 @@
           return next
         })
       }, [current, zoom])
-      if (routeCacheRef.current?.for !== current) routeCacheRef.current = { for: current, map: new Map() }
-      const routeCache = routeCacheRef.current.map
+      // R2.3 失效粒度：缓存 key 从「current 引用」改为「边的结构签名」——
+      // 此前任何 mutate（拖拽每 move）都换 current 引用，全部边路由作废重算（O(E×路由)/move）。
+      // 签名含两端锚点坐标/面/车道偏移，任一变化才重算该边。
+      const routeKey = (edge, fromRect, toRect, oA, oB) => [
+        edge.id, edge.fromSide ?? 'right', edge.toSide ?? 'left',
+        Math.round(fromRect.x), Math.round(fromRect.y), Math.round(fromRect.w), Math.round(fromRect.h),
+        Math.round(toRect.x), Math.round(toRect.y), Math.round(toRect.w), Math.round(toRect.h),
+        oA, oB, current?.nodes.length ?? 0,
+      ].join('|')
+      const routeCache = routeCacheRef.current
       const edgeDCached = (fromRect, toRect, edge, oA, oB) => {
-        const hit = routeCache.get(edge.id)
+        const key = routeKey(edge, fromRect, toRect, oA, oB)
+        const hit = routeCache.get(key)
         if (typeof hit === 'string') return hit
         // 此前写成调用 edgeDCached 自己 → 任何调用即无限递归；缓存 key 相同的前提下
         // 这里应调用真实的 edgePath 计算并写入缓存。
         const d = edgePath(fromRect, toRect, edge, oA, oB)
-        routeCache.set(edge.id, d)
+        routeCache.set(key, d)
+        if (routeCache.size > 4000) routeCache.clear()
         return d
       }
 
@@ -1760,6 +1810,7 @@
         return h('div', {
           key: node.id,
           className: 'daf-node daf-glass',
+          ref: (el) => { if (el) nodeElsRef.current.set(node.id, el); else nodeElsRef.current.delete(node.id) },
           'data-node-id': node.id,
           'data-kind': node.kind,
           'data-status': status === 'idle' ? undefined : status,
@@ -1775,7 +1826,18 @@
             // 只响应左键：中键留给画布平移，右键留给上下文菜单（手势互斥）
             if (event.button !== 0) return
             if (event.target.closest('.daf-anchor') || event.target.closest('.daf-port') || event.target.closest('button')) return
-            dragRef.current = { id: node.id, px: event.clientX, py: event.clientY, x: node.pos.x, y: node.pos.y, zoom }
+            const dragNode = current.nodes.find((item) => item.id === node.id) ?? node
+            const isDragContainer = dragNode.kind === 'group.steps' || dragNode.kind === 'phase'
+            // 容器拖动预算：pointerdown 时算好未钉住子节点集合与起始位（move 期零扫描）
+            const dragChildIds = isDragContainer
+              ? new Set(current.nodes.filter((item) => (item.parentId === node.id || item.phaseId === node.id) && item.pos?.pinned !== true).map((item) => item.id))
+              : new Set()
+            const dragChildStart = new Map()
+            for (const childId of dragChildIds) {
+              const childNode = current.nodes.find((item) => item.id === childId)
+              if (childNode) dragChildStart.set(childId, { x: childNode.pos.x, y: childNode.pos.y })
+            }
+            dragRef.current = { id: node.id, px: event.clientX, py: event.clientY, x: node.pos.x, y: node.pos.y, zoom, childIds: dragChildIds, childStart: dragChildStart }
             setSelectedId(node.id)
           },
           onPointerUp: () => {
