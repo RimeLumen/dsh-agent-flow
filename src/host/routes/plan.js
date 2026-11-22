@@ -47,9 +47,13 @@ export function planRoutes(deps) {
         const result = await deps.plans.confirm(sessionId, workflow)
         // 自动入库（批次 5）：只在用户**确认/调整**后落库——skipped / timeout 不落，
         // 未采纳的草稿不会变成噪声。落库在确认之后，也满足"延后落库"（不写半成品）。
+        // 修复：此前在 mutate 之外直接改 state.experiences——confirm 不带 workflow 时
+        // 没有 scheduleFlush，经验只驻留内存，重启即丢。包进 mutate 走防抖落盘。
         try {
-          const active = store.state.workflows.find((item) => item.sessionId === sessionId && !item.archivedAt)
-          if (active) autoCaptureExperience(store.state, active, {})
+          await store.mutate((state) => {
+            const active = state.workflows.find((item) => item.sessionId === sessionId && !item.archivedAt)
+            return active ? autoCaptureExperience(state, active, {}) : null
+          })
         } catch (error) {
           // 自动入库是附带能力，失败不该让确认失败；但必须留痕——
           // 静默吞掉会让「经验库不再增长」这种失效无人发现。

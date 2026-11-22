@@ -555,6 +555,21 @@ function check(section, label, ok, extra) {
   check(section, '注入文本引导 nodeId 与批量', indexSrc.includes('优先传 flow_plan 返回的节点 id') && indexSrc.includes('items 批量上报'))
 }
 
+// ── 14. R1 P0 修复防回归 ──
+{
+  const section = 'r1-p0'
+  const idx = readFileSync(join(hostDir, 'index.js'), 'utf8')
+  const sto = readFileSync(join(hostDir, 'store.js'), 'utf8')
+  const canvas = readFileSync(join(root, 'src', 'client', '08-canvas.js'), 'utf8')
+  const planRoute = readFileSync(join(hostDir, 'routes', 'plan.js'), 'utf8')
+  check(section, 'normalizeWorkflow 已导入（子代理继承复活）', idx.includes("import { createEmptyWorkflow, normalizeWorkflow } from './flow/model.js'"))
+  check(section, 'exit 钩子无 require（ESM 兼容）', !/= require\(/.test(sto) && sto.includes("import { mkdirSync, renameSync, writeFileSync } from 'node:fs'"))
+  check(section, '四工具统一 disposers 回收', (idx.match(/disposers\.push\(dispose/g) ?? []).length >= 4 && idx.includes('return disposeAll'))
+  check(section, 'SVG 导出转义实体恢复', canvas.includes("replace(/&/g, '&amp;')") && canvas.includes("replace(/</g, '&lt;')"))
+  check(section, '轮询 userOverride 防拽回', canvas.includes('canvasOverrideRef.current && sessionFlow') && canvas.includes('canvasOverrideRef.current ='))
+  check(section, '自动入库走 mutate 落盘', planRoute.includes('await store.mutate((state) => {') && planRoute.includes('autoCaptureExperience(state, active, {})'))
+}
+
 // ── 汇总 ──
 const bySection = new Map()
 for (const r of results) {

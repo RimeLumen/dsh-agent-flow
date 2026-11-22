@@ -4146,7 +4146,8 @@ window.__ModuleLoader__.load({
             if (dirty || run.status !== 'idle') return
             const sessionFlow = sessionId ? items.find((item) => item.sessionId === sessionId && !item.archivedAt) : undefined
             const mine = items.find((item) => item.id === current?.id)
-            const target = sessionFlow && sessionFlow.id !== current?.id
+            // userOverride 时跳过 sessionFlow 拽回分支；当前画布的服务端更新仍跟随
+            const target = !canvasOverrideRef.current && sessionFlow && sessionFlow.id !== current?.id
               ? sessionFlow
               : mine && current && mine.updatedAt && mine.updatedAt !== current.updatedAt
                 ? mine
@@ -4207,10 +4208,14 @@ window.__ModuleLoader__.load({
         void loadFlows(false)
       }, [loadFlows])
 
+      // 用户主动切换画布标记：pickFlow 打开非本会话画布后，轮询不再强制拽回 session 画布
+      // （修复：此前最迟 4s 被 adopt 回 session 画布并重置选择）。切回本会话画布时复位。
+      const canvasOverrideRef = useRef(false)
       const pickFlow = async (id) => {
         if (dirty && !window.confirm(t.confirmDiscard)) return
         try {
           const full = await api.workflow(id)
+          canvasOverrideRef.current = Boolean(sessionIdRef.current) && full.workflow.sessionId !== sessionIdRef.current
           adoptWorkflow(full.workflow)
           setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
@@ -4509,7 +4514,8 @@ window.__ModuleLoader__.load({
         }
         const w = br - bx + PAD * 2, h = bb - by + PAD * 2
         const ox = PAD - bx, oy = PAD - by
-        const esc = (s) => String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+        // 修复：此前三个 replace 均为自替换（转义实体在历史搬运中丢失），标题含 &/< 的节点导出 SVG/PNG 损坏
+        const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
         svg += '<rect width="100%" height="100%" fill="' + EXPORT_BACKGROUND + '"/>'
         svg += '<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#666"/></marker></defs>'

@@ -13,7 +13,7 @@ import {
   resolveEffective,
 } from './selection.js'
 import { RunRegistry } from './flow/scheduler.js'
-import { createEmptyWorkflow } from './flow/model.js'
+import { createEmptyWorkflow, normalizeWorkflow } from './flow/model.js'
 import { createPlanManager, phasesToWorkflow } from './plan.js'
 import { decomposePrompt } from './decompose.js'
 import { composePrompt } from './compose.js'
@@ -339,6 +339,20 @@ export function apply(ctx, config) {
   ctx.inject(['tools'], (injected) => {
     const tools = injected.get('tools')
     if (!tools || typeof tools.register !== 'function') return undefined
+    // 统一回收：此前 disposeProgress/disposeCompose 声明后从未被任何 disposer 调用，
+    // 插件重载时两个工具悬挂（旧 store 闭包滞留 + 重复注册）。
+    const disposers = []
+    let disposed = false
+    const disposeAll = () => {
+      if (disposed) return
+      disposed = true
+      for (const dispose of disposers.splice(0, disposers.length)) {
+        try {
+          dispose?.()
+        } catch {
+        }
+      }
+    }
     try {
       const dispose = tools.register({
         name: 'flow_status',
@@ -392,6 +406,7 @@ export function apply(ctx, config) {
         },
       })
       toolRegistration.flow_status = true
+      disposers.push(dispose)
       log('flow_status tool registered')
 
       try {
@@ -530,6 +545,7 @@ export function apply(ctx, config) {
           },
         })
         toolRegistration.flow_plan = true
+        disposers.push(disposePlan)
         log('flow_plan tool registered')
 
       // 用户反馈：工作中实时更新画布——Agent 执行时经 flow_progress 上报节点状态，画布实时点亮。
@@ -632,6 +648,7 @@ export function apply(ctx, config) {
           },
         })
         toolRegistration.flow_progress = true
+        disposers.push(disposeProgress)
         log('flow_progress tool registered')
       } catch (error) {
         toolRegistration.flow_progress = false
@@ -670,32 +687,19 @@ export function apply(ctx, config) {
           },
         })
         toolRegistration.flow_compose = true
+        disposers.push(disposeCompose)
         log('flow_compose tool registered')
       } catch (error) {
         toolRegistration.flow_compose = false
         log(`flow_compose tool was not registered: ${error instanceof Error ? error.message : String(error)}`)
       }
 
-        return () => {
-          try {
-            disposePlan?.()
-          } catch {
-          }
-          try {
-            dispose?.()
-          } catch {
-          }
-        }
+        return disposeAll
       } catch (error) {
         log(`flow_plan tool was not registered: ${error instanceof Error ? error.message : String(error)}`)
       }
 
-      return () => {
-        try {
-          dispose?.()
-        } catch {
-        }
-      }
+      return disposeAll
     } catch (error) {
       log(`flow_status tool was not registered: ${error instanceof Error ? error.message : String(error)}`)
       return undefined

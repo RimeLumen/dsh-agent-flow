@@ -1,5 +1,6 @@
 /*! dsh-agent-flow v0.1.0 | Copyright (c) 2026 RimeLumen | MIT License */
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdirSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
@@ -205,8 +206,9 @@ export class Store {
         clearTimeout(this._flushTimer)
         this._flushTimer = null
         // 同步保底：exit 回调里只能同步 I/O；原子写（tmp+renameSync）防半截文件。
+        // 修复：此前在函数体内 require('node:fs')——ESM（type:module）下 require 未定义，
+        // ReferenceError 被 catch 吞掉，保底写盘从未生效。改为顶部静态导入。
         try {
-          const { writeFileSync, renameSync, mkdirSync } = require('node:fs')
           mkdirSync(this.dir, { recursive: true })
           const tmp = this.file + '.tmp'
           writeFileSync(tmp, JSON.stringify(this.state), 'utf8')
