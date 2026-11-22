@@ -13,6 +13,25 @@ export const PLAN_STATUS = Object.freeze({
   REPLACED: 'replaced',
 })
 
+// R6.2 单一实现：按 kind 构建节点 params（此前三份三元复制，其中子节点那份无条件 agent.task
+// 形态——tool.call 子节点丢 name/argsTemplate、human.checkpoint 丢 question，执行期必失败）
+export function buildStepParams(raw, kind, title) {
+  if (kind === 'agent.task') {
+    return { target: 'session', prompt: typeof raw.prompt === 'string' && raw.prompt !== '' ? raw.prompt : title, waitForIdle: false }
+  }
+  if (kind === 'tool.call') {
+    return {
+      name: typeof raw.tool === 'string' ? raw.tool : '',
+      argsTemplate: typeof raw.args === 'string' && raw.args.trim() !== '' ? raw.args : '{}',
+      allowDangerous: raw.allowDangerous === true,
+    }
+  }
+  if (kind === 'human.checkpoint') {
+    return { question: typeof raw.prompt === 'string' && raw.prompt !== '' ? raw.prompt : title, options: ['继续', '停止'] }
+  }
+  return { ...(raw.params && typeof raw.params === 'object' ? raw.params : {}) }
+}
+
 export function phasesToWorkflow(input, context = {}) {
   const makeId = () => `n_${Math.random().toString(36).slice(2, 8)}`
   const phasesIn = (Array.isArray(input?.phases) ? input.phases : []).filter((phase) => phase && typeof phase === 'object')
@@ -61,17 +80,7 @@ export function phasesToWorkflow(input, context = {}) {
     subtasks.slice(0, 20).forEach((raw, subtaskIndex) => {
       const stepTitle = typeof raw.title === 'string' && raw.title.trim() !== '' ? raw.title.trim().slice(0, 120) : `工作 ${subtaskIndex + 1}`
       const kind = NODE_KINDS.includes(raw.kind) ? raw.kind : 'agent.task'
-      const params = kind === 'agent.task'
-        ? { target: 'session', prompt: typeof raw.prompt === 'string' && raw.prompt !== '' ? raw.prompt : stepTitle, waitForIdle: false }
-        : kind === 'tool.call'
-          ? {
-              name: typeof raw.tool === 'string' ? raw.tool : '',
-              argsTemplate: typeof raw.args === 'string' && raw.args.trim() !== '' ? raw.args : '{}',
-              allowDangerous: raw.allowDangerous === true,
-            }
-          : kind === 'human.checkpoint'
-            ? { question: typeof raw.prompt === 'string' && raw.prompt !== '' ? raw.prompt : stepTitle, options: ['继续', '停止'] }
-            : { ...(raw.params && typeof raw.params === 'object' ? raw.params : {}) }
+      const params = buildStepParams(raw, kind, stepTitle)
       push({
         id: makeId(),
         kind,
@@ -135,17 +144,7 @@ export function stepsToWorkflow(input, context = {}) {
     const title = typeof step.title === 'string' && step.title.trim() !== '' ? step.title.trim().slice(0, 120) : `步骤 ${nodes.length + 1}`
     const kind = NODE_KINDS.includes(step.kind) ? step.kind : 'agent.task'
     const substeps = Array.isArray(step.substeps) ? step.substeps.filter((item) => item && typeof item === 'object') : []
-    const params = kind === 'agent.task'
-      ? { target: 'session', prompt: typeof step.prompt === 'string' && step.prompt !== '' ? step.prompt : title, waitForIdle: false }
-      : kind === 'tool.call'
-        ? {
-            name: typeof step.tool === 'string' ? step.tool : '',
-            argsTemplate: typeof step.args === 'string' && step.args.trim() !== '' ? step.args : '{}',
-            allowDangerous: step.allowDangerous === true,
-          }
-        : kind === 'human.checkpoint'
-          ? { question: typeof step.prompt === 'string' && step.prompt !== '' ? step.prompt : title, options: ['继续', '停止'] }
-          : { ...(step.params && typeof step.params === 'object' ? step.params : {}) }
+    const params = buildStepParams(step, kind, title)
     const id = makeId()
     if (kind === 'group.steps' || substeps.length > 0) {
       const groupId = makeId()
@@ -168,7 +167,7 @@ export function stepsToWorkflow(input, context = {}) {
           kind: NODE_KINDS.includes(child.kind) ? child.kind : 'agent.task',
           title: childTitle,
           pos: { x: 400, y: childY },
-          params: { target: 'session', prompt: typeof child.prompt === 'string' && child.prompt !== '' ? child.prompt : childTitle, waitForIdle: false },
+          params: buildStepParams(child, NODE_KINDS.includes(child.kind) ? child.kind : 'agent.task', childTitle),
           onError: 'fail',
           parentId: groupId,
         })
