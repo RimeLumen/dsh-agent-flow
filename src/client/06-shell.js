@@ -154,12 +154,21 @@
         hint ? h('span', { className: 'daf-muted' }, hint) : null)
     }
 
-    /** 贴屏右侧、与画布等高的抽屉容器（Mermaid 导入 / 流程管理共用）。 */
+
+    // R7.2 弹层栈：多个抽屉/弹窗可同开，Esc 只关最后打开的一层（此前一次 Esc 同时关两层）
+    const modalStack = []
+    const modalTop = () => modalStack[modalStack.length - 1]
     function RightDrawer({ title, children, onClose }) {
       useEffect(() => {
-        const onKey = (event) => { if (event.key === 'Escape') onClose?.() }
+        const token = Symbol('layer')
+        modalStack.push(token)
+        const onKey = (event) => { if (event.key === 'Escape' && modalTop() === token) onClose?.() }
         window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        return () => {
+          const idx = modalStack.indexOf(token)
+          if (idx >= 0) modalStack.splice(idx, 1)
+          window.removeEventListener('keydown', onKey)
+        }
       }, [onClose])
       return h('div', { className: 'daf-drawer-backdrop', onMouseDown: (event) => { if (event.target === event.currentTarget) onClose?.() } },
         h('div', { className: 'daf-drawer-right', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
@@ -171,8 +180,10 @@
 
     function Modal({ title, children, onClose, footer }) {
       useEffect(() => {
+        const token = Symbol('layer')
+        modalStack.push(token)
         const onKey = (event) => {
-          if (event.key === 'Escape') onClose?.()
+          if (event.key === 'Escape' && modalTop() === token) onClose?.()
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
@@ -200,6 +211,8 @@
         window.addEventListener('keydown', onKey)
         return () => {
           window.removeEventListener('mousedown', onDown)
+          const idx = modalStack.indexOf(token)
+          if (idx >= 0) modalStack.splice(idx, 1)
           window.removeEventListener('keydown', onKey)
         }
       }, [open, onOpenChange])

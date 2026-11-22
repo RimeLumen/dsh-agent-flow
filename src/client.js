@@ -155,6 +155,7 @@ window.__ModuleLoader__.load({
         selectedCount: '已选',
         restoreSelected: '复原所选',
         deleteSelected: '删除所选',
+        batchDeleteWarn: '永久删除，不进回收站',
         archiveSelected: '归档所选',
         mergeSelected: '合并所选',
         mergeDone: '已合并为新流程',
@@ -368,6 +369,7 @@ window.__ModuleLoader__.load({
         selectedCount: 'Selected',
         restoreSelected: 'Restore selected',
         deleteSelected: 'Delete selected',
+        batchDeleteWarn: 'Permanently deleted, not to recycle bin',
         archiveSelected: 'Archive selected',
         mergeSelected: 'Merge selected',
         mergeDone: 'Merged into a new flow',
@@ -2245,12 +2247,21 @@ window.__ModuleLoader__.load({
         hint ? h('span', { className: 'daf-muted' }, hint) : null)
     }
 
-    /** 贴屏右侧、与画布等高的抽屉容器（Mermaid 导入 / 流程管理共用）。 */
+
+    // R7.2 弹层栈：多个抽屉/弹窗可同开，Esc 只关最后打开的一层（此前一次 Esc 同时关两层）
+    const modalStack = []
+    const modalTop = () => modalStack[modalStack.length - 1]
     function RightDrawer({ title, children, onClose }) {
       useEffect(() => {
-        const onKey = (event) => { if (event.key === 'Escape') onClose?.() }
+        const token = Symbol('layer')
+        modalStack.push(token)
+        const onKey = (event) => { if (event.key === 'Escape' && modalTop() === token) onClose?.() }
         window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        return () => {
+          const idx = modalStack.indexOf(token)
+          if (idx >= 0) modalStack.splice(idx, 1)
+          window.removeEventListener('keydown', onKey)
+        }
       }, [onClose])
       return h('div', { className: 'daf-drawer-backdrop', onMouseDown: (event) => { if (event.target === event.currentTarget) onClose?.() } },
         h('div', { className: 'daf-drawer-right', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
@@ -2262,8 +2273,10 @@ window.__ModuleLoader__.load({
 
     function Modal({ title, children, onClose, footer }) {
       useEffect(() => {
+        const token = Symbol('layer')
+        modalStack.push(token)
         const onKey = (event) => {
-          if (event.key === 'Escape') onClose?.()
+          if (event.key === 'Escape' && modalTop() === token) onClose?.()
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
@@ -2291,6 +2304,8 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => {
           window.removeEventListener('mousedown', onDown)
+          const idx = modalStack.indexOf(token)
+          if (idx >= 0) modalStack.splice(idx, 1)
           window.removeEventListener('keydown', onKey)
         }
       }, [open, onOpenChange])
@@ -3308,7 +3323,10 @@ window.__ModuleLoader__.load({
               !inRecycle && selectedIds.size >= 2
                 ? hh(Bt, { onClick: () => { const ids = [...selectedIds]; setSelectedIds(new Set()); void mergeFlows(ids) }, disabled: batchBusy }, t.mergeSelected)
                 : null,
-              hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
+              hh(Bt, { variant: 'danger', onClick: () => {
+                // R7.1 防误删：批量删除是永久删除（不进回收站），与单流程 3 秒倒计时同级防护
+                if (window.confirm(`${t.deleteSelected}: ${selectedIds.size}（${t.batchDeleteWarn}）`)) void runBatch('delete')
+              }, disabled: batchBusy }, t.deleteSelected))
           : null,
         flows.length === 0
           ? hh('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
@@ -3914,10 +3932,15 @@ window.__ModuleLoader__.load({
         })
       }, [beginCamera, endCamera])
 
-      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空
+      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空（R7.3 输入框守卫：焦点在可编辑元素内时不劫持）
+      const inEditable = (target) => {
+        const tag = target?.tagName
+        return tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable === true
+      }
       useEffect(() => {
         const onKey = (event) => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            if (inEditable(event.target)) return
             event.preventDefault()
             searchInputRef.current?.focus()
             return
@@ -4000,6 +4023,8 @@ window.__ModuleLoader__.load({
             setPointerPos(null)
             return
           }
+          // R7.3 焦点在可编辑元素内时不劫持任何画布快捷键（浏览器缩放/搜索等归浏览器）
+          if (inEditable(event.target)) return
           // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
           const keyTag = event.target?.tagName
           if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId && keyTag !== 'INPUT' && keyTag !== 'TEXTAREA') {
@@ -4037,6 +4062,8 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [connecting, fitToContent, cameraZoom, zoom, current, frameNodes, tourStops, tourIndex, selectedEdgeId])
+      // R6.5' 说明：主快捷键 effect 仍随依赖重建，但拖拽期的高频来源是 current——
+      // 已由 R2.1 消除（拖拽不再每 move 改 current），此处保留依赖以维持语义正确性。
 
       useEffect(() => {
         if (!flowMenu) return undefined

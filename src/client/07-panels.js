@@ -899,7 +899,10 @@
               !inRecycle && selectedIds.size >= 2
                 ? hh(Bt, { onClick: () => { const ids = [...selectedIds]; setSelectedIds(new Set()); void mergeFlows(ids) }, disabled: batchBusy }, t.mergeSelected)
                 : null,
-              hh(Bt, { variant: 'danger', onClick: () => void runBatch('delete'), disabled: batchBusy }, t.deleteSelected))
+              hh(Bt, { variant: 'danger', onClick: () => {
+                // R7.1 防误删：批量删除是永久删除（不进回收站），与单流程 3 秒倒计时同级防护
+                if (window.confirm(`${t.deleteSelected}: ${selectedIds.size}（${t.batchDeleteWarn}）`)) void runBatch('delete')
+              }, disabled: batchBusy }, t.deleteSelected))
           : null,
         flows.length === 0
           ? hh('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)

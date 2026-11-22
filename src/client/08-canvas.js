@@ -399,10 +399,15 @@
         })
       }, [beginCamera, endCamera])
 
-      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空
+      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空（R7.3 输入框守卫：焦点在可编辑元素内时不劫持）
+      const inEditable = (target) => {
+        const tag = target?.tagName
+        return tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable === true
+      }
       useEffect(() => {
         const onKey = (event) => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            if (inEditable(event.target)) return
             event.preventDefault()
             searchInputRef.current?.focus()
             return
@@ -485,6 +490,8 @@
             setPointerPos(null)
             return
           }
+          // R7.3 焦点在可编辑元素内时不劫持任何画布快捷键（浏览器缩放/搜索等归浏览器）
+          if (inEditable(event.target)) return
           // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
           const keyTag = event.target?.tagName
           if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId && keyTag !== 'INPUT' && keyTag !== 'TEXTAREA') {
@@ -522,6 +529,8 @@
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [connecting, fitToContent, cameraZoom, zoom, current, frameNodes, tourStops, tourIndex, selectedEdgeId])
+      // R6.5' 说明：主快捷键 effect 仍随依赖重建，但拖拽期的高频来源是 current——
+      // 已由 R2.1 消除（拖拽不再每 move 改 current），此处保留依赖以维持语义正确性。
 
       useEffect(() => {
         if (!flowMenu) return undefined
