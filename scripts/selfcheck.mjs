@@ -551,7 +551,7 @@ function check(section, label, ok, extra) {
   check(section, 'flow_plan 返回带节点 id', indexSrc.includes('- [${step.id}] ${step.title}'))
   check(section, 'flow_progress 支持 nodeId 优先', indexSrc.includes('nodeId ? workflow.nodes.find((item) => item.id === nodeId) : null'))
   check(section, 'flow_progress 支持批量 items', indexSrc.includes('args.items.slice(0, 20)'))
-  check(section, '进度返回文本极短化', indexSrc.includes("return { text: entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok' }"))
+  check(section, '进度返回文本极短化', indexSrc.includes("entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok'") && indexSrc.includes("return { text: parts.join('；') || 'no-op' }"))
   check(section, '注入文本引导 nodeId 与批量', indexSrc.includes('优先传 flow_plan 返回的节点 id') && indexSrc.includes('items 批量上报'))
 }
 

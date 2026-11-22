@@ -188,6 +188,9 @@ export function stepsToWorkflow(input, context = {}) {
       pos: { x: 80, y },
       params,
       onError: step.optional === true ? 'skip' : 'fail',
+      ...(Array.isArray(step.reliesOn)
+        ? { reliesOn: step.reliesOn.filter((ref) => typeof ref === 'string' && ref !== '').slice(0, 16) }
+        : {}),
       parentId: undefined,
     })
     if (previous) edges.push({ id: `e_${previous}_${id}`, from: previous, fromPort: 'out', to: id, fromSide: 'right', toSide: 'left' })
@@ -386,6 +389,23 @@ export function createPlanManager(deps) {
         if (index >= 0) state.workflows[index] = normalized
       })
       adjusted = true
+      // adjusted 回读（用户指令）：flow_plan 返回给模型的 steps 必须是用户调整后的
+      // 画布，而不是发布时快照——否则模型按旧计划执行。容器（group/phase）带 children。
+      plan.steps = normalized.nodes
+        .filter((item) => !item.parentId)
+        .slice(0, 40)
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          ...(item.kind === 'group.steps' || item.kind === 'phase'
+            ? {
+              children: normalized.nodes
+                .filter((child) => child.parentId === item.id || child.phaseId === item.id)
+                .slice(0, 20)
+                .map((child) => child.id),
+            }
+            : {}),
+        }))
     }
     return settle(sessionId, adjusted ? PLAN_STATUS.ADJUSTED : PLAN_STATUS.CONFIRMED)
   }

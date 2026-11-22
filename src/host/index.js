@@ -411,6 +411,7 @@ export function apply(ctx, config) {
                   type: 'object',
                   properties: {
                     title: { type: 'string', description: 'Step title (required).' },
+                    reliesOn: { type: 'array', items: { type: 'string' }, description: 'Titles this step logically depends on; drawn as a solid dependency arrow.' },
                     kind: { type: 'string', description: 'Optional node kind: agent.task (default), tool.call, human.checkpoint, io.output, inject.skill, flow.wait, flow.parallel, branch.condition…' },
                     prompt: { type: 'string', description: 'What to do in this step (for agent.task / human.checkpoint).' },
                     detail: { type: 'string', description: 'Extra detail for the node summary.' },
@@ -511,6 +512,11 @@ export function apply(ctx, config) {
               // 带 id 输出：模型后续用 nodeId 上报进度（比复述标题省 token 且精确命中）
               lines.push(`- [${step.id}] ${step.title}${Array.isArray(step.children) && step.children.length > 0 ? `（含 ${step.children.length} 个子步骤）` : ''}`)
             }
+            // 执行协议（用户指令）：确认后模型拿到的是可直接照做的执行序列
+            const firstStep = Array.isArray(published.plan.steps) ? published.plan.steps[0] : null
+            if (firstStep && (result.status === 'confirmed' || result.status === 'adjusted')) {
+              lines.push(`首个执行：[${firstStep.id}] ${firstStep.title}；每步开始/完成/失败用 flow_progress 上报（优先 nodeId，连续变化可用 items 批量）。`)
+            }
             if (Array.isArray(published.plan.phases) && published.plan.phases.length > 0) {
               const modeLabel = published.plan.mode === 'design' ? '设计' : '任务'
               lines.push(`阶段（${modeLabel}模式 · 布局 ${published.plan.layout}）：${published.plan.phases.map((phase) => phase.title).join(' / ')}`)
@@ -571,6 +577,11 @@ export function apply(ctx, config) {
               const nodeStatus = { ...(workflow.nodeStatus ?? {}) }
               const okList = []
               const missList = []
+              const driftList = []
+              // 漂移护栏：命中的节点不在已确认计划（含子步骤）中时柔性提示，不拒绝上报
+              const plan = plans?.read?.(sessionId) ?? null
+              const plannedIds = new Set((Array.isArray(plan?.steps) ? plan.steps : [])
+                .flatMap((step) => [step.id, ...(Array.isArray(step.children) ? step.children : [])]))
               for (const raw of entries) {
                 const status = ['running', 'succeeded', 'failed'].includes(raw?.status) ? raw.status : 'running'
                 const nodeId = typeof raw?.nodeId === 'string' ? raw.nodeId : ''
@@ -594,23 +605,30 @@ export function apply(ctx, config) {
                 }
                 nodeStatus[node.id] = status
                 okList.push(node.id)
+                if (plannedIds.size > 0 && !plannedIds.has(node.id)) driftList.push(node.id)
               }
               if (okList.length > 0) {
                 workflow.nodeStatus = nodeStatus
                 workflow.updatedAt = new Date().toISOString()
               }
-              return { okList, missList }
+              // 完成信号：已确认计划内的可执行节点（排除容器）全部终态时明确告知；
+              // 用户手画的计划外节点不阻塞完成信号。
+              const actionable = workflow.nodes.filter((item) => item.kind !== 'group.steps' && item.kind !== 'phase')
+              const plannedActionable = plannedIds.size > 0
+                ? actionable.filter((item) => plannedIds.has(item.id))
+                : actionable
+              const allDone = plannedActionable.length > 0 && plannedActionable.every((item) => ['succeeded', 'failed'].includes(nodeStatus[item.id] ?? 'idle'))
+              return { okList, missList, driftList, allDone }
             })
             if (!updated) return { text: '本会话还没有画布：先用 flow_plan 画一张。' }
             // 返回极短化：进度上报是高频调用，每次的往返 token 都是执行期开销。
-            const { okList, missList } = updated
-            if (okList.length > 0 && missList.length === 0) {
-              return { text: entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok' }
-            }
+            const { okList, missList, driftList, allDone } = updated
             const parts = []
-            if (okList.length > 0) parts.push(`ok ${okList.length}/${entries.length}`)
+            if (okList.length > 0) parts.push(entries.length > 1 ? `ok ${okList.length}/${entries.length}` : 'ok')
             if (missList.length > 0) parts.push(`未找到: ${missList.join(', ')}——请用 flow_plan 返回的节点 id 或画布标题`)
-            return { text: parts.join('；') }
+            if (driftList.length > 0) parts.push(`注意: ${driftList.join(', ')} 不在已确认计划中`)
+            if (allDone) parts.push('计划已全部执行完成')
+            return { text: parts.join('；') || 'no-op' }
           },
         })
         toolRegistration.flow_progress = true
