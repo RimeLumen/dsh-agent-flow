@@ -66,9 +66,11 @@
         let closed = false
         let timer = null
         let failures = 0
+        // R8.4 增量恢复：此前 lastPlanVersion 声明在 tick 内部，每次轮询重置——
+        // since 参数永远为空，每 4s 全量拉 plan，增量协议失效
+        let lastPlanVersion = ''
         const tick = async () => {
           let base = 4000
-          let lastPlanVersion = ''
           if (typeof document !== 'undefined' && document.hidden) {
             if (!closed) timer = setTimeout(tick, POLL_MAX)
             return

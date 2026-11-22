@@ -26,7 +26,6 @@ window.__ModuleLoader__.load({
         tools: '工具',
         search: '搜索名字或描述…',
         allSources: '全部来源',
-        selectAll: '全选可见',
         clearAll: '清空',
         save: '保存为预设',
         saved: '已保存',
@@ -59,11 +58,9 @@ window.__ModuleLoader__.load({
         saveFlow: '保存',
         deleteFlow: '删除',
         autoLayout: '自动整理',
-        zoomFit: '适配',
         compact: '紧凑',
         inspector: '节点属性',
         noNode: '选中一个节点查看属性',
-        nodeKind: '类型',
         nodeTitle: '标题',
         nodeNote: '备注',
         onError: '出错时',
@@ -99,7 +96,6 @@ window.__ModuleLoader__.load({
         setEntry: '设为起点',
         vars: '变量',
         errorBadge: '错误',
-        on: '开',
         off: '关',
         addStep: '加子步骤',
         childSteps: '子步骤',
@@ -240,7 +236,6 @@ window.__ModuleLoader__.load({
         tools: 'Tools',
         search: 'Search name or description…',
         allSources: 'All sources',
-        selectAll: 'Select visible',
         clearAll: 'Clear',
         save: 'Save as preset',
         saved: 'Saved',
@@ -273,11 +268,9 @@ window.__ModuleLoader__.load({
         saveFlow: 'Save',
         deleteFlow: 'Delete',
         autoLayout: 'Auto layout',
-        zoomFit: 'Fit',
         compact: 'Compact',
         inspector: 'Node',
         noNode: 'Select a node to edit it',
-        nodeKind: 'Kind',
         nodeTitle: 'Title',
         nodeNote: 'Note',
         onError: 'On error',
@@ -313,7 +306,6 @@ window.__ModuleLoader__.load({
         setEntry: 'Set as entry',
         vars: 'Vars',
         errorBadge: 'error',
-        on: 'on',
         off: 'off',
         addStep: 'Add step',
         childSteps: 'Child steps',
@@ -1416,9 +1408,11 @@ window.__ModuleLoader__.load({
         let closed = false
         let timer = null
         let failures = 0
+        // R8.4 增量恢复：此前 lastPlanVersion 声明在 tick 内部，每次轮询重置——
+        // since 参数永远为空，每 4s 全量拉 plan，增量协议失效
+        let lastPlanVersion = ''
         const tick = async () => {
           let base = 4000
-          let lastPlanVersion = ''
           if (typeof document !== 'undefined' && document.hidden) {
             if (!closed) timer = setTimeout(tick, POLL_MAX)
             return

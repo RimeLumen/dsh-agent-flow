@@ -90,12 +90,23 @@ function baselineHash() {
 }
 
 function check() {
-  build()
-  const current = readFileSync(single, 'utf8')
+  // R8.1 去写副作用：此前 check() 第一步就 build() 覆盖 src/client.js 再与 HEAD 比对——
+  // 单文件有未提交手改时，手改先被分片产物静默覆盖、之后才报失败（分片恰等于 HEAD 时
+  // 甚至报通过且回滚手改）。改为内存拼接直接 hash，不落盘。
+  if (!existsSync(shardDir)) { console.error('分片目录不存在，先执行 split'); process.exit(1) }
+  const parts = []
+  const seen = new Set()
+  for (const [name] of SHARDS) {
+    const file = join(shardDir, `${name}.js`)
+    if (!existsSync(file)) { console.error(`缺分片 ${name}.js`); process.exit(1) }
+    if (seen.has(name)) { console.error(`分片重名 ${name}`); process.exit(1) }
+    seen.add(name)
+    parts.push(readFileSync(file, 'utf8').replace(MARKER_RE, ''))
+  }
   // 换行风格不属于代码内容（工作树 CRLF / 仓库 LF 由 git 归一化决定），
   // 等价性比较双方都归一化到 LF——比较的是逻辑内容。
   const normalize = (text) => text.replace(/\r\n/g, '\n')
-  const blob = execFileSync('git', ['-C', root, 'hash-object', '--stdin'], { input: normalize(current), encoding: 'utf8' }).trim()
+  const blob = execFileSync('git', ['-C', root, 'hash-object', '--stdin'], { input: normalize(parts.join('')), encoding: 'utf8' }).trim()
   const baseline = baselineHash()
   if (!baseline) { console.log('无 git 基准可比对（首次提交前）'); return }
   if (blob === baseline) {

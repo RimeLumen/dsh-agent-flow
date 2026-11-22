@@ -317,7 +317,10 @@ function check(section, label, ok, extra) {
   check(section, '就绪门被真正等待', routeText.includes('store.ready()'))
   check(section, '路由 /workflows/:id/compose 存在', routeFiles.includes("'/workflows/:id/compose'"))
   check(section, '批量流程路由存在', routeFiles.includes("'/workflows/batch'"))
-  check(section, '批量路由支持三种操作', ['archive', 'restore', 'delete'].every((a) => routeFiles.includes("''")) === false || routeFiles.includes("archive / restore / delete"))
+  // R8.3 修复死断言：此前三个谓词完全相同且几乎恒真，从未真正校验三种操作
+  check(section, '批量路由支持归档', routeFiles.includes("'archive'"))
+  check(section, '批量路由支持复原', routeFiles.includes("'restore'"))
+  check(section, '批量路由支持删除', routeFiles.includes("'delete'"))
   check(section, 'FlowManager 独立组件存在', clientSrc.includes('function FlowManager(props)'))
   check(section, '停靠栏挂载 FlowManager', clientSrc.includes('h(FlowManager,'))
   check(section, '批量操作已接线', clientSrc.includes('batchWorkflows'))
@@ -569,6 +572,19 @@ function check(section, label, ok, extra) {
   check(section, 'SVG 导出转义实体恢复', canvas.includes("replace(/&/g, '&amp;')") && canvas.includes("replace(/</g, '&lt;')"))
   check(section, '轮询 userOverride 防拽回', canvas.includes('canvasOverrideRef.current && sessionFlow') && canvas.includes('canvasOverrideRef.current ='))
   check(section, '自动入库走 mutate 落盘', planRoute.includes('await store.mutate((state) => {') && planRoute.includes('autoCaptureExperience(state, active, {})'))
+}
+
+// ── 15. R8 shards 管线守门（此前对「单文件↔分片」唯一纪律零断言）──
+{
+  const section = 'shards-gate'
+  const { spawnSync } = await import('node:child_process')
+  const run = spawnSync(process.execPath, [join(root, 'scripts', 'client-shards.mjs'), 'check'], { encoding: 'utf8', cwd: root })
+  check(section, '分片等价性 check 退出码 0', run.status === 0, (run.stderr ?? '').slice(0, 120))
+  check(section, 'check 无写副作用（纯内存拼接）', !readFileSync(join(root, 'scripts', 'client-shards.mjs'), 'utf8').match(/function check\(\) \{\s*\n\s*build\(\)/))
+  check(section, '归一化对称（split/check 共用 LF 口径）', (() => {
+    const src = readFileSync(join(root, 'scripts', 'client-shards.mjs'), 'utf8')
+    return src.includes("text.replace(/\\r\\n/g, '\\n')") && src.includes("split") === false ? false : src.includes("replace(/\\r\\n/g, '\\n')")
+  })())
 }
 
 // ── 汇总 ──
