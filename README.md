@@ -221,6 +221,15 @@ Aggregated from all 16 development commits on the `Fix` branch (full detail in C
 - **Removed** — 16-anchor quadrant branches and dead position table; nearestSide; nearEdge; stale customPath writes; `await flush()` inside mutate.
 - **Changed** — `src/client.js` split into 9 shards with equivalence pipeline; selfcheck 133 → 164 assertions; route-quality fallback re-checks line-of-sight before degrading.
 
+## V0.1.0 pre-release hardening (R1–R8)
+
+Aggregated from the full-plugin audit (112 findings, 8 parallel auditors) — details in [TIP.md](TIP.md) and docs/plans/2026-11-23-master-plan.md.
+
+- **R1 correctness**: six broken-feature defects fixed (subagent canvas inheritance, exit-hook durability in ESM, tool disposer leaks, SVG export escaping, polling override, experience persistence)
+- **R2–R5**: drag hot-path DOM writes, single-source phase model, lifecycle caps, token-lean responses
+- **R6**: tool definitions extracted to src/host/flow-tools.js; copy-drift bug fixed (tool.call substeps used to be built as agent.task)
+- **R7–R8**: destructive-action guards, Escape layer stack, shard-equivalence gate in selfcheck
+
 ## License
 
 [MIT](LICENSE) © 2026 RimeLumen
