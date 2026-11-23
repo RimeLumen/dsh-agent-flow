@@ -3,7 +3,7 @@
 A DeepSeek Harness plugin that turns **each conversation's plan** into a node graph you can
 review on a canvas, execute, and reuse.
 
-> Current version **v0.1.0a** (always in sync with the `version` field in `package.json`). Full change log (Chinese): see [README.zh.md](README.zh.md#v010a-变更记录).
+> Current version **v0.1.0** (always in sync with the `version` field in `package.json`). Full change log (Chinese): see [README.zh.md](README.zh.md#v010a-变更记录).
 
 - **Context injector** — a bar in the conversation composer to pick this turn's tools and skills
   (index / preload / whitelist).

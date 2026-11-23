@@ -1,6 +1,6 @@
 {
   "name": "dsh-agent-flow",
-  "version": "0.1.0a",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Agent Flow for DeepSeek Harness: a conversation-bar context injector (pick skills/tools per session) plus a right-side node-based flow canvas with CSS-animated live progress.",
