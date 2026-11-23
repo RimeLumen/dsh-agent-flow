@@ -290,15 +290,15 @@
 .daf-scope[data-motion="off"] .daf-busy-dot { animation: none; }
 /* 悬停名称提示：淡入淡出；右缘竖栏时出现在按钮左侧 */
 .daf-tip { position: relative; }
-.daf-tip::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px);
+[data-tip]::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px);
   transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap;
   background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary);
   border: 1px solid var(--dsw-alias-border-l1); box-shadow: var(--daf-shadow-1);
   opacity: 0; pointer-events: none; z-index: 80;
   transition: opacity var(--daf-t-fast) var(--daf-ease-out); }
-.daf-tip:hover::after, .daf-tip:focus-visible::after { opacity: 1; }
-.daf-side-rail .daf-tip::after { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
-@media (prefers-reduced-motion: reduce) { .daf-tip::after { transition: none; } }
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; }
+.daf-side-rail [data-tip]::after { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+@media (prefers-reduced-motion: reduce) { [data-tip]::after { transition: none; } }
 /* 平移手势（空格或中键）：光标给出可拖拽提示 */
 .daf-scope[data-pan="true"] .daf-surface { cursor: grab; }
 .daf-scope[data-pan="true"] .daf-surface:active { cursor: grabbing; }

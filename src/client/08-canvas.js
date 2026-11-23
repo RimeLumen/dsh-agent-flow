@@ -495,6 +495,12 @@
             setSelectedEdgeId(null)
             return
           }
+          // R6 Ctrl/Cmd+Z 回撤上一步（R7.3 的可编辑元素守卫在 onKey 入口已生效）
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+            event.preventDefault()
+            undo()
+            return
+          }
           // R7.3 焦点在可编辑元素内时不劫持任何画布快捷键（浏览器缩放/搜索等归浏览器）
           if (inEditable(event.target)) return
           // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
@@ -738,14 +744,34 @@
         }
       }
 
+      // R6 回撤栈：mutate 前捕获变更前画布（上限 50），undo 弹出恢复（redo 对称）。
+      // 仅覆盖 mutate 通道（拖拽 DOM 直写在 pointerup 结算时也走 mutate ✓）。
+      const undoStackRef = useRef([])
+      const redoStackRef = useRef([])
+      const [undoTick, setUndoTick] = useState(0)
       const mutate = useCallback((mutator) => {
         setCurrent((prev) => {
           if (!prev) return prev
+          undoStackRef.current.push(clone(prev))
+          if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+          redoStackRef.current.length = 0
           const next = mutator(clone(prev))
           return next
         })
         setDirty(true)
+        setUndoTick((tick) => tick + 1)
       }, [])
+      const canUndo = undoStackRef.current.length > 0
+      const undo = useCallback(() => {
+        const prev = undoStackRef.current.pop()
+        if (!prev) return
+        setCurrent((cur) => {
+          if (cur) redoStackRef.current.push(clone(cur))
+          return prev
+        })
+        setDirty(true)
+        setUndoTick((tick) => tick + 1)
+      }, [undoTick])
 
       const applyLayout = (value) => {
         mutate((wf) => layoutWorkflow(wf, value))
@@ -2188,19 +2214,20 @@
         h(StyleTag, { css: BASE_CSS + CANVAS_CSS }),
         h('div', { className: 'daf-canvas-root' },
             h('div', { className: 'daf-side-rail', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': t.flowDock },
-            h(Btn, { onClick: () => setFlowDock((value) => !value), 'aria-expanded': String(Boolean(flowDock)), title: t.flowDock }, h(Icon, { name: 'layers', size: 15 })),
-            h(Btn, { onClick: createFlow, disabled: busy, title: t.newFlow }, h(Icon, { name: 'plus', size: 15 })),
-            h(Btn, { onClick: saveFlow, disabled: busy || !current || !dirty, title: t.saveFlow }, h(Icon, { name: 'save', size: 15 })),
-            h(Btn, { onClick: () => void archiveCurrent(), disabled: busy || !current, title: t.archiveFlow }, h(Icon, { name: 'archive', size: 15 })),
-            h(Btn, { variant: 'danger', onClick: () => void deleteCurrent(), disabled: busy || !current, title: t.deleteFlow }, h(Icon, { name: 'trash', size: 15 })),
+            h(Btn, { onClick: () => setFlowDock((value) => !value), 'aria-expanded': String(Boolean(flowDock)), 'data-tip': t.flowDock }, h(Icon, { name: 'layers', size: 15 })),
+            h(Btn, { onClick: createFlow, disabled: busy, 'data-tip': t.newFlow }, h(Icon, { name: 'plus', size: 15 })),
+            h(Btn, { onClick: saveFlow, disabled: busy || !current || !dirty, 'data-tip': t.saveFlow }, h(Icon, { name: 'save', size: 15 })),
+            h(Btn, { onClick: undo, disabled: busy || !canUndo, 'data-tip': t.undo }, h(Icon, { name: 'undo', size: 15 })),
+            h(Btn, { onClick: () => void archiveCurrent(), disabled: busy || !current, 'data-tip': t.archiveFlow }, h(Icon, { name: 'archive', size: 15 })),
+            h(Btn, { variant: 'danger', onClick: () => void deleteCurrent(), disabled: busy || !current, 'data-tip': t.deleteFlow }, h(Icon, { name: 'trash', size: 15 })),
             h('span', { className: 'daf-toolbar-sep', 'aria-hidden': 'true' }),
-            h(Btn, { onClick: toggleDevPanels, title: t.devPanels, 'aria-pressed': String(Boolean(showDevPanels)), className: showDevPanels ? 'daf-btn-dev is-on' : 'daf-btn-dev' }, h(Icon, { name: 'gear', size: 15 })),
-            run.status === 'running' && !paused ? h(Btn, { onClick: () => control('pause'), title: t.pause }, h(Icon, { name: 'pause', size: 15 })) : run.status === 'running' && paused ? h(Btn, { onClick: () => control('resume'), title: t.resume }, h(Icon, { name: 'play', size: 15 })) : h(Btn, { variant: 'primary', onClick: startRun, disabled: busy || !current, title: t.run }, h(Icon, { name: 'play', size: 15 })),
-            runId && run.status === 'running' ? h(Btn, { variant: 'danger', onClick: () => control('cancel'), title: t.cancelRun }, h(Icon, { name: 'cross', size: 15 })) : null,
-            h(Btn, { onClick: validate, disabled: busy || !current, title: t.validate }, h(Icon, { name: 'check', size: 15 })),
-            h(Btn, { onClick: () => current && mutate((wf) => autoLayout(wf)), disabled: !current, title: t.autoLayout }, h(Icon, { name: 'refresh', size: 15 })),
-            h(Btn, { onClick: () => void copyMermaid(), disabled: !current, title: t.mermaidCopy }, h(Icon, { name: 'copy', size: 15 })),
-            h(Btn, { onClick: () => setMermaidOpen(true), title: t.mermaidImport }, h(Icon, { name: 'layers', size: 15 }))
+            h(Btn, { onClick: toggleDevPanels, title: t.devPanels, 'data-tip': t.devPanels, 'aria-pressed': String(Boolean(showDevPanels)), className: showDevPanels ? 'daf-btn-dev is-on' : 'daf-btn-dev' }, h(Icon, { name: 'gear', size: 15 })),
+            run.status === 'running' && !paused ? h(Btn, { onClick: () => control('pause'), title: t.pause, 'data-tip': t.pause }, h(Icon, { name: 'pause', size: 15 })) : run.status === 'running' && paused ? h(Btn, { onClick: () => control('resume'), 'data-tip': t.resume }, h(Icon, { name: 'play', size: 15 })) : h(Btn, { variant: 'primary', onClick: startRun, disabled: busy || !current, 'data-tip': t.run }, h(Icon, { name: 'play', size: 15 })),
+            runId && run.status === 'running' ? h(Btn, { variant: 'danger', onClick: () => control('cancel'), 'data-tip': t.cancelRun }, h(Icon, { name: 'cross', size: 15 })) : null,
+            h(Btn, { onClick: validate, disabled: busy || !current, 'data-tip': t.validate }, h(Icon, { name: 'check', size: 15 })),
+            h(Btn, { onClick: () => current && mutate((wf) => autoLayout(wf)), disabled: !current, 'data-tip': t.autoLayout }, h(Icon, { name: 'refresh', size: 15 })),
+            h(Btn, { onClick: () => void copyMermaid(), disabled: !current, 'data-tip': t.mermaidCopy }, h(Icon, { name: 'copy', size: 15 })),
+            h(Btn, { onClick: () => setMermaidOpen(true), 'data-tip': t.mermaidImport }, h(Icon, { name: 'layers', size: 15 }))
             ),
             h('div', { className: 'daf-toolbar' },
             h('span', { className: 'daf-search' },
