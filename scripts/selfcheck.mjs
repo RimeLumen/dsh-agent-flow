@@ -591,6 +591,22 @@ function check(section, label, ok, extra) {
   })())
 }
 
+// ── 16. 连线交互重构防回归（二轮真机 TDZ ×2 的教训：惰性视图依赖声明顺序）──
+{
+  const section = 'edge-interact'
+  const canvasLines = readFileSync(join(root, 'src', 'client', '08-canvas.js'), 'utf8').split('\n')
+  const lineOf = (needle) => canvasLines.findIndex((l) => l.includes(needle))
+  const svLine = lineOf('const selectedEdgeView = (() => {')
+  check(section, 'selectedEdgeView 存在', svLine > 0)
+  for (const dep of ['const nodesById = useMemo', 'const rectOfNode = (node)', 'const selectedEdge = selectedEdgeId', 'const edgesView = (']) {
+    const di = lineOf(dep)
+    check(section, `依赖先于声明：${dep.slice(6, 30)}`, di >= 0 && di < svLine, `decl@${di} vs use@${svLine}`)
+  }
+  check(section, '选中边端点手柄存在', canvasLines.some((l) => l.includes("className: 'daf-edge-handle'")))
+  check(section, '命中层 800ms 防误触窗口', canvasLines.filter((l) => l.includes('suppressEdgeClickRef.current < 800')).length >= 2)
+  check(section, '单击/拖拽按位移区分', canvasLines.some((l) => l.includes('Math.hypot(event.clientX - edgeDrag.sx')))
+}
+
 // ── 汇总 ──
 const bySection = new Map()
 for (const r of results) {
