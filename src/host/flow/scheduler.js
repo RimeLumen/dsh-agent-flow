@@ -376,7 +376,12 @@ class GraphRunner {
         const target = this.graph.inc.get(id2) ?? []
         for (const edge of target) this.activatedEdges.add(edge.id)
       }
-      if (outcome !== 'ok') throw new NodeError('LOOP_ABORTED', '循环体执行未正常完成')
+      if (outcome !== 'ok') {
+        // R3.5 用户取消/暂停不是执行失败：抛 CANCELLED 让上层按取消结算，
+        // 此前统一抛 LOOP_ABORTED → settleFailed 记 failed，取消被误报为失败
+        if (outcome === 'cancelled') throw new NodeError('CANCELLED', '循环体被取消')
+        throw new NodeError('LOOP_ABORTED', '循环体执行未正常完成')
+      }
       if (untilExpr.trim() !== '') {
         const parsed = runExpr(untilExpr, { vars: this.record.vars, last: this.lastOutputOf(node.id), node: this.outputsView() })
         if (!parsed.ok) throw new NodeError('BAD_EXPR', `循环条件求值失败：${parsed.error}`)

@@ -26,7 +26,6 @@ window.__ModuleLoader__.load({
         tools: '工具',
         search: '搜索名字或描述…',
         allSources: '全部来源',
-        selectAll: '全选可见',
         clearAll: '清空',
         save: '保存为预设',
         saved: '已保存',
@@ -59,11 +58,9 @@ window.__ModuleLoader__.load({
         saveFlow: '保存',
         deleteFlow: '删除',
         autoLayout: '自动整理',
-        zoomFit: '适配',
         compact: '紧凑',
         inspector: '节点属性',
         noNode: '选中一个节点查看属性',
-        nodeKind: '类型',
         nodeTitle: '标题',
         nodeNote: '备注',
         onError: '出错时',
@@ -95,11 +92,10 @@ window.__ModuleLoader__.load({
         targetSubagent: '子代理',
         dangerousAllowed: '危险已允许',
         confirmDiscard: '有未保存的改动，切换后丢失。继续？',
-        deleteEdge: '双击删除这条连线',
+        deleteEdge: '删除这条连线',
         setEntry: '设为起点',
         vars: '变量',
         errorBadge: '错误',
-        on: '开',
         off: '关',
         addStep: '加子步骤',
         childSteps: '子步骤',
@@ -146,6 +142,31 @@ window.__ModuleLoader__.load({
         off: '关',
         exportSvg: '导出 SVG',
         exportPng: '导出 PNG（4×）',
+        busyNow: 'Agent 执行中',
+        busyHint: '当前会话的 Agent 正在工作（来自 agent/status）',
+        recycleTitle: '回收站',
+        backToList: '返回列表',
+        selectAll: '全选',
+        clearSelection: '清空选择',
+        selectedCount: '已选',
+        restoreSelected: '复原所选',
+        deleteSelected: '删除所选',
+        batchDeleteWarn: '永久删除，不进回收站',
+        archiveSelected: '归档所选',
+        mergeSelected: '合并所选',
+        mergeDone: '已合并为新流程',
+        mergeNeedTwo: '合并至少需要选择两个流程',
+        laneParent: '父级',
+        laneSub: '子代理',
+        originInherit: '父级延续',
+        originMerge: '合并产物',
+        selectFlow: '选择该流程',
+        batchDone: '批量操作完成',
+        compose: '组合为提示词',
+        composeHint: '把画布上的节点与连线组合成可执行的提示词，交回给 Agent',
+        composeCopy: '复制提示词',
+        composeCopied: '提示词已复制',
+        composeWarn: '结构提醒：',
         mermaidImported: 'Mermaid 已导入为新流程',
         more: '更多',
         purgeCountdown: '秒后永久删除',
@@ -162,7 +183,8 @@ window.__ModuleLoader__.load({
         statusOk: '已完成',
         statusFail: '失败',
         layout: '布局',
-        layout_chain: '链式',
+        layout_chain: '从左到右',
+        layout_tb: '从上到下',
         layout_star: '星形',
         layout_radial: '环形',
         layoutPinned: '手拖过的节点不参与自动布局',
@@ -214,7 +236,6 @@ window.__ModuleLoader__.load({
         tools: 'Tools',
         search: 'Search name or description…',
         allSources: 'All sources',
-        selectAll: 'Select visible',
         clearAll: 'Clear',
         save: 'Save as preset',
         saved: 'Saved',
@@ -247,11 +268,9 @@ window.__ModuleLoader__.load({
         saveFlow: 'Save',
         deleteFlow: 'Delete',
         autoLayout: 'Auto layout',
-        zoomFit: 'Fit',
         compact: 'Compact',
         inspector: 'Node',
         noNode: 'Select a node to edit it',
-        nodeKind: 'Kind',
         nodeTitle: 'Title',
         nodeNote: 'Note',
         onError: 'On error',
@@ -283,11 +302,10 @@ window.__ModuleLoader__.load({
         targetSubagent: 'subagent',
         dangerousAllowed: 'dangerous allowed',
         confirmDiscard: 'Unsaved changes will be lost. Continue?',
-        deleteEdge: 'Double-click to delete this edge',
+        deleteEdge: 'Delete this edge',
         setEntry: 'Set as entry',
         vars: 'Vars',
         errorBadge: 'error',
-        on: 'on',
         off: 'off',
         addStep: 'Add step',
         childSteps: 'Child steps',
@@ -334,6 +352,31 @@ window.__ModuleLoader__.load({
         off: 'off',
         exportSvg: 'Export SVG',
         exportPng: 'Export PNG (4x)',
+        busyNow: 'Agent working',
+        busyHint: 'The agent of this session is working (from agent/status)',
+        recycleTitle: 'Recycle bin',
+        backToList: 'Back to list',
+        selectAll: 'Select all',
+        clearSelection: 'Clear selection',
+        selectedCount: 'Selected',
+        restoreSelected: 'Restore selected',
+        deleteSelected: 'Delete selected',
+        batchDeleteWarn: 'Permanently deleted, not to recycle bin',
+        archiveSelected: 'Archive selected',
+        mergeSelected: 'Merge selected',
+        mergeDone: 'Merged into a new flow',
+        mergeNeedTwo: 'Select at least two flows to merge',
+        laneParent: 'Parent',
+        laneSub: 'Subagent',
+        originInherit: 'Inherited from parent',
+        originMerge: 'Merged',
+        selectFlow: 'Select this flow',
+        batchDone: 'Batch done',
+        compose: 'Compose prompt',
+        composeHint: 'Turn the canvas into an executable prompt for the agent',
+        composeCopy: 'Copy prompt',
+        composeCopied: 'Prompt copied',
+        composeWarn: 'Structure notes: ',
         mermaidImported: 'Mermaid imported as a new flow',
         more: 'More',
         purgeCountdown: 's until permanent delete',
@@ -349,7 +392,8 @@ window.__ModuleLoader__.load({
         statusOk: 'done',
         statusFail: 'failed',
         layout: 'Layout',
-        layout_chain: 'Chain',
+        layout_chain: 'Left to right',
+        layout_tb: 'Top to bottom',
         layout_star: 'Star',
         layout_radial: 'Radial',
         layoutPinned: 'Nodes you dragged stay put during auto layout',
@@ -427,6 +471,16 @@ window.__ModuleLoader__.load({
       return payload
     }
 
+    // 诊断接口的短时缓存（批次 6）：界面上有 3 个消费者各自请求 /diagnostics，
+    // 首次打开会发 3 次回环请求。这里合并为 1 次（5 秒内复用同一个 promise）。
+    let diagnosticsCache = { at: 0, promise: null }
+    const loadDiagnostics = () => {
+      const now = Date.now()
+      if (diagnosticsCache.promise && now - diagnosticsCache.at < 5000) return diagnosticsCache.promise
+      diagnosticsCache = { at: now, promise: api.diagnostics() }
+      return diagnosticsCache.promise
+    }
+
     const api = {
       catalog: (sessionId, cwd) => request('GET', `/catalog?sessionId=${encodeURIComponent(sessionId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),
       selection: () => request('GET', '/selection'),
@@ -441,6 +495,8 @@ window.__ModuleLoader__.load({
       createWorkflow: (name, from) => request('POST', '/workflows', { name, from }),
       saveWorkflow: (id, workflow) => request('PUT', `/workflows/${encodeURIComponent(id)}`, { workflow }),
       deleteWorkflow: (id) => request('DELETE', `/workflows/${encodeURIComponent(id)}`),
+      batchWorkflows: (action, ids) => request('POST', '/workflows/batch', { action, ids }),
+      mergeWorkflows: (ids, name) => request('POST', '/workflows/merge', { ids, name }),
       archiveWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/archive`),
       restoreWorkflow: (id) => request('POST', `/workflows/${encodeURIComponent(id)}/restore`),
       experiences: (workspaceId, cwd) => request('GET', `/experiences?workspaceId=${encodeURIComponent(workspaceId ?? '')}&cwd=${encodeURIComponent(cwd ?? '')}`),
@@ -458,6 +514,8 @@ window.__ModuleLoader__.load({
         }
       },
       validate: (id, sessionId) => request('POST', `/workflows/${encodeURIComponent(id)}/validate?sessionId=${encodeURIComponent(sessionId ?? '')}`),
+      // 反向组合（批次 3）：画布 → 提示词
+      compose: (id, goal) => request('POST', `/workflows/${encodeURIComponent(id)}/compose`, { goal }),
       startRun: (workflowId, sessionId, vars, workspaceId) => request('POST', '/runs', { workflowId, sessionId, vars, workspaceId }),
       run: (id, since) => request('GET', `/runs/${encodeURIComponent(id)}?since=${Number(since) || 0}`),
       runs: (sessionId) => request('GET', `/runs?sessionId=${encodeURIComponent(sessionId ?? '')}`),
@@ -651,6 +709,10 @@ window.__ModuleLoader__.load({
 .daf-chip[data-archived="true"] { opacity: .55; border-style: dashed; }
 .daf-chip[data-draft="true"] { border-style: dotted; border-color: var(--dsw-alias-state-warn-primary); }
 .daf-chip[data-draft="true"]::after { content: "草稿"; font-size: 9px; color: var(--dsw-alias-state-warn-primary); margin-left: 4px; }
+.daf-chip[data-inherit="true"] { border-style: dashed; border-color: var(--dsw-alias-state-info-primary, #4a90d9); }
+.daf-chip[data-inherit="true"]::after { content: "父级延续"; font-size: 9px; color: var(--dsw-alias-state-info-primary, #4a90d9); margin-left: 4px; }
+.daf-chip[data-merge="true"] { border-style: dashed; border-color: var(--dsw-alias-brand-primary); }
+.daf-chip[data-merge="true"]::after { content: "合并"; font-size: 9px; color: var(--dsw-alias-brand-primary); margin-left: 4px; }
 
 .daf-toolbar { gap: 8px; }
 .daf-btn-lg { padding: 6px 14px; font-size: 12.5px; font-weight: 600; }
@@ -659,26 +721,14 @@ window.__ModuleLoader__.load({
 .daf-flow-menu.daf-more-menu { left: auto; right: 0; }
 .daf-more-group { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; }
 
-.daf-flow-dock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 9; }
-.daf-flow-dock-toggle { position: relative; width: 40px; height: 40px; border-radius: 999px; display: inline-flex;
-  align-items: center; justify-content: center; border: 1px solid var(--dsw-alias-border-l1);
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 82%, transparent); color: var(--dsw-alias-label-secondary);
-  cursor: pointer; backdrop-filter: blur(6px); transition: color var(--daf-t-fast) var(--daf-ease-out),
-  border-color var(--daf-t-fast) var(--daf-ease-out), transform var(--daf-t-fast) var(--daf-ease-out); }
-.daf-flow-dock-toggle:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-border-l2); }
-.daf-flow-dock-toggle:active { transform: scale(.94); }
-.daf-flow-dock.is-open .daf-flow-dock-toggle { color: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); }
+/* 流程管理壳已改为贴屏右侧抽屉（daf-drawer-right），旧的圆钮定位样式随之移除。 */
 .daf-dock-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; border-radius: 999px;
   background: var(--dsw-alias-brand-primary); color: var(--daf-on-brand); font-size: 10px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
-.daf-flow-dock-body { position: absolute; top: calc(100% + 8px); right: 0; width: 248px; max-height: min(62vh, 520px);
-  overflow: auto; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 10px;
-  border: 1px solid var(--dsw-alias-border-l1); background: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent);
-  backdrop-filter: blur(10px); box-shadow: var(--daf-shadow-2);
-  opacity: 0; transform: translateX(10px); visibility: hidden; pointer-events: none;
-  transition: opacity var(--daf-t-fast) ease, transform var(--daf-t-fast) ease, visibility 0s linear var(--daf-t-fast); }
-.daf-flow-dock.is-open .daf-flow-dock-body { opacity: 1; transform: none; visibility: visible; pointer-events: auto;
-  transition: opacity var(--daf-t-base) var(--daf-ease-out), transform var(--daf-t-base) var(--daf-ease-out); }
+.daf-dock-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; border-radius: 999px;
+  background: var(--dsw-alias-brand-primary); color: var(--daf-on-brand); font-size: 10px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+/* 旧 dock body 的绝对定位样式已随抽屉化移除（抽屉容器提供滚动与背景）。 */
 
 .daf-edge[data-selected="true"] { stroke: var(--dsw-alias-brand-primary); stroke-width: 2.2; }
 .daf-edge-editor { position: absolute; z-index: 6; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px;
@@ -725,19 +775,14 @@ window.__ModuleLoader__.load({
 .daf-exp-card-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--dsw-alias-label-primary); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) {
-  .daf-flow-dock-body { transition-duration: 1ms; }
+  .daf-drawer-right { animation: none; }
   .daf-purge-bar::before { animation-duration: 3s; } }
 
-.daf-flow-dock { position: absolute; top: 8px; right: 8px; z-index: 9; display: flex; flex-direction: column; align-items: flex-end; }
-.daf-flow-dock-toggle { border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; padding: 4px 10px;
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 82%, transparent); color: var(--dsw-alias-label-secondary);
-  font-size: 11.5px; cursor: pointer; backdrop-filter: blur(6px); }
-.daf-flow-dock-toggle:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-border-l2); }
-.daf-flow-dock.is-open .daf-flow-dock-toggle { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.daf-flow-dock-body { width: 240px; max-height: min(62vh, 520px); overflow: auto; display: flex; flex-direction: column; gap: 2px;
-  padding: 6px; border: 1px solid var(--dsw-alias-border-l1); border-top-left-radius: 0;
-  background: color-mix(in srgb, var(--dsw-alias-bg-base) 92%, transparent); backdrop-filter: blur(10px);
-  box-shadow: var(--daf-shadow-2); }
+/* 窄屏下的旧 dock 样式已随抽屉化移除。 */
+.daf-flow-check { flex: none; width: 14px; height: 14px; accent-color: var(--dsw-alias-brand-primary); cursor: pointer; }
+.daf-batch-bar { display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 8%, transparent); }
 .daf-flow-dock-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 2px 4px; }
 .daf-dock-switch { border: none; background: none; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer;
   padding: 2px 4px; border-radius: 6px; }
@@ -786,6 +831,16 @@ window.__ModuleLoader__.load({
 .daf-switch[aria-checked="true"] .daf-switch-dot { transform: translateX(12px); background: var(--daf-on-brand); }
 .daf-muted { color: var(--dsw-alias-label-secondary); font-size: 11.5px; }
 .daf-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; }
+/* 贴屏右侧抽屉：与画布等高，滑入淡出 */
+.daf-drawer-backdrop { position: fixed; inset: 0; z-index: 60; background: var(--daf-scrim);
+  opacity: 0; animation: daf-drawer-fade var(--daf-t-fast) var(--daf-ease-out) forwards; }
+@keyframes daf-drawer-fade { to { opacity: 1; } }
+.daf-drawer-right { position: absolute; top: 0; right: 0; bottom: 0; width: min(440px, 46vw);
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow: auto;
+  background: var(--dsw-alias-bg-overlay); border-left: 1px solid var(--dsw-alias-border-l1);
+  box-shadow: var(--daf-shadow-3); animation: daf-slide-in var(--daf-t-base) var(--daf-ease-out); }
+@keyframes daf-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.daf-drawer-head { display: flex; align-items: center; gap: 8px; }
 .daf-modal-backdrop { position: fixed; inset: 0; background: var(--daf-scrim); display: flex; align-items: center;
   justify-content: center; z-index: 60; padding: 16px; }
 .daf-modal { background: var(--dsw-alias-bg-overlay); border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px;
@@ -908,7 +963,37 @@ window.__ModuleLoader__.load({
 .daf-node[data-search-hit="true"] { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }
 /* P3 动效治理：总开关关掉后，静态语义（颜色/状态）全部保留，只停播放。 */
 .daf-scope[data-motion="off"] * { animation: none !important; transition: none !important; }
+/* Still 模式：保留流动的静态语义（虚线节奏差异），而不是让状态信息一起消失 */
+.daf-scope[data-motion="off"] .daf-edge-flow[data-state="active"] { stroke-dasharray: 7 5; opacity: .75; }
+.daf-scope[data-motion="off"] .daf-edge-flow[data-state="done"] { stroke-dasharray: 2 10; opacity: .5; }
+/* 执行氛围（批次 7.1）：Agent 工作中——状态条胶囊 + 画布边缘呼吸 */
+.daf-busy-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; color: var(--dsw-alias-brand-primary);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 14%, transparent); }
+.daf-busy-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dsw-alias-brand-primary);
+  animation: daf-busy-pulse 1.4s ease-in-out infinite; }
+@keyframes daf-busy-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+.daf-scope[data-busy="true"] .daf-canvas-root { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent); }
+.daf-scope[data-motion="off"] .daf-busy-dot { animation: none; }
+/* 悬停名称提示：淡入淡出；右缘竖栏时出现在按钮左侧 */
+.daf-tip { position: relative; }
+.daf-tip::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px);
+  transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+  background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary);
+  border: 1px solid var(--dsw-alias-border-l1); box-shadow: var(--daf-shadow-1);
+  opacity: 0; pointer-events: none; z-index: 80;
+  transition: opacity var(--daf-t-fast) var(--daf-ease-out); }
+.daf-tip:hover::after, .daf-tip:focus-visible::after { opacity: 1; }
+.daf-side-rail .daf-tip::after { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+@media (prefers-reduced-motion: reduce) { .daf-tip::after { transition: none; } }
+/* 平移手势（空格或中键）：光标给出可拖拽提示 */
+.daf-scope[data-pan="true"] .daf-surface { cursor: grab; }
+.daf-scope[data-pan="true"] .daf-surface:active { cursor: grabbing; }
 .daf-edge-flow[data-budget="skip"] { animation: none; opacity: .5; }
+/* 主干 / 支线：脊椎加粗，支线保持轻量 */
+.daf-edge-glow[data-main="true"] { opacity: .26; }
+.daf-edge-flow[data-main="true"] { stroke-width: 2.9; }
+.daf-edge-flow[data-main="false"] { opacity: .35; }
 .daf-edge-bolus[data-budget="skip"] { animation: none; opacity: 0; }
 /* P3 大纲面板 */
 .daf-outline { position: absolute; left: 10px; top: 64px; z-index: 30; width: 236px; max-height: 54vh;
@@ -931,7 +1016,13 @@ window.__ModuleLoader__.load({
 .daf-outline-dot[data-st="running"] { background: var(--dsw-alias-brand-primary); }
 .daf-outline-dot[data-st="succeeded"] { background: var(--dsw-alias-state-success-primary); }
 .daf-outline-dot[data-st="failed"] { background: var(--dsw-alias-state-error-primary); }
-/* 阶段容器框（archify phase-as-frame） */
+/* 阶段容器框 */
+.daf-lane-band { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-state-info-primary, #4a90d9);
+  background: color-mix(in srgb, var(--dsw-alias-state-info-primary, #4a90d9) 6%, transparent);
+  border-radius: 12px; pointer-events: none; z-index: 0; }
+.daf-lane-band-label { position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+  font-size: 11px; color: var(--dsw-alias-state-info-primary, #4a90d9);
+  background: var(--dsw-alias-bg-layer-1); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
 .daf-phase-frame { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-border-l2);
   border-radius: 14px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 35%, transparent);
   pointer-events: none; }
@@ -966,8 +1057,10 @@ window.__ModuleLoader__.load({
 .daf-edge-glow[data-state="active"] { opacity: .30; }
 .daf-edge-glow[data-state="done"] { opacity: .16; }
 .daf-edge-flow { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 2 16; opacity: .22;
-  animation: daf-flow-move var(--daf-flow-dur, 3.4s) linear infinite;
+  /* 流动只属于 data-animate 的边（运行中/主干），其余保持静态——
+     节点多时几百条无限动画会让整片连线高频闪烁 */
   transition: opacity var(--daf-t-base) var(--daf-ease-out); }
+.daf-edge-flow[data-animate="true"] { animation: daf-flow-move var(--daf-flow-dur, 3.4s) linear infinite; }
 
 .daf-btn-dev.is-on { border-color: var(--dsw-alias-brand-primary); color: var(--dsw-alias-brand-primary); }
 .daf-edge-flow[data-state="active"] { opacity: .9; --daf-flow-dur: .9s; }
@@ -1027,8 +1120,7 @@ window.__ModuleLoader__.load({
 .daf-hovercard-calls { display: flex; flex-direction: column; gap: 2px; }
 .daf-hovercard-error { color: var(--dsw-alias-state-error-primary); -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 .daf-node[data-status="pending"] { opacity: .45; border-style: dashed; }
-.daf-node[data-status="ready"] { animation: daf-breathe 2.2s ease-in-out infinite; }
-@keyframes daf-breathe { 0%,100% { border-color: var(--dsw-alias-border-l1); } 50% { border-color: var(--dsw-alias-border-l2); } }
+/* ready 是未开始的常态，不播放呼吸——节点多时整片边框都在闪 */
 .daf-node[data-status="running"] { border-color: var(--dsw-alias-brand-primary); }
 .daf-node[data-status="running"]::after { content: ''; position: absolute; inset: -3px; border-radius: 12px;
   background: conic-gradient(from var(--daf-angle, 0deg), transparent 0deg, var(--dsw-alias-brand-primary) 90deg, transparent 200deg);
@@ -1161,7 +1253,8 @@ window.__ModuleLoader__.load({
 @media (prefers-reduced-motion: reduce) {
   .daf-node[data-diff="added"], .daf-node[data-diff="moved"] { animation: none; } }
 
-.daf-node[data-selected="true"] { animation: daf-select 2.4s ease-in-out infinite; }
+/* 选中态用静态强调，不做无限循环——节点多时反复重选会变成持续闪烁 */
+.daf-node[data-selected="true"] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 40%, transparent), 0 0 10px color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent); }
 @keyframes daf-select {
   0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 40%, transparent), 0 0 10px color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent); }
   50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 70%, transparent), 0 0 22px color-mix(in srgb, var(--dsw-alias-brand-primary) 45%, transparent); }
@@ -1178,6 +1271,14 @@ window.__ModuleLoader__.load({
 .daf-node:hover .daf-anchor, .daf-node[data-selected="true"] .daf-anchor, .daf-anchor[data-armed="true"] { opacity: 1; }
 .daf-anchor:hover::before, .daf-anchor[data-armed="true"]::before {
   background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); transform: scale(1.35); }
+/* 连线进行中：所有锚点可见（矩形不是吸附目标，必须让人看见可以绑的目标） */
+.daf-scope[data-connecting="true"] .daf-anchor { opacity: .5; }
+.daf-scope[data-connecting="true"] .daf-node:hover .daf-anchor { opacity: .8; }
+/* 会绑上的那一颗：放大并强调 */
+.daf-anchor[data-snap="true"] { opacity: 1; }
+.daf-anchor[data-snap="true"]::before {
+  background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary);
+  transform: scale(1.7); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 26%, transparent); }
 
 .daf-flows { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: min(52vw, 620px); padding-bottom: 2px; }
 .daf-flows::-webkit-scrollbar { height: 4px; }
@@ -1307,6 +1408,9 @@ window.__ModuleLoader__.load({
         let closed = false
         let timer = null
         let failures = 0
+        // R8.4 增量恢复：此前 lastPlanVersion 声明在 tick 内部，每次轮询重置——
+        // since 参数永远为空，每 4s 全量拉 plan，增量协议失效
+        let lastPlanVersion = ''
         const tick = async () => {
           let base = 4000
           if (typeof document !== 'undefined' && document.hidden) {
@@ -1314,7 +1418,15 @@ window.__ModuleLoader__.load({
             return
           }
           try {
-            const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}`)
+            const sinceParam = lastPlanVersion !== '' ? `&since=${encodeURIComponent(lastPlanVersion)}` : ''
+            const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}${sinceParam}`)
+            if (result?.same === true) {
+              base = 4000
+              failures = 0
+              if (!closed) timer = setTimeout(tick, pollDelay(base, failures))
+              return
+            }
+            lastPlanVersion = result?.plan?.updatedAt ?? ''
             const next = result?.plan ?? { status: 'idle' }
             base = next.status === 'awaiting' ? 1500 : 4000
             failures = 0
@@ -1379,7 +1491,7 @@ window.__ModuleLoader__.load({
 
     const EDGE_SIDES = [
       'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left',
-      'top-q1', 'top-q3', 'right-q1', 'right-q3', 'bottom-q1', 'bottom-q3', 'left-q1', 'left-q3',
+
     ]
     const FACE_OF = (side) => {
       const s = String(side || '')
@@ -1421,8 +1533,8 @@ window.__ModuleLoader__.load({
   }
 
   /**
-   * 均匀空间网格（吸收 archify renderers/shared/spatial-grid.mjs）：
-   * 按格子索引矩形，查询只返回可能与框相交的候选。archify 的格子边长 160。
+   * 均匀空间网格：
+   * 按格子索引矩形，查询只返回可能与框相交的候选。该实现的格子边长 160。
    * insert/query 都用矩形包围盒；all() 返回全部条目，供需要全量时的兜底。
    */
   function createSpatialGrid(cellSize) {
@@ -1588,9 +1700,9 @@ window.__ModuleLoader__.load({
   }
 
 
-    // 文本适配（吸收 archify renderers/shared/text-fit.mjs）：
+    // 文本适配：
     // 按可用宽度收缩字号，而不是直接省略号截断——普通超长文本"变小"而不是溢出/被切。
-    // 口径与 archify 一致：全角字符 2 个单位、其余 1 个单位（emoji 2），
+    // 口径与 一致：全角字符 2 个单位、其余 1 个单位（emoji 2），
     // 每单位每字号占 0.6px 宽，左右内边距合计 8px。
     const TEXT_FIT = { widthFactor: 0.6, horizontalPadding: 8 }
     const FULLWIDTH_RE = /[\u1100-\u115F\u2E80-\u303E\u3041-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE6F\uFF00-\uFF60\uFFE0-\uFFE6]/
@@ -1621,43 +1733,24 @@ window.__ModuleLoader__.load({
     function anchorPoint(rect, side) {
       const midX = rect.x + rect.w / 2
       const midY = rect.y + rect.h / 2
-      const qx1 = rect.x + rect.w * 0.25
-      const qx3 = rect.x + rect.w * 0.75
-      const qy1 = rect.y + rect.h * 0.25
-      const qy3 = rect.y + rect.h * 0.75
       const right = rect.x + rect.w
       const bottom = rect.y + rect.h
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限分支已随 16→8 锚点裁决移除
       switch (side) {
         case 'top':
           return { x: midX, y: rect.y, dir: 'up' }
-        case 'top-q1':
-          return { x: qx1, y: rect.y, dir: 'up' }
-        case 'top-q3':
-          return { x: qx3, y: rect.y, dir: 'up' }
         case 'top-right':
           return { x: right, y: rect.y, dir: 'right' }
         case 'right':
           return { x: right, y: midY, dir: 'right' }
-        case 'right-q1':
-          return { x: right, y: qy1, dir: 'right' }
-        case 'right-q3':
-          return { x: right, y: qy3, dir: 'right' }
         case 'bottom-right':
           return { x: right, y: bottom, dir: 'right' }
         case 'bottom':
           return { x: midX, y: bottom, dir: 'down' }
-        case 'bottom-q1':
-          return { x: qx1, y: bottom, dir: 'down' }
-        case 'bottom-q3':
-          return { x: qx3, y: bottom, dir: 'down' }
         case 'bottom-left':
           return { x: rect.x, y: bottom, dir: 'left' }
         case 'left':
           return { x: rect.x, y: midY, dir: 'left' }
-        case 'left-q1':
-          return { x: rect.x, y: qy1, dir: 'left' }
-        case 'left-q3':
-          return { x: rect.x, y: qy3, dir: 'left' }
         case 'top-left':
         default:
           return { x: rect.x, y: rect.y, dir: 'left' }
@@ -1665,39 +1758,44 @@ window.__ModuleLoader__.load({
     }
 
     function anchorStyle(side) {
+      // 8 锚点（EDGE_SIDES 同源）；q1/q3 象限位已随 16→8 锚点裁决移除
       const positions = {
         top: { left: '50%', top: -10, transform: 'translateX(-50%)' },
-        'top-q1': { left: '25%', top: -10, transform: 'translateX(-50%)' },
-        'top-q3': { left: '75%', top: -10, transform: 'translateX(-50%)' },
         'top-right': { right: -10, top: -10 },
         right: { right: -10, top: '50%', transform: 'translateY(-50%)' },
-        'right-q1': { right: -10, top: '25%', transform: 'translateY(-50%)' },
-        'right-q3': { right: -10, top: '75%', transform: 'translateY(-50%)' },
         'bottom-right': { right: -10, bottom: -10 },
         bottom: { left: '50%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q1': { left: '25%', bottom: -10, transform: 'translateX(-50%)' },
-        'bottom-q3': { left: '75%', bottom: -10, transform: 'translateX(-50%)' },
         'bottom-left': { left: -10, bottom: -10 },
         left: { left: -10, top: '50%', transform: 'translateY(-50%)' },
-        'left-q1': { left: -10, top: '25%', transform: 'translateY(-50%)' },
-        'left-q3': { left: -10, top: '75%', transform: 'translateY(-50%)' },
         'top-left': { left: -10, top: -10 },
       }
       return positions[side] ?? positions.left
     }
 
-    function nearestSide(rect, point) {
-      let best = 'left'
+    // ── 锚点吸附（核心逻辑变更）──
+    // 连接线必须绑定在锚点上：吸附候选只有 16 个锚点，节点矩形本身不参与判定。
+    // 半径按屏幕像素给出，换算到画布坐标时除以 zoom，保证手感不随缩放变化。
+    const ANCHOR_SNAP_PX = 16
+
+    // 导出底色：导出物是脱离界面的独立产物，需要固定的实心底色
+    // （透明 PNG 在不同查看器里表现不一致；导出图也不应跟随界面主题变暗）。
+    // 这是唯一允许出现硬编码白色的地方，界面本身一律走主题变量。
+    const EXPORT_BACKGROUND = '#ffffff'
+
+    /** 找离 point 最近的锚点；**超出半径返回 null**——矩形不在候选内。 */
+    function nearestAnchor(rect, point, radius) {
+      let bestSide = null
       let bestDistance = Infinity
       for (const side of EDGE_SIDES) {
         const anchor = anchorPoint(rect, side)
-        const distance = (anchor.x - point.x) ** 2 + (anchor.y - point.y) ** 2
+        const distance = Math.hypot(anchor.x - point.x, anchor.y - point.y)
         if (distance < bestDistance) {
           bestDistance = distance
-          best = side
+          bestSide = side
         }
       }
-      return best
+      if (bestSide === null || bestDistance > radius) return null
+      return { side: bestSide, distance: bestDistance }
     }
 
     function edgePath(fromRect, toRect, edge, obstaclesOrGrid = [], startOffset = 0, endOffset = 0) {
@@ -1739,6 +1837,10 @@ window.__ModuleLoader__.load({
           let polyline = 0
           for (let i = 1; i < route.length; i += 1) polyline += Math.hypot(route[i].x - route[i - 1].x, route[i].y - route[i - 1].y)
           if (polyline / straight <= 2.5) return polylineToPath(route)
+          // 回退前复查：直线若穿节点本体，宁要绕行折线也不要穿模直线（正确性优先于美观）
+          const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))
+          if (!stillBlocked) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
+          return polylineToPath(route)
         }
         return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
       }
@@ -1779,157 +1881,180 @@ window.__ModuleLoader__.load({
       return { ...workflow, layout, nodes }
     }
 
+    /**
+     * 统一布局引擎：先定结构，再投影。
+     *
+     * 第一步 分组：容器节点（阶段 / 组）与其子节点构成一个单元，单元整体参与排序
+     *         ——从属关系不再被遍历深度打散，子节点始终跟着父容器走。
+     * 第二步 排序：按连线方向给单元定层（单元级拓扑，环上单元放最后）；主干节点
+     *         按主干序号插队；同层按「主干序 → 标题」稳定排序。
+     * 第三步 投影：四种布局共享同一结构，只改坐标映射。
+     *         从左到右 / 从上到下是同构投影（仅交换轴）；星图按深度分环；辐射图整圈。
+     * 第四步 由调用方做重叠修复。
+     */
     function layoutPositions(workflow, layout) {
       const positions = new Map()
-      const phases = workflow.nodes
-        .filter((node) => node.kind === 'phase')
-        .sort((a, b) => (a.params?.order ?? 0) - (b.params?.order ?? 0) || a.pos.y - b.pos.y)
-      const childrenOf = (phaseId) => workflow.nodes.filter((node) => node.phaseId === phaseId)
-      if (phases.length > 0 && layout === 'chain') {
-        phases.forEach((phase, index) => {
-          const x = 70 + index * 320
-          positions.set(phase.id, { x, y: 70 })
-          childrenOf(phase.id).forEach((child, i) => positions.set(child.id, { x: x + 30, y: 180 + i * 100 }))
-        })
-      } else if (phases.length > 0 && layout === 'star') {
-        const cx = 560
-        const cy = 440
-        phases.forEach((phase) => {
-          const children = childrenOf(phase.id)
-          const radius = Math.max(190, 90 + children.length * 26)
-          positions.set(phase.id, { x: cx, y: cy })
-          children.forEach((child, i) => {
-            const angle = (Math.PI * 2 * i) / Math.max(1, children.length) - Math.PI / 2
-            positions.set(child.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-          })
-        })
-      } else if (phases.length > 0) {
-        const cx = 640
-        const cy = 480
-        const ring = Math.max(240, 120 + phases.length * 46)
-        phases.forEach((phase, index) => {
-          const angle = (Math.PI * 2 * index) / phases.length - Math.PI / 2
-          positions.set(phase.id, { x: Math.round(cx + Math.cos(angle) * ring), y: Math.round(cy + Math.sin(angle) * ring) })
-          const children = childrenOf(phase.id)
-          children.forEach((child, i) => {
-            const spread = (i - (children.length - 1) / 2) * 38
-            const outer = ring + 175
-            positions.set(child.id, {
-              x: Math.round(cx + Math.cos(angle) * outer - Math.sin(angle) * spread),
-              y: Math.round(cy + Math.sin(angle) * outer + Math.cos(angle) * spread),
-            })
-          })
-        })
-      } else if (layout === 'star') {
-        const hub = workflow.nodes.find((node) => node.id === workflow.entry) ?? workflow.nodes[0]
-        const cx = 560
-        const cy = 440
-        if (hub) {
-          positions.set(hub.id, { x: cx, y: cy })
-          const others = workflow.nodes.filter((node) => node.id !== hub.id)
-          const radius = Math.max(200, 80 + others.length * 26)
-          others.forEach((node, i) => {
-            const angle = (Math.PI * 2 * i) / Math.max(1, others.length) - Math.PI / 2
-            positions.set(node.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-          })
-        }
-      } else if (layout === 'radial') {
-        const cx = 560
-        const cy = 440
-        const radius = Math.max(240, 90 + workflow.nodes.length * 22)
-        workflow.nodes.forEach((node, i) => {
-          const angle = (Math.PI * 2 * i) / Math.max(1, workflow.nodes.length) - Math.PI / 2
-          positions.set(node.id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
-        })
+      if (!workflow) return positions
+      const nodes = workflow.nodes
+      const isContainer = (node) => node.kind === 'phase' || node.kind === 'group.steps'
+      const childrenOf = (id) => nodes.filter((node) => node.phaseId === id || node.parentId === id)
+
+      // ── 单元划分 ──
+      const containers = nodes.filter(isContainer)
+      const unitOf = new Map()
+      for (const container of containers) {
+        unitOf.set(container.id, container.id)
+        for (const child of childrenOf(container.id)) unitOf.set(child.id, container.id)
       }
-      const out = new Map(workflow.nodes.map((node) => [node.id, []]))
-      for (const edge of workflow.edges) out.get(edge.from)?.push(edge.to)
-      const layer = new Map([[workflow.entry, 0]])
-      const queue = [workflow.entry]
+      const units = [
+        ...containers.map((container) => ({ id: container.id, members: [container.id, ...childrenOf(container.id).map((child) => child.id)] })),
+        ...nodes.filter((node) => !unitOf.has(node.id)).map((node) => ({ id: node.id, members: [node.id] })),
+      ]
+      const unitByNode = new Map()
+      for (const unit of units) for (const member of unit.members) unitByNode.set(member, unit.id)
+
+      // ── 单元级拓扑分层 ──
+      const outEdges = new Map(units.map((unit) => [unit.id, []]))
+      const inDegree = new Map(units.map((unit) => [unit.id, 0]))
+      for (const edge of workflow.edges ?? []) {
+        const fromUnit = unitByNode.get(edge.from)
+        const toUnit = unitByNode.get(edge.to)
+        if (!fromUnit || !toUnit || fromUnit === toUnit) continue
+        outEdges.get(fromUnit).push(toUnit)
+        inDegree.set(toUnit, (inDegree.get(toUnit) ?? 0) + 1)
+      }
+      const depth = new Map()
+      const queue = units.filter((unit) => (inDegree.get(unit.id) ?? 0) === 0).map((unit) => unit.id)
+      for (const id of queue) depth.set(id, 0)
+      const seen = new Set(queue)
       while (queue.length > 0) {
         const id = queue.shift()
-        for (const next of out.get(id) ?? []) {
-          if (!layer.has(next)) {
-            layer.set(next, (layer.get(id) ?? 0) + 1)
-            queue.push(next)
-          }
+        for (const next of outEdges.get(id) ?? []) {
+          const candidate = (depth.get(id) ?? 0) + 1
+          if (candidate > (depth.get(next) ?? 0)) depth.set(next, candidate)
+          inDegree.set(next, (inDegree.get(next) ?? 0) - 1)
+          if ((inDegree.get(next) ?? 0) === 0 && !seen.has(next)) { seen.add(next); queue.push(next) }
         }
       }
-      // 轨道分类（吸收 archify placement-repair）：回环节点 → 左轨；入口不可达的侧支 → 右轨；
-      // 主干（入口可达且非回环）留在中央列。简单线性流程完全不受影响（全部主干）。
-      const canReachSet = (start) => {
-        const seen = new Set()
-        const todo = [start]
+      // 环上的单元（入度永不为 0）与入口不可达的孤岛都排到最后——
+      // 否则无入边的孤岛会被当成根，挤进第一层与主干抢位置。
+      const entryUnit = workflow.entry ? unitByNode.get(workflow.entry) : null
+      const reachable = new Set()
+      if (entryUnit) {
+        const todo = [entryUnit]
         while (todo.length > 0) {
           const id = todo.pop()
-          for (const next of out.get(id) ?? []) {
-            if (seen.has(next)) continue
-            seen.add(next)
-            todo.push(next)
-          }
+          if (reachable.has(id)) continue
+          reachable.add(id)
+          for (const next of outEdges.get(id) ?? []) if (!reachable.has(next)) todo.push(next)
         }
-        return seen
       }
-      const reachCache = new Map()
-      const reachOf = (id) => {
-        if (!reachCache.has(id)) reachCache.set(id, canReachSet(id))
-        return reachCache.get(id)
+      for (const unit of units) if (!depth.has(unit.id) || !reachable.has(unit.id)) depth.set(unit.id, units.length)
+
+      // ── 层内稳定排序：主干序 → 标题 ──
+      const mainIndex = new Map((Array.isArray(workflow.mainPath) ? workflow.mainPath : []).map((id, index) => [id, index]))
+      const layers = new Map()
+      for (const unit of units) {
+        const d = depth.get(unit.id) ?? 0
+        if (!layers.has(d)) layers.set(d, [])
+        layers.get(d).push(unit)
       }
-      const fromEntry = reachOf(workflow.entry)
-      const cyclicIds = new Set()
-      for (const node of workflow.nodes) {
-        const back = reachOf(node.id)
-        if (back.has(node.id)) { cyclicIds.add(node.id); continue }
-        for (const other of back) {
-          if (other !== node.id && reachOf(other).has(node.id)) { cyclicIds.add(node.id); break }
+      const stableKey = (unit) => {
+        let mainOrder = Infinity
+        for (const id of unit.members) {
+          const index = mainIndex.get(id)
+          if (index !== undefined) mainOrder = Math.min(mainOrder, index)
         }
+        return { mainOrder: mainOrder === Infinity ? 1e9 : mainOrder, title: byId(unit.id)?.title ?? '' }
+      }
+      const byId = (id) => nodes.find((node) => node.id === id)
+      for (const [d, list] of layers) {
+        list.sort((a, b) => stableKey(a).mainOrder - stableKey(b).mainOrder || stableKey(a).title.localeCompare(stableKey(b).title))
+        layers.set(d, list)
       }
 
-      // 同格垂直居中（吸收 archify workflow-placement-repair）：
-      // 按 (列) 分组 → total = Σh + gap*(n-1) → top = 轴心 - total/2，整组围绕轴心对称。
-      // 旧做法是从顶部逐行堆叠，同行节点一多主干就会偏离中心。
-      const COLUMN_GAP = 40
-      const AXIS_Y = 480
-      const baseX = phases.length > 0 ? 820 : 60
-      const mainIds = []
-      const railLeft = []
-      const railRight = []
-      for (const node of workflow.nodes) {
-        if (positions.has(node.id) || node.kind === 'phase') continue
-        // 只有入口不可达的岛才分轨：线性流程与含环主干保持原有列布局（零回归）。
-        const unreachable = node.id !== workflow.entry && !fromEntry.has(node.id)
-        if (unreachable) (cyclicIds.has(node.id) ? railLeft : railRight).push(node.id)
-        else mainIds.push(node.id)
-      }
-      const columns = new Map()
-      let maxDepth = 0
-      for (const id of mainIds) {
-        const depth = layer.get(id) ?? 0
-        maxDepth = Math.max(maxDepth, depth)
-        if (!columns.has(depth)) columns.set(depth, [])
-        columns.get(depth).push(id)
-      }
-      const placeColumn = (ids, x) => {
-        if (ids.length === 0) return
-        const total = ids.length * NODE_HEIGHT + COLUMN_GAP * Math.max(0, ids.length - 1)
-        let top = AXIS_Y - total / 2
-        for (const id of ids) {
-          positions.set(id, { x, y: Math.round(top) })
-          top += NODE_HEIGHT + COLUMN_GAP
+      // ── 投影 ──
+      const GAP = 40
+      const AXIS = 480
+      if (layout === 'chain' || layout === 'tb') {
+        // 从左到右 / 从上到下：同构投影，仅交换轴。
+        const horizontal = layout === 'chain'
+        const ALONG_STEP = horizontal ? 280 : NODE_HEIGHT + 140
+        const ORIGIN = 60
+        const CROSS_GAP = 40
+        const crossSize = horizontal ? NODE_HEIGHT : NODE_WIDTH
+        for (const [d, list] of layers) {
+          const totalSpan = list.reduce((sum, unit) => {
+            const members = horizontal ? unit.members.length : unit.members.length
+            return sum + members * crossSize + CROSS_GAP * Math.max(0, members - 1)
+          }, 0) + CROSS_GAP * Math.max(0, list.length - 1)
+          let cross = (horizontal ? AXIS : 640) - totalSpan / 2
+          for (const unit of list) {
+            // 子节点排在容器右侧（横向）或下侧（纵向）一格——从属关系在坐标上可见。
+            unit.members.forEach((id, memberIndex) => {
+              const memberOffset = memberIndex === 0 ? 0 : (horizontal ? 120 : NODE_HEIGHT + 20)
+              const along = ORIGIN + d * ALONG_STEP + memberOffset
+              if (horizontal) positions.set(id, { x: along, y: Math.round(cross + crossSize / 2) })
+              else positions.set(id, { x: Math.round(cross + crossSize / 2), y: along })
+              cross += crossSize + CROSS_GAP
+            })
+            cross += CROSS_GAP
+          }
         }
+        return positions
       }
-      for (const [depth, ids] of columns) placeColumn(ids, baseX + depth * 280)
-      // 左轨 = 回环（返回主干），右轨 = 入口不可达的侧支
-      placeColumn(railLeft, baseX - 300)
-      placeColumn(railRight, baseX + (maxDepth + 1) * 280)
+
+      if (layout === 'star') {
+        // 星图：入口（或首单元）居中，其余按深度分环；环内按稳定序排角度。
+        const hubUnit = layers.get(0)?.[0] ?? units[0]
+        const cx = 560, cy = 440
+        hubUnit.members.forEach((id, index) => {
+          if (index === 0) { positions.set(id, { x: cx, y: cy }); return }
+          // hub 的子节点小半径环绕中心，避免全部叠在中心点
+          const angle = (Math.PI * 2 * (index - 1)) / Math.max(1, hubUnit.members.length - 1) - Math.PI / 2
+          positions.set(id, { x: Math.round(cx + Math.cos(angle) * 130), y: Math.round(cy + Math.sin(angle) * 130) })
+        })
+        const byRing = new Map()
+        for (const unit of units) {
+          if (unit.id === hubUnit.id) continue
+          const ring = Math.max(0, (depth.get(unit.id) ?? 1) - 1)
+          if (!byRing.has(ring)) byRing.set(ring, [])
+          byRing.get(ring).push(unit)
+        }
+        for (const [ring, list] of byRing) {
+          const radius = 200 + ring * 170
+          const totalSlots = list.reduce((sum, unit) => sum + unit.members.length, 0)
+          // 环间错开起始角：否则每个环都从正上方开始，多环时全部叠成一条垂直线
+          const startAngle = -Math.PI / 2 + ring * (Math.PI / Math.max(3, totalSlots))
+          let slot = 0
+          for (const unit of list) {
+            for (const id of unit.members) {
+              const angle = startAngle + (Math.PI * 2 * slot) / Math.max(1, totalSlots)
+              positions.set(id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
+              slot += 1
+            }
+          }
+        }
+        return positions
+      }
+
+      // 辐射图：全部节点按稳定序放一圈。
+      const cx = 560, cy = 440
+      const all = units.flatMap((unit) => unit.members)
+      const radius = Math.max(240, 90 + all.length * 22)
+      all.forEach((id, index) => {
+        const angle = (Math.PI * 2 * index) / Math.max(1, all.length) - Math.PI / 2
+        positions.set(id, { x: Math.round(cx + Math.cos(angle) * radius), y: Math.round(cy + Math.sin(angle) * radius) })
+      })
       return positions
     }
+
 
     function autoLayout(workflow) {
       return resolveOverlaps(layoutWorkflow(workflow, workflow?.layout ?? 'chain'))
     }
 
-    /** 布局修复（archify placement-repair 思路）：重叠节点沿 y 网格下移到空位；钉住的不动。 */
+    /** 布局修复：重叠节点沿 y 网格下移到空位；钉住的不动。 */
     function resolveOverlaps(workflow) {
       if (!workflow) return workflow
       const placed = []
@@ -2066,17 +2191,37 @@ window.__ModuleLoader__.load({
         h(Btn, { onClick: () => openCanvas(ctx, sessionId), title: t.openCanvas }, `${t.tabTitle}`))
     }
 
+    // R4.4 单例注入：此前每个组件实例都渲染整份 <style>（8 处调用，同屏 2-3 份重复 ~52KB）。
+    // 首次调用把 css 写入 document.head 的单例节点；后续实例不再重复渲染。
+    // R4.4 回归修复（二轮审计）：单例节点方案破坏了多 css 串场景——不同组件传不同样式
+    // （注入器的短样式先到先得占了唯一节点，画布的 BASE+CANVAS_CSS 从此注入不进去 → UI 裸奔）。
+    // 改为按 css 串内容去重：同一串只注入一次（去重收益保留），不同串各一个节点（全部生效）。
+    const seenStyles = new Set()
     function StyleTag(props) {
+      const css = String(props.css ?? '')
+      if (typeof document !== 'undefined') {
+        if (css !== '' && !seenStyles.has(css)) {
+          seenStyles.add(css)
+          const el = document.createElement('style')
+          el.setAttribute('data-dsh-plugin', 'dsh-agent-flow')
+          el.textContent = css
+          document.head.appendChild(el)
+        }
+        return null
+      }
       return h('style', { 'data-dsh-plugin': 'dsh-agent-flow' }, props.css)
     }
 
     function Btn({ children, onClick, variant, disabled, title, type }) {
+      // 悬停名称提示统一由 CSS 淡入淡出（data-tip）承担；原生 title 移除避免双重显示，
+      // 无障碍语义由 aria-label 保留。
       return h('button', {
         type: type ?? 'button',
-        className: `daf-btn${variant === 'primary' ? ' daf-btn-primary' : variant === 'danger' ? ' daf-btn-danger' : ''}`,
+        className: `daf-btn daf-tip${variant === 'primary' ? ' daf-btn-primary' : variant === 'danger' ? ' daf-btn-danger' : ''}`,
         onClick,
         disabled: disabled === true,
-        title,
+        'data-tip': title,
+        'aria-label': title,
       }, children)
     }
 
@@ -2101,10 +2246,36 @@ window.__ModuleLoader__.load({
         hint ? h('span', { className: 'daf-muted' }, hint) : null)
     }
 
+
+    // R7.2 弹层栈：多个抽屉/弹窗可同开，Esc 只关最后打开的一层（此前一次 Esc 同时关两层）
+    const modalStack = []
+    const modalTop = () => modalStack[modalStack.length - 1]
+    function RightDrawer({ title, children, onClose }) {
+      useEffect(() => {
+        const token = Symbol('layer')
+        modalStack.push(token)
+        const onKey = (event) => { if (event.key === 'Escape' && modalTop() === token) onClose?.() }
+        window.addEventListener('keydown', onKey)
+        return () => {
+          const idx = modalStack.indexOf(token)
+          if (idx >= 0) modalStack.splice(idx, 1)
+          window.removeEventListener('keydown', onKey)
+        }
+      }, [onClose])
+      return h('div', { className: 'daf-drawer-backdrop', onMouseDown: (event) => { if (event.target === event.currentTarget) onClose?.() } },
+        h('div', { className: 'daf-drawer-right', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+          h('div', { className: 'daf-drawer-head' },
+            h('strong', { style: { flex: 1 } }, title),
+            h(Btn, { onClick: onClose }, '✕')),
+          children))
+    }
+
     function Modal({ title, children, onClose, footer }) {
       useEffect(() => {
+        const token = Symbol('layer')
+        modalStack.push(token)
         const onKey = (event) => {
-          if (event.key === 'Escape') onClose?.()
+          if (event.key === 'Escape' && modalTop() === token) onClose?.()
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
@@ -2116,44 +2287,6 @@ window.__ModuleLoader__.load({
             h(Btn, { onClick: onClose }, '✕')),
           children,
           footer ? h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 } }, footer) : null))
-    }
-
-    function Popover({ trigger, children, open, onOpenChange }) {
-      const anchorRef = useRef(null)
-      useEffect(() => {
-        if (!open) return undefined
-        const onDown = (event) => {
-          if (anchorRef.current && !anchorRef.current.contains(event.target)) onOpenChange(false)
-        }
-        const onKey = (event) => {
-          if (event.key === 'Escape') onOpenChange(false)
-        }
-        window.addEventListener('mousedown', onDown)
-        window.addEventListener('keydown', onKey)
-        return () => {
-          window.removeEventListener('mousedown', onDown)
-          window.removeEventListener('keydown', onKey)
-        }
-      }, [open, onOpenChange])
-      return h('div', { className: 'daf-anchor', ref: anchorRef },
-        trigger,
-        open ? h('div', { className: 'daf-popover', role: 'menu' }, children) : null)
-    }
-
-    function useAsync(action) {
-      const [state, setState] = useState({ pending: false, error: null, value: null })
-      const run = useCallback(async (...args) => {
-        setState({ pending: true, error: null, value: null })
-        try {
-          const value = await action(...args)
-          setState({ pending: false, error: null, value })
-          return value
-        } catch (error) {
-          setState({ pending: false, error: error.message, value: null })
-          return null
-        }
-      }, [action])
-      return [state, run]
     }
 
     const ICON_PATHS = {
@@ -2339,7 +2472,7 @@ window.__ModuleLoader__.load({
       const [hostCaps, setHostCaps] = useState(null)
       useEffect(() => {
         let closed = false
-        void api.diagnostics()
+        void loadDiagnostics()
           .then((result) => {
             if (!closed) setHostCaps(result)
           })
@@ -2800,7 +2933,7 @@ window.__ModuleLoader__.load({
 
       const load = useCallback(async () => {
         try {
-          const [prefResult, diagnostic, errorResult] = await Promise.all([api.prefs(), api.diagnostics(), api.errors(30)])
+          const [prefResult, diagnostic, errorResult] = await Promise.all([api.prefs(), loadDiagnostics(), api.errors(30)])
           setPrefs(prefResult.prefs)
           setDiag(diagnostic)
           setErrorLog(errorResult)
@@ -3023,6 +3156,352 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /**
+     * 流程管理（独立组件）：列表 + 回收站 + 批量操作。
+     * 从画布主图层抽出；自身只做渲染与选择状态，数据与处理器由 props 传入。
+     *
+     * 回收站视图（showArchived=true）下：
+     *   - 每行复选框选择；点击行切换选中
+     *   - 顶部批量操作条：全选 / 清空选择 / 批量复原 / 批量删除
+     *   - 每行右键菜单仍提供单个复原 / 永久删除（3 秒倒计时防误删）
+     */
+    function FlowManager(props) {
+      const {
+        flows, current, sessionId, t, h: hh, Icon: Ic, Btn: Bt,
+        pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
+        flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
+        showArchived, setShowArchived, batchOperation, mergeFlows,
+      } = props
+      const [selectedIds, setSelectedIds] = useState(() => new Set())
+      const [batchBusy, setBatchBusy] = useState(false)
+
+      const archivedRows = flows.filter((item) => item.archivedAt)
+      const activeRows = flows.filter((item) => !item.archivedAt)
+      const inRecycle = showArchived === true
+      const selectable = inRecycle ? archivedRows : activeRows
+      const allSelected = selectable.length > 0 && selectable.every((item) => selectedIds.has(item.id))
+
+      const toggleOne = (id) => {
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          if (next.has(id)) next.delete(id)
+          else next.add(id)
+          return next
+        })
+      }
+      const toggleAll = () => {
+        setSelectedIds(allSelected ? new Set() : new Set(selectable.map((item) => item.id)))
+      }
+      // 视图切换后清空选择——两个视图的可选集合不同，残留选择会误伤
+      const switchView = () => {
+        setSelectedIds(new Set())
+        setShowArchived((value) => !value)
+      }
+
+      const runBatch = async (action) => {
+        if (selectedIds.size === 0 || batchBusy) return
+        setBatchBusy(true)
+        try {
+          await batchOperation(action, [...selectedIds])
+          setSelectedIds(new Set())
+        } finally {
+          setBatchBusy(false)
+        }
+      }
+
+      const rows = flows.slice(0, 60).map((flow) => {
+        const menu = purgePendingId === flow.id
+          ? hh('div', { className: 'daf-purge-warn', role: 'alert' },
+              hh('span', null, `3 ${t.purgeCountdown}`),
+              hh('span', { className: 'daf-purge-bar', 'aria-hidden': 'true' }),
+              hh(Bt, { onClick: () => setPurgePendingId(null) }, t.cancel))
+          : flowMenu === flow.id
+            ? hh('div', { className: 'daf-flow-menu daf-flow-menu-static' },
+                hh(Bt, { onClick: () => { setFlowMenu(null); void duplicateFlow(flow) } }, t.duplicate),
+                flow.archivedAt
+                  ? hh(Bt, { onClick: () => { setFlowMenu(null); void restoreFlowById(flow) } }, t.restoreFlow)
+                  : hh(Bt, { onClick: () => { setFlowMenu(null); void archiveFlowById(flow) } }, t.archiveFlow),
+                flow.archivedAt
+                  ? hh(Bt, { variant: 'danger', onClick: () => { setFlowMenu(null); requestPurge(flow) } }, t.purgeFlow)
+                  : null)
+            : null
+        return hh('div', { key: flow.id, className: 'daf-flow-row' },
+          hh('input', {
+            type: 'checkbox',
+            className: 'daf-flow-check',
+            'aria-label': t.selectFlow,
+            checked: selectedIds.has(flow.id),
+            onChange: () => toggleOne(flow.id),
+          }),
+          hh('button', {
+            type: 'button',
+            className: 'daf-chip daf-flow-row-chip',
+            'data-active': String(flow.id === current?.id),
+            'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
+            'data-archived': flow.archivedAt ? 'true' : undefined,
+            'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
+            'data-inherit': flow.origin === 'inherit' ? 'true' : undefined,
+            'data-merge': flow.origin === 'merge' ? 'true' : undefined,
+            title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
+            onClick: (event) => {
+              // 批量模式下点击行 = 切换选中；未在批量模式时点击 = 打开画布
+              if (selectedIds.size > 0 || event.ctrlKey || event.metaKey || event.shiftKey) { toggleOne(flow.id); return }
+              if (flow.id !== current?.id) void pickFlow(flow.id)
+            },
+            onContextMenu: (event) => {
+              event.preventDefault()
+              setFlowMenu((prev) => (prev === flow.id ? null : flow.id))
+            },
+          },
+            Boolean(sessionId) && flow.sessionId === sessionId ? hh(Ic, { name: 'bolt', size: 11 }) : null,
+            hh('span', { className: 'daf-flow-name' }, flow.name),
+            hh('span', { className: 'daf-chip-count' }, String(flow.nodes))),
+          menu)
+      })
+
+      return hh('div', { className: 'daf-flow-manager', style: { display: 'flex', flexDirection: 'column', minHeight: 0, flex: '1 1 auto' } },
+        hh('div', { className: 'daf-flow-dock-head' },
+          hh('span', { className: 'daf-muted' }, `${inRecycle ? t.recycleTitle : t.flowDock} · ${inRecycle ? archivedRows.length : activeRows.length}`),
+          hh('span', { className: 'daf-spacer' }),
+          hh('button', {
+            type: 'button',
+            className: 'daf-dock-switch daf-tip',
+            'data-tip': inRecycle ? t.backToList : t.recycleTitle,
+            onClick: switchView,
+          }, inRecycle ? t.backToList : t.recycleTitle)),
+        selectable.length > 0
+          ? hh('div', { className: 'daf-batch-bar' },
+              hh('button', { type: 'button', className: 'daf-dock-switch', onClick: toggleAll },
+                allSelected ? t.clearSelection : t.selectAll),
+              hh('span', { className: 'daf-muted' }, `${t.selectedCount}: ${selectedIds.size}`),
+              hh('span', { className: 'daf-spacer' }),
+              inRecycle
+                ? hh(Bt, { onClick: () => void runBatch('restore'), disabled: batchBusy }, t.restoreSelected)
+                : hh(Bt, { onClick: () => void runBatch('archive'), disabled: batchBusy }, t.archiveSelected),
+              // 手动合并（用户指令①）：列表视图选中 ≥2 时可用；合并后源流程进回收站，清空选择
+              !inRecycle && selectedIds.size >= 2
+                ? hh(Bt, { onClick: () => { const ids = [...selectedIds]; setSelectedIds(new Set()); void mergeFlows(ids) }, disabled: batchBusy }, t.mergeSelected)
+                : null,
+              hh(Bt, { variant: 'danger', onClick: () => {
+                // R7.1 防误删：批量删除是永久删除（不进回收站），与单流程 3 秒倒计时同级防护
+                if (window.confirm(`${t.deleteSelected}: ${selectedIds.size}（${t.batchDeleteWarn}）`)) void runBatch('delete')
+              }, disabled: batchBusy }, t.deleteSelected))
+          : null,
+        flows.length === 0
+          ? hh('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
+          : hh('div', { className: 'daf-flow-manager-list', style: { overflow: 'auto', minHeight: 0 } }, rows))
+    }
+
+    /**
+     * 开发者面板（独立组件）。
+     * 从画布主图层抽出：关闭时完全不实例化；只做渲染、不持有状态——
+     * 数据与处理器全部由 CanvasTab 经 props 传入（接口即下面这段解构）。
+     */
+    function DevLayer(props) {
+      const {
+        selected, t, mutate, statusOf, run, checkpoint, current, setError, childrenOf,
+        ctx, issues, runId, setSelectedId, addChild, control, nodesById, steps,
+      } = props
+      return [
+              h('div', { className: 'daf-inspector' },
+                h('div', { className: 'daf-col-head' }, h('span', null, t.inspector)),
+                !selected
+                  ? h('div', { className: 'daf-muted' }, t.noNode)
+                  : h('div', { className: 'daf-col', style: { gap: 8 } },
+                    h(Field, { label: t.nodeTitle },
+                      h('input', {
+                        className: 'daf-input',
+                        value: selected.title,
+                        onChange: (event) => mutate((wf) => {
+                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, title: event.target.value } : node))
+                          return wf
+                        }),
+                      })),
+                    h(Field, { label: t.nodeKind }, h('div', { className: 'daf-muted' }, `${selected.kind} — ${kindLabel(selected.kind, ctx)}`)),
+                    selected.kind === 'group.steps'
+                      ? h(Field, { label: t.childSteps },
+                        h('div', { className: 'daf-col', style: { gap: 4 } },
+                          childrenOf(selected.id).map((child) => h('div', { key: child.id, className: 'daf-child' },
+                            h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, child.title),
+                            h(Btn, {
+                              variant: 'danger',
+                              onClick: () => mutate((wf) => {
+                                wf.nodes = wf.nodes.filter((node) => node.id !== child.id)
+                                wf.edges = wf.edges.filter((edge) => edge.from !== child.id && edge.to !== child.id)
+                                return wf
+                              }),
+                            }, '✕'))),
+                          h(Btn, { onClick: () => addChild(selected.id) }, `+ ${t.addStep}`)))
+                      : null,
+                    selected.parentId
+                      ? h(Field, { label: t.boundTo },
+                        h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
+                          h('span', { className: 'daf-muted' }, nodesById.get(selected.parentId)?.title ?? selected.parentId),
+                          h(Btn, {
+                            onClick: () => mutate((wf) => {
+                              wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, parentId: undefined } : node))
+                              return wf
+                            }),
+                          }, t.unbind)))
+                      : null,
+                    h(Field, { label: t.onError },
+                      h('select', {
+                        className: 'daf-select',
+                        value: selected.onError ?? 'fail',
+                        onChange: (event) => mutate((wf) => {
+                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, onError: event.target.value } : node))
+                          return wf
+                        }),
+                      },
+                        h('option', { value: 'fail' }, t.errFail),
+                        h('option', { value: 'skip' }, t.errSkip),
+                        h('option', { value: 'fallback' }, t.errFallback))),
+                    selected.onError === 'fallback'
+                      ? h(Field, { label: `${t.errFallback} id` },
+                        h('select', {
+                          className: 'daf-select',
+                          value: selected.fallbackTo ?? '',
+                          onChange: (event) => mutate((wf) => {
+                            wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, fallbackTo: event.target.value } : node))
+                            return wf
+                          }),
+                        },
+                          h('option', { value: '' }, '—'),
+                          current.nodes.filter((node) => node.id !== selected.id).map((node) => h('option', { key: node.id, value: node.id }, `${node.title} (${node.id})`))))
+                      : null,
+                    h(Field, { label: 'timeoutMs' },
+                      h('input', {
+                        className: 'daf-input',
+                        type: 'number',
+                        min: 1000,
+                        step: 1000,
+                        defaultValue: selected.timeoutMs ?? '',
+                        onBlur: (event) => mutate((wf) => {
+                          const value = Number(event.target.value)
+                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, timeoutMs: Number.isFinite(value) && value > 0 ? value : undefined } : node))
+                          return wf
+                        }),
+                      })),
+                    h(Field, { label: t.nodeNote },
+                      h('textarea', {
+                        className: 'daf-textarea',
+                        style: { minHeight: 48 },
+                        value: selected.note ?? '',
+                        onChange: (event) => mutate((wf) => {
+                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, note: event.target.value } : node))
+                          return wf
+                        }),
+                      })),
+                    h(Field, { label: t.advancedJson, hint: 'params' },
+                      h('textarea', {
+                        className: 'daf-textarea',
+                        key: `${selected.id}:${JSON.stringify(selected.params ?? {})}`,
+                        defaultValue: JSON.stringify(selected.params ?? {}, null, 2),
+                        onBlur: (event) => {
+                          try {
+                            const parsed = JSON.parse(event.target.value)
+                            mutate((wf) => {
+                              wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, params: parsed } : node))
+                              return wf
+                            })
+                            setError(null)
+                          } catch (problem) {
+                            setError(`params JSON: ${problem.message}`)
+                          }
+                        },
+                      })),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                      h(Btn, {
+                        variant: 'danger',
+                        onClick: () => mutate((wf) => {
+                          wf.nodes = wf.nodes.filter((node) => node.id !== selected.id)
+                          wf.edges = wf.edges.filter((edge) => edge.from !== selected.id && edge.to !== selected.id)
+                          if (wf.entry === selected.id) wf.entry = wf.nodes[0]?.id ?? ''
+                          return wf
+                        }),
+                      }, t.deleteNode),
+                      h(Btn, {
+                        onClick: () => mutate((wf) => {
+                          wf.entry = selected.id
+                          return wf
+                        }),
+                        title: t.setEntry,
+                      }, t.setEntry))),
+                h('div', { className: 'daf-col-head', style: { marginTop: 8 } }, h('span', null, t.validate)),
+                issues.length === 0
+                  ? h('div', { className: 'daf-muted' }, '—')
+                  : h('div', { className: 'daf-issues' }, issues.map((issue, index) => h('div', { key: `${issue.code}-${index}`, className: 'daf-issue', 'data-level': issue.level },
+                    h('span', null, issue.level === 'error' ? '✕' : '!'),
+                    h('span', null, `${issue.message}${issue.nodeId ? ` (${issue.nodeId})` : ''}`))))),
+              h('div', { className: 'daf-steps-wrap' },
+                h('div', { className: 'daf-col-head' }, h('span', null, t.stepList)),
+                h('div', { className: 'daf-steps' }, steps.map((node) => h('div', { key: node.id, style: { display: 'flex', flexDirection: 'column', gap: 3 } },
+                  h('div', {
+                    className: 'daf-step',
+                    'data-status': run.status === 'idle' ? undefined : statusOf(node.id),
+                    onClick: () => setSelectedId(node.id),
+                  },
+                    h('span', null, statusOf(node.id) === 'succeeded' ? '✓' : statusOf(node.id) === 'failed' ? '✕' : statusOf(node.id) === 'running' ? '●' : '○'),
+                    h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, node.title),
+                    h('span', { className: 'daf-node-kind' }, kindLabel(node.kind, ctx))),
+                  childrenOf(node.id).map((child) => h('div', {
+                    key: child.id,
+                    className: 'daf-child',
+                    'data-status': statusOf(child.id) === 'idle' ? undefined : statusOf(child.id),
+                    style: { marginLeft: 14 },
+                    onClick: () => setSelectedId(child.id),
+                  },
+                    h('span', null, statusOf(child.id) === 'succeeded' ? '✓' : statusOf(child.id) === 'running' ? '●' : statusOf(child.id) === 'failed' ? '✕' : '○'),
+                    h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, child.title),
+                    h('span', { className: 'daf-node-kind' }, kindLabel(child.kind, ctx)))))))),
+              h('div', { className: 'daf-run-panel' },
+                h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
+                  h('strong', null, t.runsTitle),
+                  h('span', { className: 'daf-badge' }, run.status),
+                  run.cursor?.length ? h('span', { className: 'daf-muted' }, run.cursor.join(' → ')) : null,
+                  runId ? h('span', { className: 'daf-muted' }, runId) : null),
+                h(Field, { label: `${t.vars} (JSON)` },
+                  h('textarea', {
+                    className: 'daf-textarea',
+                    style: { minHeight: 44 },
+                    key: `vars:${current?.id ?? 'none'}:${JSON.stringify(current?.vars ?? {})}`,
+                    defaultValue: JSON.stringify(current?.vars ?? {}, null, 2),
+                    onBlur: (event) => {
+                      try {
+                        const parsed = JSON.parse(event.target.value)
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                          mutate((wf) => {
+                            wf.vars = Object.fromEntries(Object.entries(parsed).filter(([, value]) => typeof value === 'string'))
+                            return wf
+                          })
+                        }
+                      } catch {
+                        setError('vars 需要是 JSON 对象')
+                      }
+                    },
+                  })),
+                checkpoint
+                  ? h('div', { className: 'daf-checkpoint' },
+                    h('strong', null, t.checkpointAsk),
+                    h('div', null, checkpoint.question),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                      (checkpoint.options ?? []).map((option) => h(Btn, {
+                        key: option,
+                        variant: 'primary',
+                        onClick: () => control('answer', { nodeId: checkpoint.nodeId, answer: option }),
+                      }, option))))
+                  : null,
+                h('div', { className: 'daf-col-head' }, h('span', null, t.logs)),
+                h('div', { className: 'daf-log' },
+                  (run.logs ?? []).slice(-80).map((line, index) => h('div', {
+                    key: `${line.ts}-${index}`,
+                    className: 'daf-log-line',
+                    'data-level': line.level,
+                  }, `${new Date(line.ts).toLocaleTimeString('zh-CN')} ${line.message}`))))
+      ]
+    }
+
+
     function CanvasTab(props) {
       const { ctx, sessionId } = props
       const t = dictFor(ctx)
@@ -3051,28 +3530,88 @@ window.__ModuleLoader__.load({
       showArchivedRef.current = showArchived
       const [flowDock, setFlowDock] = useState(false)
       const [moreOpen, setMoreOpen] = useState(false)
-      // P0 节点搜索（吸收 archify node-finder）：稳定 ID 搜索，不改 IR/几何。
+      // P0 节点搜索：稳定 ID 搜索，不改 IR/几何。
       const [searchQuery, setSearchQuery] = useState('')
       const [searchIndex, setSearchIndex] = useState(0)
       const searchInputRef = useRef(null)
-      // P1 缩略图视口框（吸收 archify semantic-radar）：直接改 DOM，不触发重渲染。
+      // P1 缩略图视口框：直接改 DOM，不触发重渲染。
       const thumbViewRef = useRef(null)
-      // P3 动效预算（吸收 archify motion-governor）：一个读者开关 + 一个运动预算。
+      // P3 动效预算：一个读者开关 + 一个运动预算。
       // 初始值跟随系统偏好，用户可在「更多」菜单里覆盖。
       const [motionOff, setMotionOff] = useState(() => {
         try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
       })
-      const MOTION_BUDGET = 6
-      // P3 大纲 + 树折叠（吸收 archify node-outline / tree-branches）：阶段可折叠，点击定位。
+      // P3 大纲 + 树折叠：阶段可折叠，点击定位。
       const [outlineOpen, setOutlineOpen] = useState(false)
       const [collapsedPhases, setCollapsedPhases] = useState(() => new Set())
-      // P3 导览（吸收 archify guided-views）：按顺序把相机依次送到每个节点。
+      // P3 导览：按顺序把相机依次送到每个节点。
       const [tourIndex, setTourIndex] = useState(-1)
-      const tourStops = useMemo(() => (current?.nodes ?? []).map((node) => node.id), [current])
+      // 导览一站 = 一个阶段（含其子任务）；无阶段时按主干顺序逐节点。
+      const tourStops = useMemo(() => {
+        const nodes = current?.nodes ?? []
+        const phases = nodes.filter((node) => node.kind === 'phase')
+        if (phases.length > 0) {
+          return phases.map((phase) => ({
+            id: phase.id,
+            title: phase.title,
+            members: [phase.id, ...nodes.filter((node) => node.phaseId === phase.id).map((node) => node.id)],
+          }))
+        }
+        const main = Array.isArray(current?.mainPath) && current.mainPath.length > 0
+          ? current.mainPath
+          : nodes.map((node) => node.id)
+        return main.map((id) => ({ id, title: nodes.find((node) => node.id === id)?.title ?? id, members: [id] }))
+      }, [current])
+
+      // 把视口框到给定节点集合（导览的一站 / 阶段）
+      const frameNodes = useCallback((ids) => {
+        const el = surfaceRef.current
+        const nodes = (current?.nodes ?? []).filter((node) => ids.includes(node.id))
+        if (!el || nodes.length === 0) return
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+        for (const node of nodes) {
+          const rect = rectOfNode(node)
+          minX = Math.min(minX, rect.x); minY = Math.min(minY, rect.y)
+          maxX = Math.max(maxX, rect.x + rect.w); maxY = Math.max(maxY, rect.y + rect.h)
+        }
+        const PAD = 56
+        const next = clampZoom(Math.min(
+          (el.clientWidth - 24) / Math.max(1, maxX - minX + PAD * 2),
+          (el.clientHeight - 24) / Math.max(1, maxY - minY + PAD * 2),
+          1.6,
+        ))
+        setZoom(next)
+        requestAnimationFrame(() => {
+          el.scrollTo({
+            left: Math.max(0, (minX - PAD) * next),
+            top: Math.max(0, (minY - PAD) * next),
+            behavior: 'smooth',
+          })
+        })
+      }, [current])
       const [selectedEdgeId, setSelectedEdgeId] = useState(null)
       const [edgeMenu, setEdgeMenu] = useState(null)
+      // 连线拖动：按住连线的一端拖到新锚点，松手更新该端的 fromSide/toSide。
+      const [edgeDrag, setEdgeDrag] = useState(null)
       const [mermaidOpen, setMermaidOpen] = useState(false)
       const [mermaidText, setMermaidText] = useState('')
+      // 反向组合：组合出的提示词与弹窗开关
+      const [composeOpen, setComposeOpen] = useState(false)
+      const [composeText, setComposeText] = useState('')
+      const [composeWarnings, setComposeWarnings] = useState([])
+
+      // 反向组合：把当前画布交给宿主序列化成提示词，再展示出来。
+      const composeToPrompt = async () => {
+        if (!current) return
+        try {
+          const result = await api.compose(current.id)
+          setComposeText(result?.text ?? '')
+          setComposeWarnings(Array.isArray(result?.warnings) ? result.warnings : [])
+          setComposeOpen(true)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
 
       const copyMermaid = async () => {
         if (!current) return
@@ -3091,7 +3630,7 @@ window.__ModuleLoader__.load({
         try {
           const result = await api.mermaidImport(mermaidText)
           await loadFlows(true)
-          setCurrent(result.workflow)
+          adoptWorkflow(result.workflow)
           setSelectedId(result.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
           const skipped = (result.issues ?? []).length
@@ -3127,7 +3666,7 @@ window.__ModuleLoader__.load({
         void api.prefs().then((result) => {
           if (closed) return
           setHighContrast(result?.prefs?.highContrast === true)
-          void api.diagnostics().then((diag) => {
+          void loadDiagnostics().then((diag) => {
             setSessionBusy(diag?.sessionBusy?.[sessionId ?? ''] === true)
           }).catch(() => {})
           setShowDevPanels(result?.prefs?.showDevPanels === true)
@@ -3178,7 +3717,7 @@ window.__ModuleLoader__.load({
         if (!plan.workflowId) return
         try {
           const full = await api.workflow(plan.workflowId)
-          setCurrent(full.workflow)
+          adoptWorkflow(full.workflow)
           setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
         } catch (problem) {
@@ -3246,12 +3785,102 @@ window.__ModuleLoader__.load({
         el.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: 'smooth' })
       }, [current, zoom])
 
-      // P1 相机事务（吸收 archify viewer-camera）：所有缩放都围绕锚点补偿滚动，
+      // 相机状态机：idle / panning / zooming / dragging。
+      // 转移带守卫——拖节点时不平移、平移时不缩放抢占，避免多套手势互相打架。
+      const [cameraState, setCameraState] = useState('idle')
+      const cameraStateRef = useRef('idle')
+      cameraStateRef.current = cameraState
+      const cameraSeqRef = useRef(0)
+      // 动画结束信号（onDone）：供导览等需要串接多段相机的功能使用
+      const [zoomSettled, setZoomSettled] = useState(0)
+      const zoomSettleTimer = useRef(0)
+      const [spaceHeld, setSpaceHeld] = useState(false)
+      const spaceHeldRef = useRef(false)
+      spaceHeldRef.current = spaceHeld
+      const beginCamera = useCallback((next) => {
+        const now = cameraStateRef.current
+        if (next === 'panning' && (now === 'dragging' || now === 'zooming')) return false
+        if (next === 'dragging' && now === 'panning') return false
+        if (next === 'zooming' && now === 'dragging') return false
+        cameraSeqRef.current += 1
+        setCameraState(next)
+        return true
+      }, [])
+      const endCamera = useCallback((expect) => {
+        if (expect && cameraStateRef.current !== expect) return
+        setCameraState('idle')
+      }, [])
+
+      // 拖节点期间禁止平移：复用已有的连线拖拽状态作为 dragging 信号
+      useEffect(() => {
+        if (connecting) beginCamera('dragging')
+        else endCamera('dragging')
+      }, [connecting, beginCamera, endCamera])
+
+      // 平移手势：空格 + 左键拖拽，或中键拖拽
+      useEffect(() => {
+        const el = surfaceRef.current
+        if (!el) return undefined
+        let panning = null
+        const onDown = (event) => {
+          const middle = event.button === 1
+          const withSpace = spaceHeldRef.current && event.button === 0
+          if (!middle && !withSpace) return
+          if (!beginCamera('panning')) return
+          event.preventDefault()
+          panning = { x: event.clientX, y: event.clientY, left: el.scrollLeft, top: el.scrollTop }
+          try { el.setPointerCapture(event.pointerId) } catch { /* 指针捕获失败不影响平移 */ }
+        }
+        const onMove = (event) => {
+          if (!panning) return
+          el.scrollLeft = panning.left - (event.clientX - panning.x)
+          el.scrollTop = panning.top - (event.clientY - panning.y)
+        }
+        const onUp = () => { if (panning) { panning = null; endCamera('panning') } }
+        el.addEventListener('pointerdown', onDown)
+        el.addEventListener('pointermove', onMove)
+        el.addEventListener('pointerup', onUp)
+        el.addEventListener('pointercancel', onUp)
+        return () => {
+          el.removeEventListener('pointerdown', onDown)
+          el.removeEventListener('pointermove', onMove)
+          el.removeEventListener('pointerup', onUp)
+          el.removeEventListener('pointercancel', onUp)
+        }
+      }, [current, beginCamera, endCamera])
+
+      // 空格键：按住进入可平移状态（松手恢复）
+      useEffect(() => {
+        const onKeyDown = (event) => {
+          if (event.code !== 'Space' || event.repeat) return
+          const target = event.target
+          const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+          if (typing) return
+          event.preventDefault()
+          setSpaceHeld(true)
+        }
+        const onKeyUp = (event) => { if (event.code === 'Space') setSpaceHeld(false) }
+        window.addEventListener('keydown', onKeyDown)
+        window.addEventListener('keyup', onKeyUp)
+        return () => {
+          window.removeEventListener('keydown', onKeyDown)
+          window.removeEventListener('keyup', onKeyUp)
+        }
+      }, [])
+
+      // P1 相机事务：所有缩放都围绕锚点补偿滚动，
       // smooth=true 时用浏览器平滑滚动（滚轮用瞬时，避免与连续手势打架）。
       const cameraZoom = useCallback((nextRaw, options) => {
         const el = surfaceRef.current
         const next = clampZoom(Number(nextRaw))
         if (!Number.isFinite(next)) return
+        // 状态机准入：拖节点时不允许缩放；缩放可抢占上一段缩放。
+        if (!beginCamera('zooming')) return
+        window.clearTimeout(zoomSettleTimer.current)
+        zoomSettleTimer.current = window.setTimeout(() => {
+          endCamera('zooming')
+          setZoomSettled((value) => value + 1)
+        }, 240)
         setZoom((prev) => {
           if (next === prev) return prev
           const cx = options?.anchor?.x ?? (el ? el.clientWidth / 2 : 0)
@@ -3259,12 +3888,17 @@ window.__ModuleLoader__.load({
           if (el) setScrollFix({ prev, next, cx, cy, left: el.scrollLeft, top: el.scrollTop, smooth: options?.smooth === true })
           return next
         })
-      }, [])
+      }, [beginCamera, endCamera])
 
-      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空
+      // P0：Ctrl/Cmd+F 聚焦搜索框，Esc 清空（R7.3 输入框守卫：焦点在可编辑元素内时不劫持）
+      const inEditable = (target) => {
+        const tag = target?.tagName
+        return tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable === true
+      }
       useEffect(() => {
         const onKey = (event) => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            if (inEditable(event.target)) return
             event.preventDefault()
             searchInputRef.current?.focus()
             return
@@ -3347,6 +3981,19 @@ window.__ModuleLoader__.load({
             setPointerPos(null)
             return
           }
+          // R7.3 焦点在可编辑元素内时不劫持任何画布快捷键（浏览器缩放/搜索等归浏览器）
+          if (inEditable(event.target)) return
+          // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
+          const keyTag = event.target?.tagName
+          if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId && keyTag !== 'INPUT' && keyTag !== 'TEXTAREA') {
+            event.preventDefault()
+            mutate((wf) => {
+              wf.edges = wf.edges.filter((item) => item.id !== selectedEdgeId)
+              return wf
+            })
+            setSelectedEdgeId(null)
+            return
+          }
           if (!(event.ctrlKey || event.metaKey)) return
           if (event.key === '0') {
             event.preventDefault()
@@ -3357,11 +4004,24 @@ window.__ModuleLoader__.load({
           } else if (event.key === '-') {
             event.preventDefault()
             cameraZoom(zoom / 1.15, { smooth: true })
+          } else if (event.key === '1') {
+            event.preventDefault()
+            fitToContent()
+          } else if (event.key === '2') {
+            event.preventDefault()
+            const main = Array.isArray(current?.mainPath) ? current.mainPath : []
+            if (main.length > 0) frameNodes(main)
+          } else if (event.key === '3') {
+            event.preventDefault()
+            const stop = tourStops[tourIndex >= 0 ? tourIndex : 0]
+            if (stop) frameNodes(stop.members)
           }
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-      }, [connecting, fitToContent, cameraZoom, zoom])
+      }, [connecting, fitToContent, cameraZoom, zoom, current, frameNodes, tourStops, tourIndex, selectedEdgeId])
+      // R6.5' 说明：主快捷键 effect 仍随依赖重建，但拖拽期的高频来源是 current——
+      // 已由 R2.1 消除（拖拽不再每 move 改 current），此处保留依赖以维持语义正确性。
 
       useEffect(() => {
         if (!flowMenu) return undefined
@@ -3381,15 +4041,8 @@ window.__ModuleLoader__.load({
         return () => window.removeEventListener('mousedown', close)
       }, [moreOpen])
 
-      useEffect(() => {
-        if (!flowDock) return undefined
-        const close = (event) => {
-          if (event.target?.closest?.('.daf-flow-dock')) return
-          setFlowDock(false)
-        }
-        window.addEventListener('mousedown', close)
-        return () => window.removeEventListener('mousedown', close)
-      }, [flowDock])
+      // 流程管理的关闭交互由 RightDrawer 自带（遮罩点击 / Esc），无需额外的外部点击监听
+      // ——旧监听豁免的是已删除的 .daf-flow-dock 类，会让抽屉内部点击也触发关闭（打开即关）。
 
       useEffect(() => {
         if (!edgeMenu) return undefined
@@ -3419,10 +4072,59 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // 批量操作（一次请求）：完成后刷新列表；当前画布被删则清空选中
+      const batchOperation = async (action, ids) => {
+        try {
+          await api.batchWorkflows(action, ids)
+          if (action === 'delete' && current && ids.includes(current.id)) {
+            setCurrent(null)
+            setSelectedId(null)
+          }
+          setNotice(`${t.batchDone}: ${ids.length}`)
+          const list = await api.workflows(showArchivedRef.current ? 'all' : undefined)
+          setFlows(list)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
+
       const duplicateFlow = async (flow) => {
         try {
           await api.createWorkflow(`${flow.name} ${t.duplicate}`, flow.id)
           await loadFlows(true)
+        } catch (problem) {
+          setError(problem.message)
+        }
+      }
+
+      // needsLayout 消费：宿主不做布局（布局只在客户端），泳道追加/合并产物会带
+      // needsLayout 标记；加载到标记画布时自动整理一次并清除标记。
+      // 同一 updatedAt 只布局一次——避免轮询反复重排，用户拖动位置被重置。
+      const laidOutRef = useRef(new Map())
+      const adoptWorkflow = (wf) => {
+        if (!wf) return
+        if (wf.needsLayout === true && laidOutRef.current.get(wf.id) !== wf.updatedAt) {
+          laidOutRef.current.set(wf.id, wf.updatedAt)
+          setCurrent({ ...autoLayout(wf), needsLayout: false })
+          return
+        }
+        setCurrent(wf)
+      }
+
+      // 手动合并（用户指令①）：把选中的 ≥2 个流程串成一张新画布；源画布保留。
+      const mergeFlows = async (ids) => {
+        if (!Array.isArray(ids) || ids.length < 2) {
+          setNotice(t.mergeNeedTwo)
+          return
+        }
+        try {
+          const result = await api.mergeWorkflows(ids)
+          await loadFlows(true)
+          if (result?.workflow) {
+            adoptWorkflow(result.workflow)
+            setSelectedId(result.workflow.id)
+          }
+          setNotice(t.mergeDone)
         } catch (problem) {
           setError(problem.message)
         }
@@ -3441,7 +4143,8 @@ window.__ModuleLoader__.load({
             if (dirty || run.status !== 'idle') return
             const sessionFlow = sessionId ? items.find((item) => item.sessionId === sessionId && !item.archivedAt) : undefined
             const mine = items.find((item) => item.id === current?.id)
-            const target = sessionFlow && sessionFlow.id !== current?.id
+            // userOverride 时跳过 sessionFlow 拽回分支；当前画布的服务端更新仍跟随
+            const target = !canvasOverrideRef.current && sessionFlow && sessionFlow.id !== current?.id
               ? sessionFlow
               : mine && current && mine.updatedAt && mine.updatedAt !== current.updatedAt
                 ? mine
@@ -3449,7 +4152,7 @@ window.__ModuleLoader__.load({
             if (!target) return
             const full = await api.workflow(target.id)
             if (closed) return
-            setCurrent(full.workflow)
+            adoptWorkflow(full.workflow)
             setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
             setDirty(false)
           } catch {
@@ -3487,7 +4190,7 @@ window.__ModuleLoader__.load({
             const active = sessionIdRef.current
             const preferred = (active ? items.find((item) => item.sessionId === active && !item.archivedAt) : undefined) ?? items[0]
             const full = await api.workflow(preferred.id)
-            setCurrent(full.workflow)
+            adoptWorkflow(full.workflow)
             setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
             setDirty(false)
             setIssues([])
@@ -3502,11 +4205,15 @@ window.__ModuleLoader__.load({
         void loadFlows(false)
       }, [loadFlows])
 
+      // 用户主动切换画布标记：pickFlow 打开非本会话画布后，轮询不再强制拽回 session 画布
+      // （修复：此前最迟 4s 被 adopt 回 session 画布并重置选择）。切回本会话画布时复位。
+      const canvasOverrideRef = useRef(false)
       const pickFlow = async (id) => {
         if (dirty && !window.confirm(t.confirmDiscard)) return
         try {
           const full = await api.workflow(id)
-          setCurrent(full.workflow)
+          canvasOverrideRef.current = Boolean(sessionIdRef.current) && full.workflow.sessionId !== sessionIdRef.current
+          adoptWorkflow(full.workflow)
           setSelectedId(full.workflow.nodes?.[0]?.id ?? null)
           setDirty(false)
           setIssues([])
@@ -3534,7 +4241,7 @@ window.__ModuleLoader__.load({
       const pinnedCount = (current?.nodes ?? []).filter((node) => node.pos?.pinned === true).length
 
       const nextLayoutName = () => {
-        const order = ['chain', 'star', 'radial']
+        const order = ['chain', 'tb', 'star', 'radial']
         const now = current?.layout ?? 'chain'
         return order[(order.indexOf(now) + 1) % order.length]
       }
@@ -3668,49 +4375,12 @@ window.__ModuleLoader__.load({
         return () => clearTimeout(timer)
       }, [purgePendingId])
 
-      const flowRows = flows.slice(0, 60).map((flow) => {
-        const menu = purgePendingId === flow.id
-          ? h('div', { className: 'daf-purge-warn', role: 'alert' },
-              h('span', null, `3 ${t.purgeCountdown}`),
-              h('span', { className: 'daf-purge-bar', 'aria-hidden': 'true' }),
-              h(Btn, { onClick: () => setPurgePendingId(null) }, t.cancel))
-          : flowMenu === flow.id
-            ? h('div', { className: 'daf-flow-menu daf-flow-menu-static' },
-                h(Btn, { onClick: () => { setFlowMenu(null); void duplicateFlow(flow) } }, t.duplicate),
-                flow.archivedAt
-                  ? h(Btn, { onClick: () => { setFlowMenu(null); void restoreFlowById(flow) } }, t.restoreFlow)
-                  : h(Btn, { onClick: () => { setFlowMenu(null); void archiveFlowById(flow) } }, t.archiveFlow),
-                flow.archivedAt
-                  ? h(Btn, { variant: 'danger', onClick: () => { setFlowMenu(null); requestPurge(flow) } }, t.purgeFlow)
-                  : null)
-            : null
-        return h('div', { key: flow.id, className: 'daf-flow-row' },
-          h('button', {
-            type: 'button',
-            className: 'daf-chip daf-flow-row-chip',
-            'data-active': String(flow.id === current?.id),
-            'data-session': String(Boolean(sessionId) && flow.sessionId === sessionId),
-            'data-archived': flow.archivedAt ? 'true' : undefined,
-            'data-draft': flow.origin === 'auto-draft' ? 'true' : undefined,
-            title: `${flow.name} · ${flow.nodes}${flow.archivedAt ? ` · ${t.archivedBadge}` : ''}${flow.turn ? ` · ${t.turnLabel} ${flow.turn}` : ''}`,
-            onClick: () => { if (flow.id !== current?.id) void pickFlow(flow.id) },
-            onContextMenu: (event) => {
-              event.preventDefault()
-              setFlowMenu((prev) => (prev === flow.id ? null : flow.id))
-            },
-          },
-            Boolean(sessionId) && flow.sessionId === sessionId ? h(Icon, { name: 'bolt', size: 11 }) : null,
-            h('span', { className: 'daf-flow-name' }, flow.name),
-            h('span', { className: 'daf-chip-count' }, String(flow.nodes))),
-          menu)
-      })
 
       const activeFlowCount = flows.filter((item) => !item.archivedAt).length
 
       const sideAbbr = (side) => String(side)
         .replace('top-right', 'TR').replace('top-left', 'TL')
         .replace('bottom-right', 'BR').replace('bottom-left', 'BL')
-        .replace('-q1', '1').replace('-q3', '3')
         .replace('top', 'T').replace('bottom', 'B').replace('right', 'R').replace('left', 'L')
       const selectedEdge = selectedEdgeId ? (current?.edges ?? []).find((item) => item.id === selectedEdgeId) : null
       const selectedEdgeView = (() => {
@@ -3719,7 +4389,7 @@ window.__ModuleLoader__.load({
         const toNode = nodesById.get(selectedEdge.to)
         if (!fromNode || !toNode) return null
         const mid = edgeMidpoint(rectOfNode(fromNode), rectOfNode(toNode), selectedEdge)
-        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left', 'right-q1', 'right-q3', 'left-q1', 'left-q3', 'top-q1', 'top-q3', 'bottom-q1', 'bottom-q3']
+        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left']
         const sideRow = (which) => h('div', { className: 'daf-edge-editor-row' },
           h('span', { className: 'daf-muted' }, which === 'from' ? t.edgeFrom : t.edgeTo),
           sides.map((side) => {
@@ -3841,9 +4511,10 @@ window.__ModuleLoader__.load({
         }
         const w = br - bx + PAD * 2, h = bb - by + PAD * 2
         const ox = PAD - bx, oy = PAD - by
-        const esc = (s) => String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+        // 修复：此前三个 replace 均为自替换（转义实体在历史搬运中丢失），标题含 &/< 的节点导出 SVG/PNG 损坏
+        const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
-        svg += '<rect width="100%" height="100%" fill="white"/>'
+        svg += '<rect width="100%" height="100%" fill="' + EXPORT_BACKGROUND + '"/>'
         svg += '<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#666"/></marker></defs>'
         for (const e of current.edges) {
           const from = current.nodes.find((n) => n.id === e.from)
@@ -3878,7 +4549,7 @@ window.__ModuleLoader__.load({
         setNotice(t.exportSvg + ' ✓')
       }
 
-      // P2 4× 栅格导出（吸收 archify export 的无依赖技巧：把 SVG 的 width/height 放大 4 倍，
+      // P2 4× 栅格导出（吸收该机制的无依赖技巧：把 SVG 的 width/height 放大 4 倍，
       // 浏览器按该分辨率原生栅格化矢量，drawImage 再画到 Canvas——不需要任何第三方库。）
       const exportPng = async () => {
         const built = buildFlowSvg()
@@ -3899,7 +4570,7 @@ window.__ModuleLoader__.load({
           canvas.width = Math.round(built.w * SCALE)
           canvas.height = Math.round(built.h * SCALE)
           const context = canvas.getContext('2d')
-          context.fillStyle = '#ffffff'
+          context.fillStyle = EXPORT_BACKGROUND
           context.fillRect(0, 0, canvas.width, canvas.height)
           context.drawImage(image, 0, 0, canvas.width, canvas.height)
           const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
@@ -3911,43 +4582,34 @@ window.__ModuleLoader__.load({
         }
       }
 
-      const flowDockView = h('div', { className: `daf-flow-dock${flowDock ? ' is-open' : ''}` },
-        h('button', {
-          type: 'button',
-          className: 'daf-flow-dock-toggle',
-          title: t.flowDock,
-          'aria-expanded': String(Boolean(flowDock)),
-          onClick: () => setFlowDock((value) => !value),
-        },
-          h(Icon, { name: 'layers', size: 16 }),
-          activeFlowCount > 0 ? h('span', { className: 'daf-dock-badge' }, String(activeFlowCount)) : null),
-        h('div', { className: 'daf-flow-dock-body' },
-              h('div', { className: 'daf-flow-dock-head' },
-                h('span', { className: 'daf-muted' }, `${t.flowDock} · ${flows.length}`),
-                h('button', {
-                  type: 'button',
-                  className: 'daf-dock-switch',
-                  onClick: () => setShowArchived((value) => !value),
-                }, `${t.showArchived}: ${showArchived ? t.on : t.off}`)),
-              flows.length === 0
-                ? h('div', { className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)
-                : flowRows))
+      // 流程管理：贴屏右侧、与画布等高的抽屉（与 Mermaid 导入一致的交互与动效）。
+      const flowDockView = flowDock
+        ? h(RightDrawer, { title: t.flowDock, onClose: () => setFlowDock(false) },
+            h(FlowManager, {
+              flows, current, sessionId, t, h, Icon, Btn,
+              pickFlow, duplicateFlow, restoreFlowById, archiveFlowById, requestPurge,
+              flowMenu, setFlowMenu, purgePendingId, setPurgePendingId,
+              showArchived, setShowArchived, batchOperation, mergeFlows,
+            }))
+        : null
 
       const moreMenu = h('div', { className: 'daf-flow-menu daf-more-menu' },
         h(Btn, { onClick: () => { setMoreOpen(false); void validate() }, disabled: busy || !current }, h(Icon, { name: 'check', size: 12 }), t.validate),
         h(Btn, { onClick: () => { setMoreOpen(false); if (current) mutate((wf) => autoLayout(wf)) }, disabled: !current, title: t.layoutPinned }, h(Icon, { name: 'refresh', size: 12 }), t.autoLayout),
         h('div', { className: 'daf-more-group', role: 'group', 'aria-label': t.layout },
-          ['chain', 'star', 'radial'].map((value) => h('button', {
+          ['chain', 'tb', 'star', 'radial'].map((value) => h('button', {
             key: value,
             type: 'button',
-            className: `daf-layout-btn${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
-            title: `${t.layout}: ${t[`layout_${value}`] ?? value}`,
+            // R2 二轮审计：原对象 className/title 写了两遍（前一组被后一组覆盖的死属性）——删前组
+            className: `daf-layout-btn daf-tip${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
+            'data-tip': `${t.layout}: ${t[`layout_${value}`] ?? value}`,
             disabled: !current,
             onClick: () => applyLayout(value),
           }, t[`layout_${value}`] ?? value))),
         h(Btn, { onClick: () => { setMoreOpen(false); void copyMermaid() }, disabled: !current }, t.mermaidCopy),
         h(Btn, { onClick: () => void exportSvg(), disabled: !current, title: t.exportSvg }, t.exportSvg),
         h(Btn, { onClick: () => void exportPng(), disabled: !current, title: t.exportPng }, t.exportPng),
+        h(Btn, { onClick: () => void composeToPrompt(), disabled: !current, title: t.composeHint }, t.compose),
         h(Btn, {
           onClick: () => setMotionOff((value) => !value),
           title: t.motionHint,
@@ -3966,11 +4628,13 @@ window.__ModuleLoader__.load({
         try {
           if (dirty) await api.saveWorkflow(current.id, current)
           const result = await api.validate(current.id, sessionId)
-          setIssues(result.issues ?? [])
+          // 路由探针与宿主校验合并：宿主查结构/端口，客户端查实际路径质量。
+          const merged = [...(result.issues ?? []), ...probeRoutes()]
+          setIssues(merged)
           if (!showDevPanels) {
-            const errs = (result.issues ?? []).filter((issue) => issue.level === 'error').length
-            const warns = (result.issues ?? []).length - errs
-            // finalize 门禁（archify 吸收）：0 错误 = 可运行
+            const errs = merged.filter((issue) => issue.level === 'error').length
+            const warns = merged.length - errs
+            // finalize 门禁：0 错误 = 可运行
             setNotice(errs === 0 ? `✓ ${t.validate} · ${t.validateRunnable}（${warns} W）` : `${t.validate}: ${errs} E / ${warns} W`)
           }
           setDirty(false)
@@ -4008,23 +4672,50 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // R2.1 拖拽 DOM 直写：move 期间只写被拖节点（及容器子节点）的 transform，
+      // 不做 setCurrent——此前每 move 全量 setState 会重建 obstacleGrid/lane Map 并把
+      // routeCache 整体作废（O(E×路由)/move）。pointerup 一次 mutate 结算最终位置。
+      const nodeElsRef = useRef(new Map())
       useEffect(() => {
         const onMove = (event) => {
           const drag = dragRef.current
           if (!drag) return
           const dx = (event.clientX - drag.px) / drag.zoom
           const dy = (event.clientY - drag.py) / drag.zoom
+          drag.mx = Math.max(0, Math.round(drag.x + dx))
+          drag.my = Math.max(0, Math.round(drag.y + dy))
+          drag.mdx = dx
+          drag.mdy = dy
+          const el = nodeElsRef.current.get(drag.id)
+          if (el) el.style.transform = `translate3d(${drag.mx}px, ${drag.my}px, 0)`
+          for (const childId of drag.childIds ?? []) {
+            const child = drag.childStart.get(childId)
+            const childEl = nodeElsRef.current.get(childId)
+            if (child && childEl) childEl.style.transform = `translate3d(${Math.max(0, Math.round(child.x + dx))}px, ${Math.max(0, Math.round(child.y + dy))}px, 0)`
+          }
+          if (!drag.dirtySet) {
+            drag.dirtySet = true
+            setDirty(true)
+          }
+        }
+        const onUp = () => {
+          const drag = dragRef.current
+          dragRef.current = null
+          suppressEdgeClickRef.current = Date.now()
+          if (!drag || drag.mx === undefined) return
           setCurrent((prev) => {
             if (!prev) return prev
             const node = prev.nodes.find((item) => item.id === drag.id)
             if (!node) return prev
-            return { ...prev, nodes: prev.nodes.map((item) => (item.id === drag.id ? { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(drag.x + dx)), y: Math.max(0, Math.round(drag.y + dy)), pinned: true } } : item)) }
+            return { ...prev, nodes: prev.nodes.map((item) => {
+              if (item.id === drag.id) return { ...item, pos: { ...item.pos, x: drag.mx, y: drag.my, pinned: true } }
+              if (drag.childIds?.has(item.id) && item.pos?.pinned !== true) {
+                const start = drag.childStart.get(item.id)
+                return { ...item, pos: { ...item.pos, x: Math.max(0, Math.round(start.x + drag.mdx)), y: Math.max(0, Math.round(start.y + drag.mdy)) } }
+              }
+              return item
+            }) }
           })
-          setDirty(true)
-        }
-        const onUp = () => {
-          suppressEdgeClickRef.current = Date.now()
-          dragRef.current = null
         }
         window.addEventListener('pointermove', onMove)
         window.addEventListener('pointerup', onUp)
@@ -4043,6 +4734,8 @@ window.__ModuleLoader__.load({
       const selected = selectedId ? nodesById.get(selectedId) : null
 
       const nodeStatusMap = current?.nodeStatus ?? {}
+      // 主干：两端都在主干上的边是脊椎，视觉加粗；其余为支线。
+      const mainPathSet = new Set(Array.isArray(current?.mainPath) ? current.mainPath : [])
       const statusOf = (id) => nodeStatusMap[id]
         ?? run.nodes?.[id]?.status
         ?? (run.status === 'idle' ? 'idle' : 'pending')
@@ -4063,13 +4756,24 @@ window.__ModuleLoader__.load({
       const steps = useMemo(() => orderByLayer(current).filter((node) => !node.parentId), [current])
       const checkpoint = run.checkpoint
 
-      const childCountOf = (id) => (current?.nodes ?? []).filter((node) => node.parentId === id).length
+      // R2.2 预聚合：parentId→children 一次 O(N) 建 Map，rectOfNode/childrenOf 查表 O(1)
+      //（此前 childCountOf 每次 filter 全节点，被 allRects/nodesView 逐节点调用 → 每渲染 O(N²)）
+      const childrenByParent = useMemo(() => {
+        const map = new Map()
+        for (const node of current?.nodes ?? []) {
+          const pid = node.parentId
+          if (!pid) continue
+          if (!map.has(pid)) map.set(pid, [])
+          map.get(pid).push(node)
+        }
+        for (const list of map.values()) list.sort((a, b) => (Number(a.pos?.y) || 0) - (Number(b.pos?.y) || 0))
+        return map
+      }, [current])
+      const childCountOf = (id) => childrenByParent.get(id)?.length ?? 0
       const rectOfNode = (node) => rectOf(node, childCountOf(node.id))
-      const childrenOf = (id) => (current?.nodes ?? [])
-        .filter((node) => node.parentId === id)
-        .sort((a, b) => (Number(a.pos?.y) || 0) - (Number(b.pos?.y) || 0))
+      const childrenOf = (id) => childrenByParent.get(id) ?? []
 
-      const completeConnection = (targetId, pointer) => {
+      const completeConnection = (targetId, pointer, targetSide = null) => {
         if (!connecting || connecting.nodeId === targetId) return
         lastConnectRef.current = Date.now()
         const source = nodesById.get(connecting.nodeId)
@@ -4099,8 +4803,8 @@ window.__ModuleLoader__.load({
         }
         const grabbed = connecting.side && EDGE_SIDES.includes(connecting.side) ? connecting.side : null
         const fromSide = grabbed && FACE_OF(grabbed) === FACE_OF(baseFrom) ? grabbed : baseFrom
-        const snapped = pointer ? nearestSide(toRect, pointer) : null
-        const toSide = snapped && FACE_OF(snapped) === FACE_OF(baseTo) ? snapped : baseTo
+        // 落点锚点由吸附结果显式给出；没有给出时（内部调用）退回按方向选面。
+        const toSide = targetSide && EDGE_SIDES.includes(targetSide) ? targetSide : baseTo
         const fromPort = connecting.port ?? 'out'
         mutate((wf) => {
           const exists = wf.edges.some((edge) => edge.from === connecting.nodeId && edge.fromPort === fromPort && edge.to === targetId)
@@ -4108,15 +4812,6 @@ window.__ModuleLoader__.load({
             const used = new Set(wf.edges.map((edge) => Number(edge.color)).filter((value) => Number.isFinite(value)))
             let color = 0
             while (used.has(color) && color < EDGE_PALETTE_SIZE - 1) color += 1
-            const aFrom = anchorPoint(rectOfNode(source), fromSide)
-            const reach = Math.max(40, Math.min(160, Math.hypot((pointer?.x ?? aFrom.x) - aFrom.x, (pointer?.y ?? aFrom.y) - aFrom.y) * 0.45))
-            const controlOf = (point, direction) => {
-              if (direction === 'right') return { x: point.x + reach, y: point.y }
-              if (direction === 'left') return { x: point.x - reach, y: point.y }
-              if (direction === 'up') return { x: point.x, y: point.y - reach }
-              return { x: point.x, y: point.y + reach }
-            }
-            const bTarget = anchorPoint(rectOfNode(target), toSide)
             wf.edges.push({
               id: `e_${connecting.nodeId}_${targetId}_${Math.random().toString(36).slice(2, 6)}`,
               from: connecting.nodeId,
@@ -4125,7 +4820,9 @@ window.__ModuleLoader__.load({
               fromSide,
               toSide,
               color,
-              customPath: pointer ? { c1: controlOf(aFrom, fromSide), c2: controlOf(bTarget, toSide) } : undefined,
+              // 不再写 customPath（绝对坐标控制点在节点移动后僵死不重算）——
+              // 曲线一律走 edgePath 实时路由；自定义造型未来用「拖中点」实现。
+              customPath: undefined,
             })
           }
           return wf
@@ -4184,7 +4881,261 @@ window.__ModuleLoader__.load({
       // 空间网格每次渲染建一次（O(N)），代替原来逐边 O(E×N) 的障碍数组构建。
       const obstacleGrid = createSpatialGrid(160)
       for (const item of allRects) obstacleGrid.insert(item.rect, item)
-      let flowBudgetUsed = 0
+      // 路由结果缓存（key=edge.id，current 换代即弃）：节点多时每渲染重跑几百次
+      // Dijkstra 是连线高频卡顿/闪烁的直接来源；命中直接复用 d，节点挪动后
+      // mutate 产生新 current，缓存自然失效重算。
+      // 连线拖动：move 时把被拖端吸附到最近锚点（仅视觉预览，pointerup 才提交 mutate）。
+      const [pointerSnapTarget, setPointerSnapTarget] = useState(null)
+      useEffect(() => {
+        if (!edgeDrag) return undefined
+        const onMove = (event) => {
+          const el = surfaceInnerRef.current
+          if (!el) return
+          const rect = el.getBoundingClientRect()
+          const canvasPoint = {
+            x: (event.clientX - rect.left) / zoom,
+            y: (event.clientY - rect.top) / zoom,
+          }
+          setPointerPos(canvasPoint)
+          // 预览吸附目标：靠近节点（抓取半径 24 屏幕px，除 zoom 换算逻辑距离，缩放下手感一致）
+          const grabRadius = 24 / (zoom || 1)
+          const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
+          const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
+          let snap = null
+          for (const node of current?.nodes ?? []) {
+            if (node.id === fixedId) continue
+            const nodeRect = rectOfNode(node)
+            const dx = Math.max(nodeRect.x - canvasPoint.x, 0, canvasPoint.x - (nodeRect.x + nodeRect.w))
+            const dy = Math.max(nodeRect.y - canvasPoint.y, 0, canvasPoint.y - (nodeRect.y + nodeRect.h))
+            const distance = Math.hypot(dx, dy)
+            if (distance > grabRadius) continue
+            const anchor = nearestAnchor(nodeRect, canvasPoint, Infinity)
+            if (anchor && (!snap || distance < snap.distance)) snap = { nodeId: node.id, side: anchor.side, distance }
+          }
+          setPointerSnapTarget(snap)
+        }
+        const onUp = (event) => {
+          const el = surfaceInnerRef.current
+          const rect = el?.getBoundingClientRect()
+          if (!el || !rect) { setEdgeDrag(null); return }
+          const canvasPoint = {
+            x: (event.clientX - rect.left) / zoom,
+            y: (event.clientY - rect.top) / zoom,
+          }
+          const grabRadius = 24 / (zoom || 1)
+          // 吸附判定：靠近节点（矩形 24px 邻域内最近者）即绑定——不必精确点中锚点，
+          // 锚点自动取该节点上离指针最近的一面。固定端自身的节点不参与。
+          const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
+          const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
+          let best = null
+          for (const node of current?.nodes ?? []) {
+            if (node.id === fixedId) continue
+            const rect = rectOfNode(node)
+            const dx = Math.max(rect.x - canvasPoint.x, 0, canvasPoint.x - (rect.x + rect.w))
+            const dy = Math.max(rect.y - canvasPoint.y, 0, canvasPoint.y - (rect.y + rect.h))
+            const distance = Math.hypot(dx, dy)
+            if (distance > grabRadius) continue
+            const anchor = nearestAnchor(rect, canvasPoint, Infinity)
+            if (anchor && (!best || distance < best.distance)) best = { nodeId: node.id, side: anchor.side, distance }
+          }
+          if (best) {
+            mutate((wf) => {
+              wf.edges = wf.edges.map((item) => {
+                if (item.id !== edgeDrag.id) return item
+                if (edgeDrag.end === 'from') {
+                  // 拖 from 端：换来源节点与出射面
+                  return { ...item, from: best.nodeId, fromSide: best.side, customPath: undefined }
+                }
+                return { ...item, to: best.nodeId, toSide: best.side, customPath: undefined }
+              })
+              return wf
+            })
+          }
+          setEdgeDrag(null)
+          setPointerPos(null)
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        return () => {
+          window.removeEventListener('pointermove', onMove)
+          window.removeEventListener('pointerup', onUp)
+        }
+      }, [edgeDrag, current, zoom])
+
+      // 标号定位（修复漂移）：不再用数学近似（edgeMidpoint 与实际折线/贝塞尔脱节），
+      // 渲染后对每条可见路径调 getPointAtLength(len/2) 取**真实线上的中点**。
+      // 路由缓存（R2.3：key=边的结构签名，见 edgeDCached 处）——不再随 current 引用整体作废
+      const routeCacheRef = useRef(new Map())
+      const edgePathEls = useRef(new Map())
+      const [edgeMids, setEdgeMids] = useState(() => new Map())
+      // R2.4 增量测量：getTotalLength/getPointAtLength 会强制同步 layout（每边两次）。
+      // 缓存每边的 d 串，路径未变的边直接复用上次中点——拖拽/缩放时只测真正变形的边。
+      const midCacheRef = useRef({ ds: new Map(), mids: new Map() })
+      useEffect(() => {
+        const cache = midCacheRef.current
+        const next = new Map()
+        for (const [edgeId, el] of edgePathEls.current) {
+          try {
+            const d = el.getAttribute('d') ?? ''
+            if (cache.ds.get(edgeId) === d) {
+              const cachedMid = cache.mids.get(edgeId)
+              if (cachedMid) { next.set(edgeId, cachedMid); continue }
+            }
+            const len = el.getTotalLength()
+            if (len > 0) {
+              const point = el.getPointAtLength(len / 2)
+              const mid = { x: point.x, y: point.y }
+              next.set(edgeId, mid)
+              cache.ds.set(edgeId, d)
+              cache.mids.set(edgeId, mid)
+            }
+          } catch { /* 路径不可测（隐藏/无 d）时保留旧值 */ }
+        }
+        if (cache.ds.size > 4000) { cache.ds.clear(); cache.mids.clear() }
+        setEdgeMids((prev) => {
+          if (prev.size === next.size && [...next.entries()].every(([id, point]) => {
+            const old = prev.get(id)
+            return old && Math.abs(old.x - point.x) < 0.5 && Math.abs(old.y - point.y) < 0.5
+          })) return prev
+          return next
+        })
+      }, [current, zoom])
+      // R2.3 失效粒度：缓存 key 从「current 引用」改为「边的结构签名」——
+      // 此前任何 mutate（拖拽每 move）都换 current 引用，全部边路由作废重算（O(E×路由)/move）。
+      // 签名含两端锚点坐标/面/车道偏移，任一变化才重算该边。
+      const routeKey = (edge, fromRect, toRect, oA, oB) => [
+        edge.id, edge.fromSide ?? 'right', edge.toSide ?? 'left',
+        Math.round(fromRect.x), Math.round(fromRect.y), Math.round(fromRect.w), Math.round(fromRect.h),
+        Math.round(toRect.x), Math.round(toRect.y), Math.round(toRect.w), Math.round(toRect.h),
+        oA, oB, current?.nodes.length ?? 0,
+      ].join('|')
+      const routeCache = routeCacheRef.current
+      const edgeDCached = (fromRect, toRect, edge, oA, oB) => {
+        const key = routeKey(edge, fromRect, toRect, oA, oB)
+        const hit = routeCache.get(key)
+        if (typeof hit === 'string') return hit
+        // 此前写成调用 edgeDCached 自己 → 任何调用即无限递归；缓存 key 相同的前提下
+        // 这里应调用真实的 edgePath 计算并写入缓存。
+        const d = edgePath(fromRect, toRect, edge, oA, oB)
+        routeCache.set(key, d)
+        if (routeCache.size > 4000) routeCache.clear()
+        return d
+      }
+
+      // 路由探针：把每条边**实际算出**的路径解析成折线，
+      // 检查结构性问题。放在客户端做，避免把路由器在宿主侧再实现一遍（两处实现必然漂移）。
+      // 结果并入 issues，由校验按钮与开发者面板统一展示。
+      const parsePathPoints = (d) => {
+        const points = []
+        const re = /[ML]\s*(-?[\d.]+)\s+(-?[\d.]+)/g
+        let m
+        while ((m = re.exec(String(d ?? ''))) !== null) points.push({ x: Number(m[1]), y: Number(m[2]) })
+        return points
+      }
+      const segmentsCross = (p1, p2, p3, p4) => {
+        const dir = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+        const d1 = dir(p3, p4, p1), d2 = dir(p3, p4, p2), d3 = dir(p1, p2, p3), d4 = dir(p1, p2, p4)
+        return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+      }
+      const probeRoutes = () => {
+        const nodes = current?.nodes ?? []
+        const byId = new Map(nodes.map((node) => [node.id, node]))
+        const issues = []
+        const traced = []
+        const anchorCount = new Map()
+        for (const edge of current?.edges ?? []) {
+          const from = byId.get(edge.from)
+          const to = byId.get(edge.to)
+          if (!from || !to) continue
+          const fromSide = edge.fromSide && EDGE_SIDES.includes(edge.fromSide) ? edge.fromSide : 'right'
+          const toSide = edge.toSide && EDGE_SIDES.includes(edge.toSide) ? edge.toSide : 'left'
+          const d = edgePath(rectOfNode(from), rectOfNode(to), edge, obstacleGrid, 0, 0)
+          const points = parsePathPoints(d)
+          if (points.length < 2) continue
+          traced.push({ edge, points })
+          const key = edge.from + '|' + fromSide
+          anchorCount.set(key, (anchorCount.get(key) ?? 0) + 1)
+          const head = points[0]
+          const tail = points[points.length - 1]
+          const straight = Math.hypot(tail.x - head.x, tail.y - head.y) || 1
+          let polyline = 0
+          for (let i = 1; i < points.length; i += 1) polyline += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y)
+          if (polyline / straight > 2.5) {
+            issues.push({ level: 'warning', code: 'route-detour', message: `连线绕行过长（${(polyline / straight).toFixed(1)}× 直线）：${from.title} → ${to.title}`, edgeId: edge.id })
+          }
+          for (const node of nodes) {
+            if (node.id === edge.from || node.id === edge.to) continue
+            const rect = rectOfNode(node)
+            let hugging = false
+            for (let i = 1; i < points.length && !hugging; i += 1) {
+              if (segmentHitsRect(points[i - 1], points[i], rect, 2)) hugging = true
+            }
+            if (hugging) {
+              issues.push({ level: 'warning', code: 'route-hugging', message: `连线贴着节点「${node.title}」`, edgeId: edge.id, nodeId: node.id })
+            }
+          }
+        }
+        // 交叉候选预筛（性能审计 P-C）：每条边的包围盒入网格，只有同格的边对
+        // 才进入逐段精确判定——把 O(E²) 的两两组合降为 O(同格对数)。
+        const crossGrid = createSpatialGrid(320)
+        traced.forEach((item, index) => {
+          const xs = item.points.map((point) => point.x)
+          const ys = item.points.map((point) => point.y)
+          crossGrid.insert(
+            { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) },
+            index,
+          )
+        })
+        const bboxOf = (index) => {
+          const xs = traced[index].points.map((point) => point.x)
+          const ys = traced[index].points.map((point) => point.y)
+          return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
+        }
+        for (let i = 0; i < traced.length; i += 1) {
+          const candidates = crossGrid.query(bboxOf(i)).filter((j) => j > i)
+          for (const j of candidates) {
+            const left = traced[i], right = traced[j]
+            if (left.edge.from === right.edge.from || left.edge.to === right.edge.to) continue
+            let crossed = false
+            for (let x = 1; x < left.points.length && !crossed; x += 1) {
+              for (let y = 1; y < right.points.length && !crossed; y += 1) {
+                if (segmentsCross(left.points[x - 1], left.points[x], right.points[y - 1], right.points[y])) crossed = true
+              }
+            }
+            if (crossed) {
+              issues.push({ level: 'warning', code: 'route-crossing', message: `两条连线交叉：${left.edge.id} × ${right.edge.id}`, edgeId: left.edge.id, otherId: right.edge.id })
+            }
+          }
+        }
+        for (const [key, count] of anchorCount) {
+          if (count <= 3) continue
+          const [nodeId, side] = key.split('|')
+          issues.push({ level: 'warning', code: 'anchor-conflict', message: `「${byId.get(nodeId)?.title ?? nodeId}」的 ${side} 面挂了 ${count} 条连线，建议分散锚点`, nodeId })
+        }
+        return issues
+      }
+      // 动效治理：一个读者开关 + 一个运动预算 + 语义归属让位。
+      // 预算随图规模分级：图越大，同屏流动的边越少，避免大面积动画拖慢渲染。
+      const visibleNodeCount = (current?.nodes ?? []).length
+      const motionBudget = motionOff ? 0 : (visibleNodeCount <= 20 ? 6 : visibleNodeCount <= 60 ? 4 : 2)
+      // 归属优先级：正在跑的边最先保住，其次主干，最后是已完成的边。
+      const edgeMotionScore = (edge) => {
+        const fromState = statusOf(edge.from)
+        const toState = statusOf(edge.to)
+        let score = 0
+        if (toState === 'running' || fromState === 'running') score += 100
+        if (fromState === 'succeeded' && toState === 'running') score += 50
+        if (mainPathSet.has(edge.from) && mainPathSet.has(edge.to)) score += 10
+        return score
+      }
+      const budgetEdgeIds = new Set(
+        (current?.edges ?? [])
+          .map((edge) => ({ id: edge.id, score: edgeMotionScore(edge) }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, motionBudget)
+          .filter((item) => item.score > 0)
+          .map((item) => item.id),
+      )
       const edgeList = (current?.edges ?? []).map((edge) => {
         const from = nodesById.get(edge.from)
         const to = nodesById.get(edge.to)
@@ -4193,7 +5144,8 @@ window.__ModuleLoader__.load({
         const toRect = rectOfNode(to)
         const fk = `${edge.from}|${edge.fromSide ?? 'right'}`
         const tk = `${edge.to}|${edge.toSide ?? 'left'}`
-        const d = edgePath(fromRect, toRect, edge, obstacleGrid,
+        // 路由缓存接入：同一边在同画布内只算一次（缓存随 current 引用失效）
+        const d = edgeDCached(fromRect, toRect, edge, obstacleGrid,
           (fromLaneTotal.get(fk) ?? 1) > 1 ? ((fromLaneSeen.get(fk) ?? 0) - ((fromLaneTotal.get(fk) ?? 1) - 1) / 2) * 8 : 0,
           (toLaneTotal.get(tk) ?? 1) > 1 ? ((toLaneSeen.get(tk) ?? 0) - ((toLaneTotal.get(tk) ?? 1) - 1) / 2) * 8 : 0)
         fromLaneSeen.set(fk, (fromLaneSeen.get(fk) ?? 0) + 1)
@@ -4202,15 +5154,17 @@ window.__ModuleLoader__.load({
         const traversals = run.traversals?.[edge.id] ?? 0
         const resolvedColor = Number.isFinite(Number(edge.color)) ? Number(edge.color) : autoColors.get(edge.id)
         const colorStyle = Number.isFinite(resolvedColor) ? { stroke: `var(--daf-edge-${resolvedColor % EDGE_PALETTE_SIZE})` } : undefined
-        const mid = edgeMidpoint(fromRect, toRect, edge)
+        const mid = edgeMids.get(edge.id) ?? edgeMidpoint(fromRect, toRect, edge)
         const flowState = state === 'idle' ? undefined : state
-        // P3 运动预算：同一屏最多 MOTION_BUDGET 条边同时流动；超出的保留颜色/状态但不播放。
-        const animating = state === 'active' && flowBudgetUsed < MOTION_BUDGET && !motionOff
-        if (animating) flowBudgetUsed += 1
+        const onMain = mainPathSet.size > 0 && mainPathSet.has(edge.from) && mainPathSet.has(edge.to)
+        // 动效治理：预算内的边才播放流动；预算外的保留颜色与状态，只是不播动画。
+        // 预算按语义归属分配，而不是按渲染顺序先到先得——否则前面的边会吃掉全部预算。
+        const animating = state === 'active' && budgetEdgeIds.has(edge.id)
         const budgetSkip = state === 'active' && !animating ? 'skip' : undefined
         return h('g', { key: edge.id },
-          h('path', { className: 'daf-edge-glow', d, 'data-state': flowState, style: colorStyle }),
-          h('path', { className: 'daf-edge-flow', d, 'data-state': flowState, 'data-budget': budgetSkip, style: colorStyle }),
+          h('path', { className: 'daf-edge-glow', d, 'data-state': flowState, 'data-main': onMain ? 'true' : undefined, style: colorStyle }),
+          h('path', { className: 'daf-edge-flow', d, 'data-state': flowState, 'data-budget': budgetSkip, 'data-main': onMain ? 'true' : undefined,
+            'data-animate': String(state === 'active' || (onMain && state !== 'failed')), style: colorStyle }),
           h('path', { className: 'daf-edge-bolus', d, 'data-state': flowState, 'data-budget': budgetSkip, style: colorStyle }),
           h('path', {
             d,
@@ -4224,9 +5178,33 @@ window.__ModuleLoader__.load({
               suppressEdgeClickRef.current = Date.now()
               setEdgeMenu({ id: edge.id, x: event.clientX, y: event.clientY })
             },
+            onPointerDown: (event) => {
+              // 连线拖动：按下即判定拖哪一端（距两端锚点近者被拖动）。
+              // 只响应左键：右键交给 onContextMenu 开菜单（手势互斥）
+              if (event.button !== 0) return
+              event.preventDefault()
+              event.stopPropagation()
+              suppressEdgeClickRef.current = Date.now()
+              const from = nodesById.get(edge.from)
+              const to = nodesById.get(edge.to)
+              if (!from || !to) return
+              const dragRect = surfaceInnerRef.current?.getBoundingClientRect()
+              if (!dragRect) return
+              const canvasPoint = {
+                // 用内层缩放面的 rect（含滚动补偿）；外层 wrap 的 rect 会差出 scrollLeft/zoom，
+                // 124% 缩放下偏差数百 px，导致端点判定与 24px 吸附全部失效。
+                x: (event.clientX - dragRect.left) / zoom,
+                y: (event.clientY - dragRect.top) / zoom,
+              }
+              const dFrom = Math.hypot(canvasPoint.x - (rectOfNode(from).x + rectOfNode(from).w / 2), canvasPoint.y - (rectOfNode(from).y + rectOfNode(from).h / 2))
+              const dTo = Math.hypot(canvasPoint.x - (rectOfNode(to).x + rectOfNode(to).w / 2), canvasPoint.y - (rectOfNode(to).y + rectOfNode(to).h / 2))
+              setEdgeDrag({ id: edge.id, end: dFrom < dTo ? 'from' : 'to' })
+              setEdgeMenu(null)
+            },
           }),
           h('path', {
             className: 'daf-edge',
+            ref: (el) => { if (el) edgePathEls.current.set(edge.id, el); else edgePathEls.current.delete(edge.id) },
             d,
             'data-state': flowState,
             'data-kind': 'seq',
@@ -4296,6 +5274,20 @@ window.__ModuleLoader__.load({
             style: { pointerEvents: 'none' },
           })
         }))
+      // 预览时的吸附目标：全部节点里最近的锚点（排除起点自身）。
+      // 提前到 nodesView 之前算，锚点按钮据此高亮「会绑到哪一个」。
+      const previewSnap = connecting && pointerPos
+        ? (() => {
+          let best = null
+          for (const node of current?.nodes ?? []) {
+            if (node.id === connecting.nodeId) continue
+            const hit = nearestAnchor(rectOfNode(node), pointerPos, ANCHOR_SNAP_PX / (zoom || 1))
+            if (hit && (!best || hit.distance < best.distance)) best = { nodeId: node.id, side: hit.side, distance: hit.distance }
+          }
+          return best
+        })()
+        : null
+
       const edgesView = [...edgeList, ...bindEdges, ...depEdges]
 
       const nodesView = (current?.nodes ?? []).map((node) => {
@@ -4317,6 +5309,7 @@ window.__ModuleLoader__.load({
         return h('div', {
           key: node.id,
           className: 'daf-node daf-glass',
+          ref: (el) => { if (el) nodeElsRef.current.set(node.id, el); else nodeElsRef.current.delete(node.id) },
           'data-node-id': node.id,
           'data-kind': node.kind,
           'data-status': status === 'idle' ? undefined : status,
@@ -4327,25 +5320,28 @@ window.__ModuleLoader__.load({
           'data-pinned': node.pos?.pinned === true ? 'true' : undefined,
           style: { transform: `translate3d(${node.pos.x}px, ${node.pos.y}px, 0)`, ...(node.parentId ? { zIndex: 2 } : {}) },
           onPointerDown: (event) => {
+            // 起点只能从锚点按钮发起（见下面的 .daf-anchor 渲染）。
+            // 节点矩形体一律用于拖动——矩形不再是起线区域。
+            // 只响应左键：中键留给画布平移，右键留给上下文菜单（手势互斥）
+            if (event.button !== 0) return
             if (event.target.closest('.daf-anchor') || event.target.closest('.daf-port') || event.target.closest('button')) return
-            const rect = event.currentTarget.getBoundingClientRect()
-            const band = 8
-            const nearEdge = event.clientX - rect.left <= band || rect.right - event.clientX <= band
-              || event.clientY - rect.top <= band || rect.bottom - event.clientY <= band
-            if (nearEdge) {
-              const canvasPoint = {
-                x: (event.clientX - rect.left) / zoom + node.pos.x,
-                y: (event.clientY - rect.top) / zoom + node.pos.y,
-              }
-              setConnecting({ nodeId: node.id, port: 'out', side: nearestSide(rectOfNode(node), canvasPoint) })
-              setPointerPos(canvasPoint)
-              return
+            const dragNode = current.nodes.find((item) => item.id === node.id) ?? node
+            const isDragContainer = dragNode.kind === 'group.steps' || dragNode.kind === 'phase'
+            // 容器拖动预算：pointerdown 时算好未钉住子节点集合与起始位（move 期零扫描）
+            const dragChildIds = isDragContainer
+              ? new Set(current.nodes.filter((item) => (item.parentId === node.id || item.phaseId === node.id) && item.pos?.pinned !== true).map((item) => item.id))
+              : new Set()
+            const dragChildStart = new Map()
+            for (const childId of dragChildIds) {
+              const childNode = current.nodes.find((item) => item.id === childId)
+              if (childNode) dragChildStart.set(childId, { x: childNode.pos.x, y: childNode.pos.y })
             }
-            dragRef.current = { id: node.id, px: event.clientX, py: event.clientY, x: node.pos.x, y: node.pos.y, zoom }
+            dragRef.current = { id: node.id, px: event.clientX, py: event.clientY, x: node.pos.x, y: node.pos.y, zoom, childIds: dragChildIds, childStart: dragChildStart }
             setSelectedId(node.id)
           },
           onPointerUp: () => {
-            if (connecting) completeConnection(node.id, pointerPos)
+            // 预览=提交：吸附高亮承诺的面必须与实际绑定面一致；未吸附时才退回方向推算
+            if (connecting) completeConnection(node.id, pointerPos, previewSnap?.nodeId === node.id ? previewSnap.side : null)
           },
           onContextMenu: (event) => {
             if (!connecting) return
@@ -4361,6 +5357,10 @@ window.__ModuleLoader__.load({
             className: 'daf-anchor',
             'data-side': side,
             'data-armed': String(connecting?.nodeId === node.id && connecting?.side === side),
+            // data-snap 高亮「会绑到哪一个」：新建连线看 previewSnap，换锚拖拽看 pointerSnapTarget
+            'data-snap': String(Boolean(
+              (previewSnap && previewSnap.nodeId === node.id && previewSnap.side === side)
+              || (edgeDrag && pointerSnapTarget && pointerSnapTarget.nodeId === node.id && pointerSnapTarget.side === side))),
             style: anchorStyle(side),
             title: `${t.connectHint} (${side})`,
             'aria-label': `${t.connectHint} ${side}`,
@@ -4458,15 +5458,50 @@ window.__ModuleLoader__.load({
         )
       })
 
+      // 连线拖动预览：从固定端锚点画到指针（吸附时画到目标锚点）
+      const edgeDragPreview = (() => {
+        if (!edgeDrag || !pointerPos || !current) return null
+        const dragEdge = (current.edges ?? []).find((item) => item.id === edgeDrag.id)
+        if (!dragEdge) return null
+        const anchorNodeId = edgeDrag.end === 'from' ? dragEdge.from : dragEdge.to
+        const anchorNode = nodesById.get(anchorNodeId)
+        if (!anchorNode) return null
+        const anchorSide = edgeDrag.end === 'from' ? (dragEdge.fromSide ?? 'right') : (dragEdge.toSide ?? 'left')
+        const sourceRect = rectOfNode(anchorNode)
+        const target = pointerSnapTarget
+          ? (() => {
+            const node = nodesById.get(pointerSnapTarget.nodeId)
+            // 吸附中用真实节点矩形 + 障碍网格：预览与松手提交后的路由效果 1:1（含绕行折线）
+            if (!node) return { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
+            return rectOfNode(node)
+          })()
+          : { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }
+        const d = edgePath(sourceRect, target, { fromSide: anchorSide, toSide: pointerSnapTarget?.side }, obstacleGrid, 0, 0)
+        return h('path', { className: 'daf-connect-preview', d })
+      })()
+
       const previewPath = connecting && pointerPos && nodesById.get(connecting.nodeId)
         ? h('path', {
           className: 'daf-connect-preview',
-          d: edgePath(rectOfNode(nodesById.get(connecting.nodeId)), { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }, { fromSide: connecting.side ?? 'right' }),
+          // 已吸附到锚点时，预览线直接结束在该锚点上（用户能看见会绑到哪一颗）。
+          d: (() => {
+            const sourceRect = rectOfNode(nodesById.get(connecting.nodeId))
+            const fromSide = connecting.side ?? 'right'
+            if (!previewSnap) return edgePath(sourceRect, { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }, { fromSide })
+            const targetNode = nodesById.get(previewSnap.nodeId)
+            if (!targetNode) return edgePath(sourceRect, { x: pointerPos.x, y: pointerPos.y, w: 0, h: 0 }, { fromSide })
+            const anchor = anchorPoint(rectOfNode(targetNode), previewSnap.side)
+            return edgePath(sourceRect, { x: anchor.x, y: anchor.y, w: 0, h: 0 }, { fromSide, toSide: previewSnap.side })
+          })(),
         })
         : null
 
-      if (!current) {
-        // P3 导览：把相机送到第 index 站（-1 表示退出导览）。
+
+      // P3 导览：把相机送到第 index 站（-1 表示退出导览）。
+      // R6.5 二轮修复（React #310）：tourGo 的 useCallback 必须无条件调用——
+      // 此前它在「空画布分支」与「主路径」各定义一次以对齐 hooks 数量（二轮审计误判为
+      // 复制死代码删掉了空分支那次 → current 从 null 变有值时 hooks 数 +1 → #310 崩溃）。
+      // 上提到 if 之前单次定义，两个渲染路径共用。
       const tourGo = useCallback((index) => {
         if (tourStops.length === 0) return
         const next = index < 0 ? -1 : (index + tourStops.length) % tourStops.length
@@ -4474,81 +5509,8 @@ window.__ModuleLoader__.load({
         if (next >= 0) focusNode(tourStops[next])
       }, [tourStops, focusNode])
 
-      // 阶段容器框（吸收 archify：phase 是横跨若干列的框架，不是普通节点）。
-      // 把阶段节点与其子节点一起框起来，阶段节点就是框内的标题。
-      const phaseFramesView = (() => {
-        const all = current?.nodes ?? []
-        const frames = []
-        for (const phase of all.filter((node) => node.kind === 'phase')) {
-          const members = [phase, ...all.filter((node) => node.phaseId === phase.id)]
-          if (members.length < 2) continue
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-          for (const member of members) {
-            const rect = rectOf(member)
-            minX = Math.min(minX, rect.x); minY = Math.min(minY, rect.y)
-            maxX = Math.max(maxX, rect.x + rect.w); maxY = Math.max(maxY, rect.y + rect.h)
-          }
-          const PAD_X = 18, PAD_TOP = 22, PAD_BOTTOM = 16
-          frames.push(h('div', {
-            key: 'phaseframe:' + phase.id,
-            className: 'daf-phase-frame',
-            style: {
-              transform: 'translate3d(' + (minX - PAD_X) + 'px, ' + (minY - PAD_TOP) + 'px, 0)',
-              width: (maxX - minX + PAD_X * 2) + 'px',
-              height: (maxY - minY + PAD_TOP + PAD_BOTTOM) + 'px',
-            },
-          }, h('span', { className: 'daf-phase-frame-label' }, phase.title)))
-        }
-        return frames.length > 0 ? frames : null
-      })()
-
-      // P3 大纲树：阶段 → 子节点（可折叠）；无阶段归属的节点直接列在根层。
-      const outlineRows = (() => {
-        const nodes = current?.nodes ?? []
-        if (nodes.length === 0) return [h('div', { key: 'outline:none', className: 'daf-muted', style: { padding: '6px 8px' } }, t.canvasEmpty)]
-        const rows = []
-        const phases = nodes.filter((node) => node.kind === 'phase')
-        for (const phase of phases) {
-          const collapsed = collapsedPhases.has(phase.id)
-          rows.push(h('button', {
-            key: 'outline:ph:' + phase.id,
-            type: 'button',
-            className: 'daf-outline-row daf-outline-phase',
-            'aria-expanded': String(!collapsed),
-            onClick: () => setCollapsedPhases((prev) => {
-              const next = new Set(prev)
-              if (next.has(phase.id)) next.delete(phase.id)
-              else next.add(phase.id)
-              return next
-            }),
-          }, h('span', { className: 'daf-outline-caret' }, collapsed ? '▸' : '▾'),
-            h('span', { className: 'daf-outline-title' }, phase.title)))
-          if (collapsed) continue
-          for (const child of nodes.filter((node) => node.phaseId === phase.id)) {
-            rows.push(h('button', {
-              key: 'outline:n:' + child.id,
-              type: 'button',
-              className: 'daf-outline-row',
-              'data-selected': String(child.id === selectedId),
-              onClick: () => focusNode(child.id),
-            }, h('span', { className: 'daf-outline-dot', 'data-st': statusOf(child.id) }),
-              h('span', { className: 'daf-outline-title' }, child.title)))
-          }
-        }
-        for (const node of nodes.filter((item) => !item.phaseId && !item.parentId && item.kind !== 'phase')) {
-          rows.push(h('button', {
-            key: 'outline:r:' + node.id,
-            type: 'button',
-            className: 'daf-outline-row',
-            'data-selected': String(node.id === selectedId),
-            onClick: () => focusNode(node.id),
-          }, h('span', { className: 'daf-outline-dot', 'data-st': statusOf(node.id) }),
-            h('span', { className: 'daf-outline-title' }, node.title)))
-        }
-        return rows
-      })()
-
-      return h('div', { className: 'daf-scope', 'data-contrast': highContrast ? 'high' : 'normal', 'data-motion': motionOff ? 'off' : undefined, style: { height: '100%', minHeight: 0 } },
+      if (!current) {
+        return h('div', { className: 'daf-scope', 'data-contrast': highContrast ? 'high' : 'normal', 'data-motion': motionOff ? 'off' : undefined, 'data-pan': spaceHeld ? 'true' : undefined, 'data-camera': cameraState, 'data-busy': sessionBusy ? 'true' : undefined, 'data-connecting': connecting ? 'true' : undefined, style: { height: '100%', minHeight: 0 } },
           h(StyleTag, { css: BASE_CSS + CANVAS_CSS }),
           h('div', { className: 'daf-canvas-root' },
             h('div', { className: 'daf-toolbar' },
@@ -4568,16 +5530,36 @@ window.__ModuleLoader__.load({
               h('div', null, t.canvasEmpty),
               h('div', null, t.canvasEmptyHint))))
       }
+      const laneBandsView = (() => {
+        const lanes = Array.isArray(current?.lanes) ? current.lanes : []
+        const all = current?.nodes ?? []
+        const bands = []
+        for (const lane of lanes) {
+          if (lane.id === 'main') continue
+          const memberSet = new Set(Array.isArray(lane.nodeIds) ? lane.nodeIds : [])
+          const members = all.filter((node) => memberSet.has(node.id))
+          if (members.length === 0) continue
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          for (const member of members) {
+            const rect = rectOf(member)
+            minX = Math.min(minX, rect.x); minY = Math.min(minY, rect.y)
+            maxX = Math.max(maxX, rect.x + rect.w); maxY = Math.max(maxY, rect.y + rect.h)
+          }
+          const PAD = 26
+          bands.push(h('div', {
+            key: 'laneband:' + lane.id,
+            className: 'daf-lane-band',
+            style: {
+              transform: 'translate3d(' + (minX - PAD) + 'px, ' + (minY - PAD) + 'px, 0)',
+              width: (maxX - minX + PAD * 2) + 'px',
+              height: (maxY - minY + PAD * 2) + 'px',
+            },
+          }, h('span', { className: 'daf-lane-band-label' }, lane.label)))
+        }
+        return bands.length > 0 ? bands : null
+      })()
 
-      // P3 导览：把相机送到第 index 站（-1 表示退出导览）。
-      const tourGo = useCallback((index) => {
-        if (tourStops.length === 0) return
-        const next = index < 0 ? -1 : (index + tourStops.length) % tourStops.length
-        setTourIndex(next)
-        if (next >= 0) focusNode(tourStops[next])
-      }, [tourStops, focusNode])
-
-      // 阶段容器框（吸收 archify：phase 是横跨若干列的框架，不是普通节点）。
+      // 阶段容器框。
       // 把阶段节点与其子节点一起框起来，阶段节点就是框内的标题。
       const phaseFramesView = (() => {
         const all = current?.nodes ?? []
@@ -4655,6 +5637,7 @@ window.__ModuleLoader__.load({
         h(StyleTag, { css: BASE_CSS + CANVAS_CSS }),
         h('div', { className: 'daf-canvas-root' },
             h('div', { className: 'daf-side-rail', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': t.flowDock },
+            h(Btn, { onClick: () => setFlowDock((value) => !value), 'aria-expanded': String(Boolean(flowDock)), title: t.flowDock }, h(Icon, { name: 'layers', size: 15 })),
             h(Btn, { onClick: createFlow, disabled: busy, title: t.newFlow }, h(Icon, { name: 'plus', size: 15 })),
             h(Btn, { onClick: saveFlow, disabled: busy || !current || !dirty, title: t.saveFlow }, h(Icon, { name: 'save', size: 15 })),
             h(Btn, { onClick: () => void archiveCurrent(), disabled: busy || !current, title: t.archiveFlow }, h(Icon, { name: 'archive', size: 15 })),
@@ -4689,10 +5672,11 @@ window.__ModuleLoader__.load({
               }),
               searchQuery === '' ? null : h('span', { className: 'daf-search-count' },
                 searchMatches.length === 0 ? t.searchNone : String(Math.min(searchIndex + 1, searchMatches.length)) + '/' + String(searchMatches.length))),
+            sessionBusy ? h('span', { className: 'daf-busy-pill', title: t.busyHint }, h('span', { className: 'daf-busy-dot' }), t.busyNow) : null,
             notice ? h('span', { className: 'daf-muted' }, notice) : null,
             error ? h('span', { className: 'daf-error', title: error }, error.slice(0, 60)) : null,
             edgeMenuView,
-            mermaidOpen ? h(Modal, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
+            mermaidOpen ? h(RightDrawer, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
               h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                 h('textarea', {
                   className: 'daf-textarea',
@@ -4704,9 +5688,31 @@ window.__ModuleLoader__.load({
                 h('div', { style: { display: 'flex', gap: 6, justifyContent: 'flex-end' } },
                   h(Btn, { onClick: () => setMermaidOpen(false) }, t.cancel),
                   h(Btn, { variant: 'primary', onClick: () => void importMermaid(), disabled: busy || mermaidText.trim() === '' }, t.mermaidImport)))) : null,
+            composeOpen ? h(Modal, { title: t.compose, onClose: () => setComposeOpen(false) },
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                h('textarea', {
+                  className: 'daf-textarea',
+                  rows: 14,
+                  value: composeText,
+                  readOnly: true,
+                  'aria-label': t.compose,
+                }),
+                composeWarnings.length > 0
+                  ? h('div', { className: 'daf-muted' }, t.composeWarn + composeWarnings.map((item) => item.message).join('；'))
+                  : null,
+                h('div', { style: { display: 'flex', gap: 6, justifyContent: 'flex-end' } },
+                  h(Btn, { onClick: () => setComposeOpen(false) }, t.close),
+                  h(Btn, {
+                    variant: 'primary',
+                    onClick: () => {
+                      void navigator.clipboard.writeText(composeText)
+                        .then(() => setNotice(t.composeCopied))
+                        .catch(() => {})
+                    },
+                  }, t.composeCopy)))) : null,
             h('span', { className: 'daf-spacer' }),
               h('span', { className: 'daf-zoom', title: t.zoomHint },
-                h('button', { type: 'button', onClick: () => cameraZoom(zoom / 1.15, { smooth: true }), 'aria-label': t.zoomOut }, '−'),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomOut, onClick: () => cameraZoom(zoom / 1.15, { smooth: true }), 'aria-label': t.zoomOut }, '−'),
                 h('input', {
                   value: `${Math.round(zoom * 100)}%`,
                   'aria-label': t.zoom,
@@ -4715,9 +5721,9 @@ window.__ModuleLoader__.load({
                     if (Number.isFinite(parsed) && parsed > 0) cameraZoom(parsed / 100, { smooth: true })
                   },
                 }),
-                h('button', { type: 'button', onClick: () => cameraZoom(zoom * 1.15, { smooth: true }), 'aria-label': t.zoomIn }, '+'),
-                h('button', { type: 'button', onClick: fitToContent, title: t.zoomFit }, t.zoomFitLabel),
-                h('button', { type: 'button', onClick: () => cameraZoom(1, { smooth: true }), title: t.zoomReset }, '1:1')),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomIn, onClick: () => cameraZoom(zoom * 1.15, { smooth: true }), 'aria-label': t.zoomIn }, '+'),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomFit, onClick: fitToContent, 'aria-label': t.zoomFit }, t.zoomFitLabel),
+                h('button', { type: 'button', className: 'daf-tip', 'data-tip': t.zoomReset, onClick: () => cameraZoom(1, { smooth: true }), 'aria-label': t.zoomReset }, '1:1')),
             h('span', { className: 'daf-flow-cell' },
               h(Btn, { onClick: () => setMoreOpen((value) => !value), title: t.more, 'aria-expanded': String(Boolean(moreOpen)), 'data-more-toggle': 'true' }, h(Icon, { name: 'more', size: 14 })),
               moreOpen ? moreMenu : null)),
@@ -4770,21 +5776,15 @@ window.__ModuleLoader__.load({
                     }
                     const point = pointerPos
                     if (point) {
-                      let bestId = null
-                      let bestDistance = Infinity
+                      // 落点必须是锚点：未落在任何锚点半径内就不建立连线（矩形不是吸附目标）。
+                      let best = null
                       for (const node of current?.nodes ?? []) {
                         if (node.id === connecting.nodeId) continue
-                        const rect = rectOfNode(node)
-                        const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.w))
-                        const dy = Math.max(rect.y - point.y, 0, point.y - (rect.y + rect.h))
-                        const distance = Math.hypot(dx, dy)
-                        if (distance <= 24 && distance < bestDistance) {
-                          bestDistance = distance
-                          bestId = node.id
-                        }
+                        const hit = nearestAnchor(rectOfNode(node), point, ANCHOR_SNAP_PX / (zoom || 1))
+                        if (hit && (!best || hit.distance < best.distance)) best = { nodeId: node.id, side: hit.side, distance: hit.distance }
                       }
-                      if (bestId) {
-                        completeConnection(bestId, point)
+                      if (best) {
+                        completeConnection(best.nodeId, point, best.side)
                         return
                       }
                     }
@@ -4792,6 +5792,7 @@ window.__ModuleLoader__.load({
                     setPointerPos(null)
                   },
                 },
+                  laneBandsView,
                   h('svg', { className: 'daf-edges' },
                     h('defs', null,
                       h('marker', {
@@ -4804,7 +5805,8 @@ window.__ModuleLoader__.load({
                         orient: 'auto-start-reverse',
                       }, h('path', { d: 'M0,0 L8,4 L0,8 z', fill: 'var(--dsw-alias-brand-primary)' }))),
                     edgesView,
-                    previewPath),
+                    previewPath,
+                    edgeDragPreview),
                   selectedEdgeView,
                   (diff?.removed ?? []).map((ghost) => h('div', {
                     key: `ghost:${ghost.id}`,
@@ -4854,7 +5856,7 @@ window.__ModuleLoader__.load({
               tourIndex >= 0
                 ? h('div', { className: 'daf-tour' },
                   h(Btn, { onClick: () => tourGo(tourIndex - 1), title: t.tourPrev }, '←'),
-                  h('span', { className: 'daf-tour-count' }, String(tourIndex + 1) + '/' + String(tourStops.length)),
+                  h('span', { className: 'daf-tour-count', title: tourStops[tourIndex]?.title }, String(tourIndex + 1) + '/' + String(tourStops.length)),
                   h(Btn, { onClick: () => tourGo(tourIndex + 1), title: t.tourNext }, '→'),
                   h(Btn, { onClick: () => tourGo(-1), title: t.tourExit }, t.close))
                 : null,
@@ -4866,204 +5868,8 @@ window.__ModuleLoader__.load({
                   h('div', { className: 'daf-outline-body' }, outlineRows))
                 : null,
               flowDockView,
-              ...(showDevPanels ? [
-              h('div', { className: 'daf-inspector' },
-                h('div', { className: 'daf-col-head' }, h('span', null, t.inspector)),
-                !selected
-                  ? h('div', { className: 'daf-muted' }, t.noNode)
-                  : h('div', { className: 'daf-col', style: { gap: 8 } },
-                    h(Field, { label: t.nodeTitle },
-                      h('input', {
-                        className: 'daf-input',
-                        value: selected.title,
-                        onChange: (event) => mutate((wf) => {
-                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, title: event.target.value } : node))
-                          return wf
-                        }),
-                      })),
-                    h(Field, { label: t.nodeKind }, h('div', { className: 'daf-muted' }, `${selected.kind} — ${kindLabel(selected.kind, ctx)}`)),
-                    selected.kind === 'group.steps'
-                      ? h(Field, { label: t.childSteps },
-                        h('div', { className: 'daf-col', style: { gap: 4 } },
-                          childrenOf(selected.id).map((child) => h('div', { key: child.id, className: 'daf-child' },
-                            h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, child.title),
-                            h(Btn, {
-                              variant: 'danger',
-                              onClick: () => mutate((wf) => {
-                                wf.nodes = wf.nodes.filter((node) => node.id !== child.id)
-                                wf.edges = wf.edges.filter((edge) => edge.from !== child.id && edge.to !== child.id)
-                                return wf
-                              }),
-                            }, '✕'))),
-                          h(Btn, { onClick: () => addChild(selected.id) }, `+ ${t.addStep}`)))
-                      : null,
-                    selected.parentId
-                      ? h(Field, { label: t.boundTo },
-                        h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
-                          h('span', { className: 'daf-muted' }, nodesById.get(selected.parentId)?.title ?? selected.parentId),
-                          h(Btn, {
-                            onClick: () => mutate((wf) => {
-                              wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, parentId: undefined } : node))
-                              return wf
-                            }),
-                          }, t.unbind)))
-                      : null,
-                    h(Field, { label: t.onError },
-                      h('select', {
-                        className: 'daf-select',
-                        value: selected.onError ?? 'fail',
-                        onChange: (event) => mutate((wf) => {
-                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, onError: event.target.value } : node))
-                          return wf
-                        }),
-                      },
-                        h('option', { value: 'fail' }, t.errFail),
-                        h('option', { value: 'skip' }, t.errSkip),
-                        h('option', { value: 'fallback' }, t.errFallback))),
-                    selected.onError === 'fallback'
-                      ? h(Field, { label: `${t.errFallback} id` },
-                        h('select', {
-                          className: 'daf-select',
-                          value: selected.fallbackTo ?? '',
-                          onChange: (event) => mutate((wf) => {
-                            wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, fallbackTo: event.target.value } : node))
-                            return wf
-                          }),
-                        },
-                          h('option', { value: '' }, '—'),
-                          current.nodes.filter((node) => node.id !== selected.id).map((node) => h('option', { key: node.id, value: node.id }, `${node.title} (${node.id})`))))
-                      : null,
-                    h(Field, { label: 'timeoutMs' },
-                      h('input', {
-                        className: 'daf-input',
-                        type: 'number',
-                        min: 1000,
-                        step: 1000,
-                        defaultValue: selected.timeoutMs ?? '',
-                        onBlur: (event) => mutate((wf) => {
-                          const value = Number(event.target.value)
-                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, timeoutMs: Number.isFinite(value) && value > 0 ? value : undefined } : node))
-                          return wf
-                        }),
-                      })),
-                    h(Field, { label: t.nodeNote },
-                      h('textarea', {
-                        className: 'daf-textarea',
-                        style: { minHeight: 48 },
-                        value: selected.note ?? '',
-                        onChange: (event) => mutate((wf) => {
-                          wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, note: event.target.value } : node))
-                          return wf
-                        }),
-                      })),
-                    h(Field, { label: t.advancedJson, hint: 'params' },
-                      h('textarea', {
-                        className: 'daf-textarea',
-                        key: `${selected.id}:${JSON.stringify(selected.params ?? {})}`,
-                        defaultValue: JSON.stringify(selected.params ?? {}, null, 2),
-                        onBlur: (event) => {
-                          try {
-                            const parsed = JSON.parse(event.target.value)
-                            mutate((wf) => {
-                              wf.nodes = wf.nodes.map((node) => (node.id === selected.id ? { ...node, params: parsed } : node))
-                              return wf
-                            })
-                            setError(null)
-                          } catch (problem) {
-                            setError(`params JSON: ${problem.message}`)
-                          }
-                        },
-                      })),
-                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-                      h(Btn, {
-                        variant: 'danger',
-                        onClick: () => mutate((wf) => {
-                          wf.nodes = wf.nodes.filter((node) => node.id !== selected.id)
-                          wf.edges = wf.edges.filter((edge) => edge.from !== selected.id && edge.to !== selected.id)
-                          if (wf.entry === selected.id) wf.entry = wf.nodes[0]?.id ?? ''
-                          return wf
-                        }),
-                      }, t.deleteNode),
-                      h(Btn, {
-                        onClick: () => mutate((wf) => {
-                          wf.entry = selected.id
-                          return wf
-                        }),
-                        title: t.setEntry,
-                      }, t.setEntry),
-                      (current.nodes.some((node) => node.id !== selected.id && node.kind === 'flow.loop' && node.params?.fallbackTo !== undefined) ? null : null))),
-                h('div', { className: 'daf-col-head', style: { marginTop: 8 } }, h('span', null, t.validate)),
-                issues.length === 0
-                  ? h('div', { className: 'daf-muted' }, '—')
-                  : h('div', { className: 'daf-issues' }, issues.map((issue, index) => h('div', { key: `${issue.code}-${index}`, className: 'daf-issue', 'data-level': issue.level },
-                    h('span', null, issue.level === 'error' ? '✕' : '!'),
-                    h('span', null, `${issue.message}${issue.nodeId ? ` (${issue.nodeId})` : ''}`))))),
-              h('div', { className: 'daf-steps-wrap' },
-                h('div', { className: 'daf-col-head' }, h('span', null, t.stepList)),
-                h('div', { className: 'daf-steps' }, steps.map((node) => h('div', { key: node.id, style: { display: 'flex', flexDirection: 'column', gap: 3 } },
-                  h('div', {
-                    className: 'daf-step',
-                    'data-status': run.status === 'idle' ? undefined : statusOf(node.id),
-                    onClick: () => setSelectedId(node.id),
-                  },
-                    h('span', null, statusOf(node.id) === 'succeeded' ? '✓' : statusOf(node.id) === 'failed' ? '✕' : statusOf(node.id) === 'running' ? '●' : '○'),
-                    h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, node.title),
-                    h('span', { className: 'daf-node-kind' }, kindLabel(node.kind, ctx))),
-                  childrenOf(node.id).map((child) => h('div', {
-                    key: child.id,
-                    className: 'daf-child',
-                    'data-status': statusOf(child.id) === 'idle' ? undefined : statusOf(child.id),
-                    style: { marginLeft: 14 },
-                    onClick: () => setSelectedId(child.id),
-                  },
-                    h('span', null, statusOf(child.id) === 'succeeded' ? '✓' : statusOf(child.id) === 'running' ? '●' : statusOf(child.id) === 'failed' ? '✕' : '○'),
-                    h('span', { style: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, child.title),
-                    h('span', { className: 'daf-node-kind' }, kindLabel(child.kind, ctx)))))))),
-              h('div', { className: 'daf-run-panel' },
-                h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
-                  h('strong', null, t.runsTitle),
-                  h('span', { className: 'daf-badge' }, run.status),
-                  run.cursor?.length ? h('span', { className: 'daf-muted' }, run.cursor.join(' → ')) : null,
-                  runId ? h('span', { className: 'daf-muted' }, runId) : null),
-                h(Field, { label: `${t.vars} (JSON)` },
-                  h('textarea', {
-                    className: 'daf-textarea',
-                    style: { minHeight: 44 },
-                    key: `vars:${current?.id ?? 'none'}:${JSON.stringify(current?.vars ?? {})}`,
-                    defaultValue: JSON.stringify(current?.vars ?? {}, null, 2),
-                    onBlur: (event) => {
-                      try {
-                        const parsed = JSON.parse(event.target.value)
-                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                          mutate((wf) => {
-                            wf.vars = Object.fromEntries(Object.entries(parsed).filter(([, value]) => typeof value === 'string'))
-                            return wf
-                          })
-                        }
-                      } catch {
-                        setError('vars 需要是 JSON 对象')
-                      }
-                    },
-                  })),
-                checkpoint
-                  ? h('div', { className: 'daf-checkpoint' },
-                    h('strong', null, t.checkpointAsk),
-                    h('div', null, checkpoint.question),
-                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
-                      (checkpoint.options ?? []).map((option) => h(Btn, {
-                        key: option,
-                        variant: 'primary',
-                        onClick: () => control('answer', { nodeId: checkpoint.nodeId, answer: option }),
-                      }, option))))
-                  : null,
-                h('div', { className: 'daf-col-head' }, h('span', null, t.logs)),
-                h('div', { className: 'daf-log' },
-                  (run.logs ?? []).slice(-80).map((line, index) => h('div', {
-                    key: `${line.ts}-${index}`,
-                    className: 'daf-log-line',
-                    'data-level': line.level,
-                  }, `${new Date(line.ts).toLocaleTimeString('zh-CN')} ${line.message}`))))]
-               : [])))
+              showDevPanels ? h(DevLayer, { selected, t, mutate, statusOf, run, checkpoint, current, setError, childrenOf, ctx, issues, runId, setSelectedId, addChild, control, nodesById, steps }) : null,
+            ))
     }
 
     function apply(ctx) {

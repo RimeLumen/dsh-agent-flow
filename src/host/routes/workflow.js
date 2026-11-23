@@ -1,7 +1,9 @@
 /*! dsh-agent-flow v0.1.0 | Copyright (c) 2026 RimeLumen | MIT License */
 import { SelectionError } from '../selection.js'
 import { createEmptyWorkflow, normalizeWorkflow, validateWorkflow } from '../flow/model.js'
+import { mergeWorkflows } from '../flow/merge.js'
 import { toMermaid, fromMermaid } from '../mermaid.js'
+import { composePrompt } from '../compose.js'
 import { queryParam, readString, shortId, writeError, writeJson } from './http.js'
 
 export function workflowRoutes(deps) {
@@ -78,6 +80,91 @@ export function workflowRoutes(deps) {
       },
     },
     {
+      // 手动合并：把 ≥2 个画布按传入顺序串成一张新画布（每个源 = 一个 phase）。
+      // 源画布保留不动；合并产物 origin='merge'。
+      method: 'POST',
+      pattern: '/workflows/merge',
+      handler: async ({ res, body }) => {
+        const ids = (Array.isArray(body?.ids) ? body.ids : [])
+          .filter((id) => typeof id === 'string' && id !== '')
+          .slice(0, 12)
+        if (ids.length < 2) {
+          writeError(res, 400, new SelectionError('validation', '合并至少需要两个流程'))
+          return
+        }
+        const sources = []
+        for (const id of ids) {
+          const workflow = store.state.workflows.find((item) => item.id === id)
+          if (!workflow) {
+            writeError(res, 404, new SelectionError('not-found', `找不到流程 ${id}`))
+            return
+          }
+          sources.push(workflow)
+        }
+        const { workflow, warnings, error } = mergeWorkflows(sources, { sessionId: sources[0]?.sessionId, name: readString(body, 'name') })
+        if (!workflow || error) {
+          writeError(res, 400, new SelectionError('validation', error ?? '合并失败'))
+          return
+        }
+        await store.mutate((state) => {
+          // 置顶（用户指令）：合并产物插到列表最前；原流程进回收站可复原，
+          // 运行中的源画布不归档（避免打断执行），照常参与合并。
+          state.workflows.unshift(workflow)
+          const now = new Date().toISOString()
+          const mergedIds = new Set(ids)
+          for (const item of state.workflows) {
+            if (!mergedIds.has(item.id) || item.archivedAt) continue
+            if (!activeRun(item.id)) item.archivedAt = item.archivedAt ?? now
+          }
+        })
+        writeJson(res, 200, { workflow, warnings })
+      },
+    },
+    {
+      // 批量操作：一次 mutate + 一次落盘。逐条调用会触发 N 次状态写盘，
+      // 批量删除几十条流程时这是实打实的开销。
+      method: 'POST',
+      pattern: '/workflows/batch',
+      handler: async ({ res, body }) => {
+        const action = readString(body, 'action')
+        if (!['archive', 'restore', 'delete'].includes(action)) {
+          writeError(res, 400, new SelectionError('validation', '批量操作只支持 archive / restore / delete'))
+          return
+        }
+        const ids = (Array.isArray(body?.ids) ? body.ids : [])
+          .filter((id) => typeof id === 'string' && id !== '')
+          .slice(0, 200)
+        if (ids.length === 0) {
+          writeError(res, 400, new SelectionError('validation', '需要至少一个流程 id'))
+          return
+        }
+        const result = await store.mutate((state) => {
+          const affected = []
+          const missing = []
+          const running = new Set((registry?.list?.() ?? []).filter((run) => run.status === 'running').map((run) => run.workflowId))
+          const blocked = []
+          for (const id of ids) {
+            const index = state.workflows.findIndex((item) => item.id === id)
+            if (index < 0) { missing.push(id); continue }
+            // 永久删除时不删正在运行的流程（会让运行中的画布指向不存在的图）
+            if (action === 'delete' && running.has(id)) { blocked.push(id); continue }
+            if (action === 'delete') {
+              state.workflows.splice(index, 1)
+            } else if (action === 'archive') {
+              state.workflows[index] = { ...state.workflows[index], archivedAt: new Date().toISOString() }
+            } else {
+              const next = { ...state.workflows[index] }
+              delete next.archivedAt
+              state.workflows[index] = next
+            }
+            affected.push(id)
+          }
+          return { affected: affected.length, missing: missing.length, blocked: blocked.length, total: state.workflows.length }
+        })
+        writeJson(res, 200, { ok: true, action, ...result })
+      },
+    },
+    {
       method: 'GET',
       pattern: '/workflows/:id',
       handler: async ({ res, params }) => {
@@ -105,6 +192,28 @@ export function workflowRoutes(deps) {
           return normalized
         })
         writeJson(res, 200, { ok: true, workflow: result, revision: result.updatedAt })
+      },
+    },
+    {
+      // 反向组合（批次 3）：画布 → 提示词。
+      method: 'POST',
+      pattern: '/workflows/:id/compose',
+      handler: async ({ res, params, body }) => {
+        const workflow = store.state.workflows.find((item) => item.id === params.id)
+        if (!workflow) {
+          writeError(res, 404, new SelectionError('not-found', '找不到该流程'))
+          return
+        }
+        const result = composePrompt(workflow, {
+          goal: typeof body?.goal === 'string' ? body.goal : undefined,
+          includeVars: body?.includeVars !== false,
+        })
+        if (result.text === '') {
+          writeError(res, 400, new SelectionError('validation', result.warnings[0]?.message ?? '画布为空'))
+          return
+        }
+        // R5.4 Token 经济：sections（每阶段正文副本）全仓无消费方——不再随响应返回（体积近减半）
+        writeJson(res, 200, { text: result.text, warnings: result.warnings })
       },
     },
     {

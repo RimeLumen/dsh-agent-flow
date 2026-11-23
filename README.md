@@ -3,7 +3,7 @@
 A DeepSeek Harness plugin that turns **each conversation's plan** into a node graph you can
 review on a canvas, execute, and reuse.
 
-> Current version **v0.1.0** (always in sync with the `version` field in `package.json`).
+> Current version **v0.1.0** (always in sync with the `version` field in `package.json`). Full change log (Chinese): see [README.zh.md](README.zh.md#v010a-变更记录).
 
 - **Context injector** — a bar in the conversation composer to pick this turn's tools and skills
   (index / preload / whitelist).
@@ -211,6 +211,24 @@ a local development file not distributed with the repository).
 - **Polling & rendering**: polling backs off long while the page is hidden and exponentially on
   failure (capped at 30s, reset on success); the plan and flow list only update state when their
   **content changed**, so a poll never re-renders the whole tree.
+
+## Changes in V0.1.0a
+
+Aggregated from all 16 development commits on the `Fix` branch (full detail in Chinese above in README.zh.md).
+
+- **Added** — manual flow merge (top result, sources to recycle bin); subagent canvas inheritance with swim-lanes; edge re-anchoring by drag with live anchor highlight; orthogonal multi-segment routing when blocked; Delete-key edge deletion; flow manager batch bar in both views.
+- **Optimized** — three performance batches (compact state writes, polling version short-circuit, spatial-grid crossing prefilter); drag coordinate basis unified (scroll + zoom compensation); route cache wired in; snap radii screen-consistent; gesture exclusion (left-drag / middle-pan / right-menu).
+- **Removed** — 16-anchor quadrant branches and dead position table; nearestSide; nearEdge; stale customPath writes; `await flush()` inside mutate.
+- **Changed** — `src/client.js` split into 9 shards with equivalence pipeline; selfcheck 133 → 164 assertions; route-quality fallback re-checks line-of-sight before degrading.
+
+## V0.1.0 pre-release hardening (R1–R8)
+
+Aggregated from the full-plugin audit (112 findings, 8 parallel auditors) — details in [TIP.md](TIP.md) and docs/plans/2026-11-23-master-plan.md.
+
+- **R1 correctness**: six broken-feature defects fixed (subagent canvas inheritance, exit-hook durability in ESM, tool disposer leaks, SVG export escaping, polling override, experience persistence)
+- **R2–R5**: drag hot-path DOM writes, single-source phase model, lifecycle caps, token-lean responses
+- **R6**: tool definitions extracted to src/host/flow-tools.js; copy-drift bug fixed (tool.call substeps used to be built as agent.task)
+- **R7–R8**: destructive-action guards, Escape layer stack, shard-equivalence gate in selfcheck
 
 ## License
 

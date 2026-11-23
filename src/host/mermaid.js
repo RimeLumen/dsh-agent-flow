@@ -38,7 +38,9 @@ export function toMermaid(workflow) {
   }
   for (const node of workflow.nodes) {
     for (const ref of Array.isArray(node.reliesOn) ? node.reliesOn : []) {
-      lines.push(`  ${mId(ref)} --> ${mId(node.id)}`)
+      // R3.6 依赖边输出 `==>`：导入侧只认 `==>` 为 reliesOn——此前导出画 `-->`，
+      // 导出再导入一次依赖全部降级为顺序边
+      lines.push(`  ${mId(ref)} ==> ${mId(node.id)}`)
     }
   }
   return lines.join('\n')
@@ -119,6 +121,8 @@ export function fromMermaid(text, options = {}) {
     phases,
     entry: nodes[0]?.id ?? '',
     vars: {},
+    // R3.6 导入节点全部落在 (80,80)——标记客户端自动布局（此前导入画布节点重叠成一团）
+    needsLayout: true,
   }
   return { workflow, issues }
 }

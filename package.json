@@ -48,5 +48,8 @@
   "bugs": {
     "url": "https://github.com/RimeLumen/dsh-agent-flow/issues"
   },
-  "homepage": "https://github.com/RimeLumen/dsh-agent-flow#readme"
+  "homepage": "https://github.com/RimeLumen/dsh-agent-flow#readme",
+  "scripts": {
+    "selfcheck": "node scripts/selfcheck.mjs"
+  }
 }

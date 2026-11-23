@@ -38,6 +38,16 @@ export function writeJson(res, status, body) {
 
 export function writeError(res, status, error, context = {}) {
   const envelope = toErrorEnvelope(error, context)
+  // R5.3 Token 经济：4xx 用扁平短包络（此前 message 双份 + 完整 envelope 含 6 行 stack 全带）
+  if (status < 500) {
+    writeJson(res, status, {
+      error: envelope.message,
+      code: envelope.code,
+      kind: envelope.kind,
+      ...(Array.isArray(envelope.hints) && envelope.hints.length > 0 ? { hints: envelope.hints } : {}),
+    })
+    return
+  }
   writeJson(res, status, {
     error: envelope.message,
     code: envelope.code,

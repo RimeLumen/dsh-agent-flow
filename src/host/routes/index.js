@@ -37,7 +37,8 @@ export function registerRoutes(deps) {
     ...workflowRoutes(shared),
     ...runsRoutes(shared),
     ...dataRoutes(shared),
-    ...planRoutes(shared),
+    // R6.4 最小注入面首步：planRoutes 只声明它实际消费的依赖（plans/planFirst/planTimeoutMs/logger/store）
+    ...planRoutes({ store, plans: deps.plans, planFirst: deps.planFirst, planTimeoutMs: deps.planTimeoutMs, logger: log }),
     ...errorRoutes(shared),
     ...experienceRoutes(shared),
   ]
@@ -49,6 +50,14 @@ export function registerRoutes(deps) {
       if (!isLoopbackRequest(req)) {
         writeError(res, 403, new FlowError(ERROR_CODES.HTTP_LOOPBACK_ONLY, 'agent-flow 只接受本机回环请求', { kind: 'permission', source: 'route' }))
         return
+      }
+      // 就绪门（批次 6）：state 未加载完就先等一下，避免首帧读到空 state 而显示"没有流程"。
+      if (deps.store && typeof deps.store.ready === 'function') {
+        try {
+          await deps.store.ready()
+        } catch (error) {
+          deps.logger?.('store readiness gate failed: ' + (error instanceof Error ? error.message : String(error)))
+        }
       }
       const url = new URL(req.url ?? '/', 'http://127.0.0.1')
       const path = url.pathname.replace(/^\/api\/agent-flow/, '') || '/'
