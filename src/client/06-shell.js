@@ -106,13 +106,18 @@
 
     // R4.4 单例注入：此前每个组件实例都渲染整份 <style>（8 处调用，同屏 2-3 份重复 ~52KB）。
     // 首次调用把 css 写入 document.head 的单例节点；后续实例不再重复渲染。
+    // R4.4 回归修复（二轮审计）：单例节点方案破坏了多 css 串场景——不同组件传不同样式
+    // （注入器的短样式先到先得占了唯一节点，画布的 BASE+CANVAS_CSS 从此注入不进去 → UI 裸奔）。
+    // 改为按 css 串内容去重：同一串只注入一次（去重收益保留），不同串各一个节点（全部生效）。
+    const seenStyles = new Set()
     function StyleTag(props) {
+      const css = String(props.css ?? '')
       if (typeof document !== 'undefined') {
-        let el = document.head.querySelector('style[data-dsh-plugin="dsh-agent-flow"]')
-        if (!el) {
-          el = document.createElement('style')
+        if (css !== '' && !seenStyles.has(css)) {
+          seenStyles.add(css)
+          const el = document.createElement('style')
           el.setAttribute('data-dsh-plugin', 'dsh-agent-flow')
-          el.textContent = props.css
+          el.textContent = css
           document.head.appendChild(el)
         }
         return null
@@ -195,46 +200,6 @@
             h(Btn, { onClick: onClose }, '✕')),
           children,
           footer ? h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 } }, footer) : null))
-    }
-
-    function Popover({ trigger, children, open, onOpenChange }) {
-      const anchorRef = useRef(null)
-      useEffect(() => {
-        if (!open) return undefined
-        const onDown = (event) => {
-          if (anchorRef.current && !anchorRef.current.contains(event.target)) onOpenChange(false)
-        }
-        const onKey = (event) => {
-          if (event.key === 'Escape') onOpenChange(false)
-        }
-        window.addEventListener('mousedown', onDown)
-        window.addEventListener('keydown', onKey)
-        return () => {
-          window.removeEventListener('mousedown', onDown)
-          const idx = modalStack.indexOf(token)
-          if (idx >= 0) modalStack.splice(idx, 1)
-          window.removeEventListener('keydown', onKey)
-        }
-      }, [open, onOpenChange])
-      return h('div', { className: 'daf-anchor', ref: anchorRef },
-        trigger,
-        open ? h('div', { className: 'daf-popover', role: 'menu' }, children) : null)
-    }
-
-    function useAsync(action) {
-      const [state, setState] = useState({ pending: false, error: null, value: null })
-      const run = useCallback(async (...args) => {
-        setState({ pending: true, error: null, value: null })
-        try {
-          const value = await action(...args)
-          setState({ pending: false, error: null, value })
-          return value
-        } catch (error) {
-          setState({ pending: false, error: error.message, value: null })
-          return null
-        }
-      }, [action])
-      return [state, run]
     }
 
     const ICON_PATHS = {

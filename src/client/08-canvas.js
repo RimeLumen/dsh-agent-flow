@@ -1109,11 +1109,10 @@
           ['chain', 'tb', 'star', 'radial'].map((value) => h('button', {
             key: value,
             type: 'button',
-            className: `daf-layout-btn${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
-            title: `${t.layout}: ${t[`layout_${value}`] ?? value}`,
-            disabled: !current,
+            // R2 二轮审计：原对象 className/title 写了两遍（前一组被后一组覆盖的死属性）——删前组
             className: `daf-layout-btn daf-tip${(current?.layout ?? 'chain') === value ? ' is-on' : ''}`,
             'data-tip': `${t.layout}: ${t[`layout_${value}`] ?? value}`,
+            disabled: !current,
             onClick: () => applyLayout(value),
           }, t[`layout_${value}`] ?? value))),
         h(Btn, { onClick: () => { setMoreOpen(false); void copyMermaid() }, disabled: !current }, t.mermaidCopy),

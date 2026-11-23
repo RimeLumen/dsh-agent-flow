@@ -1043,8 +1043,7 @@
                           return wf
                         }),
                         title: t.setEntry,
-                      }, t.setEntry),
-                      (current.nodes.some((node) => node.id !== selected.id && node.kind === 'flow.loop' && node.params?.fallbackTo !== undefined) ? null : null))),
+                      }, t.setEntry))),
                 h('div', { className: 'daf-col-head', style: { marginTop: 8 } }, h('span', null, t.validate)),
                 issues.length === 0
                   ? h('div', { className: 'daf-muted' }, '—')
