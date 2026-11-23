@@ -897,39 +897,6 @@
         .replace('bottom-right', 'BR').replace('bottom-left', 'BL')
         .replace('top', 'T').replace('bottom', 'B').replace('right', 'R').replace('left', 'L')
       const selectedEdge = selectedEdgeId ? (current?.edges ?? []).find((item) => item.id === selectedEdgeId) : null
-      const selectedEdgeView = (() => {
-        if (!selectedEdge) return null
-        const fromNode = nodesById.get(selectedEdge.from)
-        const toNode = nodesById.get(selectedEdge.to)
-        if (!fromNode || !toNode) return null
-        const mid = edgeMidpoint(rectOfNode(fromNode), rectOfNode(toNode), selectedEdge)
-        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left']
-        const sideRow = (which) => h('div', { className: 'daf-edge-editor-row' },
-          h('span', { className: 'daf-muted' }, which === 'from' ? t.edgeFrom : t.edgeTo),
-          sides.map((side) => {
-            const active = (which === 'from' ? selectedEdge.fromSide : selectedEdge.toSide) ?? (which === 'from' ? 'right' : 'left')
-            return h('button', {
-              key: side,
-              type: 'button',
-              className: `daf-anchor-pick${active === side ? ' is-on' : ''}`,
-              title: side,
-              onClick: () => mutate((wf) => {
-                const target = wf.edges.find((item) => item.id === selectedEdge.id)
-                if (target) {
-                  delete target.customPath
-                  if (which === 'from') target.fromSide = side
-                  else target.toSide = side
-                }
-                return wf
-              }),
-            }, sideAbbr(side))
-          }))
-        return h('div', { className: 'daf-edge-editor daf-glass', style: { left: mid.x + 12, top: mid.y - 24 } },
-          h('div', { className: 'daf-muted' }, `${fromNode.title} → ${toNode.title}`),
-          sideRow('from'),
-          sideRow('to'),
-          h(Btn, { onClick: () => setSelectedEdgeId(null) }, t.cancel))
-      })()
 
       const edgeMenuView = edgeMenu
         ? h('div', { className: 'daf-flow-menu', style: { position: 'fixed', left: edgeMenu.x, top: edgeMenu.y, zIndex: 60 } },
@@ -1244,6 +1211,40 @@
         for (const node of current?.nodes ?? []) map.set(node.id, node)
         return map
       }, [current])
+
+      const selectedEdgeView = (() => {
+        if (!selectedEdge) return null
+        const fromNode = nodesById.get(selectedEdge.from)
+        const toNode = nodesById.get(selectedEdge.to)
+        if (!fromNode || !toNode) return null
+        const mid = edgeMidpoint(rectOfNode(fromNode), rectOfNode(toNode), selectedEdge)
+        const sides = ['right', 'left', 'top', 'bottom', 'top-right', 'top-left', 'bottom-right', 'bottom-left']
+        const sideRow = (which) => h('div', { className: 'daf-edge-editor-row' },
+          h('span', { className: 'daf-muted' }, which === 'from' ? t.edgeFrom : t.edgeTo),
+          sides.map((side) => {
+            const active = (which === 'from' ? selectedEdge.fromSide : selectedEdge.toSide) ?? (which === 'from' ? 'right' : 'left')
+            return h('button', {
+              key: side,
+              type: 'button',
+              className: `daf-anchor-pick${active === side ? ' is-on' : ''}`,
+              title: side,
+              onClick: () => mutate((wf) => {
+                const target = wf.edges.find((item) => item.id === selectedEdge.id)
+                if (target) {
+                  delete target.customPath
+                  if (which === 'from') target.fromSide = side
+                  else target.toSide = side
+                }
+                return wf
+              }),
+            }, sideAbbr(side))
+          }))
+        return h('div', { className: 'daf-edge-editor daf-glass', style: { left: mid.x + 12, top: mid.y - 24 } },
+          h('div', { className: 'daf-muted' }, `${fromNode.title} → ${toNode.title}`),
+          sideRow('from'),
+          sideRow('to'),
+          h(Btn, { onClick: () => setSelectedEdgeId(null) }, t.cancel))
+      })()
 
       const selected = selectedId ? nodesById.get(selectedId) : null
 
