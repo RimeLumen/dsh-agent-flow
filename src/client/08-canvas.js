@@ -449,6 +449,15 @@
         const paint = () => {
           raf = 0
           const bounds = contentBounds()
+          // R6 渲染稳定性：surface 尺寸随内容动态扩展（默认 2400×1600 起，节点超出时跟随
+          // contentBounds——此前固定尺寸导致全屏/大图时连线被裁剪丢失）
+          const surface = surfaceInnerRef.current
+          if (surface) {
+            const w = Math.max(2400, Math.ceil((bounds.x + bounds.w + 200) * zoom))
+            const h = Math.max(1600, Math.ceil((bounds.y + bounds.h + 200) * zoom))
+            if (surface.style.width !== w + 'px') surface.style.width = w + 'px'
+            if (surface.style.height !== h + 'px') surface.style.height = h + 'px'
+          }
           const scale = Math.min(124 / bounds.w, 84 / bounds.h)
           // 滚动量是缩放后坐标 → 除以 zoom 回到内容坐标
           view.style.left = (4 + (el.scrollLeft / zoom - bounds.x) * scale) + 'px'

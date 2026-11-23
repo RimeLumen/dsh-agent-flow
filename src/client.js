@@ -1052,9 +1052,9 @@ window.__ModuleLoader__.load({
 @container flow (max-width: 1080px) { .daf-canvas-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(220px, 1fr) auto; } }
 .daf-surface-wrap { position: relative; overflow: auto; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px;
   background: var(--dsw-alias-bg-base); min-height: 220px; }
-.daf-surface { position: relative; transform-origin: 0 0; width: 2400px; height: 1600px;
+.daf-surface { position: relative; transform-origin: 0 0; min-width: 2400px; min-height: 1600px; width: var(--daf-surface-w, 2400px); height: var(--daf-surface-h, 1600px);
   background-image: radial-gradient(var(--dsw-alias-border-l1) 1px, transparent 1px); background-size: 20px 20px; }
-.daf-edges { position: absolute; inset: 0; width: 2400px; height: 1600px; overflow: visible; pointer-events: none; }
+.daf-edges { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .daf-edge { fill: none; stroke: var(--dsw-alias-border-l2); stroke-width: 1.6; }
 
 .daf-edge-glow { fill: none; stroke: var(--dsw-alias-brand-primary); stroke-width: 7; opacity: .10; filter: blur(3.5px);
@@ -1403,6 +1403,10 @@ window.__ModuleLoader__.load({
       'group.steps': { zh: '父级流程', en: 'Parent flow' },
     }
 
+    // R6 渲染稳定性：usePlan 单例轮询——此前注入面板与画布各挂一条轮询（同屏双份流量、
+    // 两份 setState 交替触发重渲染，多节点全屏时表现为闪烁）。改为分片作用域共享轮询 +
+    // 订阅者广播：同 sessionId 只跑一条定时器，数据变更时通知全部订阅者。
+    const planHub = { sessions: new Map() } // sessionId -> { plan, version, subscribers, timer, failures }
     function usePlan(sessionId) {
       const [plan, setPlan] = useState({ status: 'idle' })
       useEffect(() => {
@@ -1410,41 +1414,40 @@ window.__ModuleLoader__.load({
           setPlan({ status: 'idle' })
           return undefined
         }
-        let closed = false
-        let timer = null
-        let failures = 0
-        // R8.4 增量恢复：此前 lastPlanVersion 声明在 tick 内部，每次轮询重置——
-        // since 参数永远为空，每 4s 全量拉 plan，增量协议失效
-        let lastPlanVersion = ''
-        const tick = async () => {
-          let base = 4000
-          if (typeof document !== 'undefined' && document.hidden) {
-            if (!closed) timer = setTimeout(tick, POLL_MAX)
-            return
-          }
-          try {
-            const sinceParam = lastPlanVersion !== '' ? `&since=${encodeURIComponent(lastPlanVersion)}` : ''
-            const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}${sinceParam}`)
-            if (result?.same === true) {
-              base = 4000
-              failures = 0
-              if (!closed) timer = setTimeout(tick, pollDelay(base, failures))
-              return
+        let entry = planHub.sessions.get(sessionId)
+        const subscriber = (next) => setPlan((prev) => (samePlan(prev, next) ? prev : next))
+        if (!entry) {
+          entry = { plan: { status: 'idle' }, version: '', subscribers: new Set([subscriber]), timer: null, failures: 0 }
+          planHub.sessions.set(sessionId, entry)
+          const schedule = (ms) => { if (entry.timer) clearTimeout(entry.timer); entry.timer = setTimeout(tick, ms) }
+          const tick = async () => {
+            let base = 4000
+            if (typeof document !== 'undefined' && document.hidden) { schedule(POLL_MAX); return }
+            try {
+              const sinceParam = entry.version !== '' ? `&since=${encodeURIComponent(entry.version)}` : ''
+              const result = await request('GET', `/plan?sessionId=${encodeURIComponent(sessionId)}${sinceParam}`)
+              if (result?.same === true) { entry.failures = 0; schedule(4000); return }
+              entry.version = result?.plan?.updatedAt ?? ''
+              entry.plan = result?.plan ?? { status: 'idle' }
+              base = entry.plan.status === 'awaiting' ? 1500 : 4000
+              entry.failures = 0
+              for (const notify of entry.subscribers) notify(entry.plan)
+            } catch {
+              entry.failures += 1
             }
-            lastPlanVersion = result?.plan?.updatedAt ?? ''
-            const next = result?.plan ?? { status: 'idle' }
-            base = next.status === 'awaiting' ? 1500 : 4000
-            failures = 0
-            if (!closed) setPlan((prev) => (samePlan(prev, next) ? prev : next))
-          } catch {
-            failures += 1
+            schedule(pollDelay(base, entry.failures))
           }
-          if (!closed) timer = setTimeout(tick, pollDelay(base, failures))
+          void tick()
+        } else {
+          entry.subscribers.add(subscriber)
+          subscriber(entry.plan) // 新订阅者立即对齐当前快照
         }
-        void tick()
         return () => {
-          closed = true
-          if (timer) clearTimeout(timer)
+          entry.subscribers.delete(subscriber)
+          if (entry.subscribers.size === 0) {
+            planHub.sessions.delete(sessionId)
+            if (entry.timer) clearTimeout(entry.timer)
+          }
         }
       }, [sessionId])
       return plan
@@ -3977,6 +3980,15 @@ window.__ModuleLoader__.load({
         const paint = () => {
           raf = 0
           const bounds = contentBounds()
+          // R6 渲染稳定性：surface 尺寸随内容动态扩展（默认 2400×1600 起，节点超出时跟随
+          // contentBounds——此前固定尺寸导致全屏/大图时连线被裁剪丢失）
+          const surface = surfaceInnerRef.current
+          if (surface) {
+            const w = Math.max(2400, Math.ceil((bounds.x + bounds.w + 200) * zoom))
+            const h = Math.max(1600, Math.ceil((bounds.y + bounds.h + 200) * zoom))
+            if (surface.style.width !== w + 'px') surface.style.width = w + 'px'
+            if (surface.style.height !== h + 'px') surface.style.height = h + 'px'
+          }
           const scale = Math.min(124 / bounds.w, 84 / bounds.h)
           // 滚动量是缩放后坐标 → 除以 zoom 回到内容坐标
           view.style.left = (4 + (el.scrollLeft / zoom - bounds.x) * scale) + 'px'

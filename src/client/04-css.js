@@ -360,9 +360,9 @@
 @container flow (max-width: 1080px) { .daf-canvas-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(220px, 1fr) auto; } }
 .daf-surface-wrap { position: relative; overflow: auto; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px;
   background: var(--dsw-alias-bg-base); min-height: 220px; }
-.daf-surface { position: relative; transform-origin: 0 0; width: 2400px; height: 1600px;
+.daf-surface { position: relative; transform-origin: 0 0; min-width: 2400px; min-height: 1600px; width: var(--daf-surface-w, 2400px); height: var(--daf-surface-h, 1600px);
   background-image: radial-gradient(var(--dsw-alias-border-l1) 1px, transparent 1px); background-size: 20px 20px; }
-.daf-edges { position: absolute; inset: 0; width: 2400px; height: 1600px; overflow: visible; pointer-events: none; }
+.daf-edges { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .daf-edge { fill: none; stroke: var(--dsw-alias-border-l2); stroke-width: 1.6; }
 
 .daf-edge-glow { fill: none; stroke: var(--dsw-alias-brand-primary); stroke-width: 7; opacity: .10; filter: blur(3.5px);
