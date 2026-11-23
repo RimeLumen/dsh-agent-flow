@@ -2005,9 +2005,21 @@
         })
         : null
 
-      if (!current) {
 
-      return h('div', { className: 'daf-scope', 'data-contrast': highContrast ? 'high' : 'normal', 'data-motion': motionOff ? 'off' : undefined, 'data-pan': spaceHeld ? 'true' : undefined, 'data-camera': cameraState, 'data-busy': sessionBusy ? 'true' : undefined, 'data-connecting': connecting ? 'true' : undefined, style: { height: '100%', minHeight: 0 } },
+      // P3 导览：把相机送到第 index 站（-1 表示退出导览）。
+      // R6.5 二轮修复（React #310）：tourGo 的 useCallback 必须无条件调用——
+      // 此前它在「空画布分支」与「主路径」各定义一次以对齐 hooks 数量（二轮审计误判为
+      // 复制死代码删掉了空分支那次 → current 从 null 变有值时 hooks 数 +1 → #310 崩溃）。
+      // 上提到 if 之前单次定义，两个渲染路径共用。
+      const tourGo = useCallback((index) => {
+        if (tourStops.length === 0) return
+        const next = index < 0 ? -1 : (index + tourStops.length) % tourStops.length
+        setTourIndex(next)
+        if (next >= 0) focusNode(tourStops[next])
+      }, [tourStops, focusNode])
+
+      if (!current) {
+        return h('div', { className: 'daf-scope', 'data-contrast': highContrast ? 'high' : 'normal', 'data-motion': motionOff ? 'off' : undefined, 'data-pan': spaceHeld ? 'true' : undefined, 'data-camera': cameraState, 'data-busy': sessionBusy ? 'true' : undefined, 'data-connecting': connecting ? 'true' : undefined, style: { height: '100%', minHeight: 0 } },
           h(StyleTag, { css: BASE_CSS + CANVAS_CSS }),
           h('div', { className: 'daf-canvas-root' },
             h('div', { className: 'daf-toolbar' },
@@ -2027,17 +2039,6 @@
               h('div', null, t.canvasEmpty),
               h('div', null, t.canvasEmptyHint))))
       }
-
-      // P3 导览：把相机送到第 index 站（-1 表示退出导览）。
-      const tourGo = useCallback((index) => {
-        if (tourStops.length === 0) return
-        const next = index < 0 ? -1 : (index + tourStops.length) % tourStops.length
-        setTourIndex(next)
-        if (next >= 0) focusNode(tourStops[next])
-      }, [tourStops, focusNode])
-
-      // 泳道背景带（用户指令②）：按 lanes.nodeIds 包围盒画条带，辨别节点归属。
-      // main 泳道不画（保持画布干净），只画 sub 等附加泳道。
       const laneBandsView = (() => {
         const lanes = Array.isArray(current?.lanes) ? current.lanes : []
         const all = current?.nodes ?? []
