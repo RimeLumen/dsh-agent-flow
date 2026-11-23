@@ -731,6 +731,11 @@ window.__ModuleLoader__.load({
 /* 旧 dock body 的绝对定位样式已随抽屉化移除（抽屉容器提供滚动与背景）。 */
 
 .daf-edge[data-selected="true"] { stroke: var(--dsw-alias-brand-primary); stroke-width: 2.2; }
+/* R6 连线选中态：端点手柄（拖到目标节点即换锚）+ 命中层光标语义 */
+.daf-edge-handle { fill: var(--dsw-alias-bg-layer-1); stroke: var(--dsw-alias-brand-primary); stroke-width: 2.5; }
+.daf-edge-handle:hover { r: 9; }
+.daf-edge-handle[data-end="from"] { stroke: var(--dsw-alias-state-success-primary, #3a9d5d); }
+.daf-edge-handle[data-end="to"] { stroke: var(--dsw-alias-brand-primary); }
 .daf-edge-editor { position: absolute; z-index: 6; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px;
   border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-overlay);
   box-shadow: var(--daf-shadow-2); font-size: 11px; max-width: 260px;
@@ -3981,6 +3986,11 @@ window.__ModuleLoader__.load({
             setPointerPos(null)
             return
           }
+          // R6 取消选中：Esc 先退连线、再退选中边
+          if (event.key === 'Escape' && selectedEdgeId) {
+            setSelectedEdgeId(null)
+            return
+          }
           // R7.3 焦点在可编辑元素内时不劫持任何画布快捷键（浏览器缩放/搜索等归浏览器）
           if (inEditable(event.target)) return
           // Delete/Backspace 删除选中的边（此前唯一删除入口是右键菜单）；输入框内不拦截
@@ -4918,6 +4928,10 @@ window.__ModuleLoader__.load({
           const el = surfaceInnerRef.current
           const rect = el?.getBoundingClientRect()
           if (!el || !rect) { setEdgeDrag(null); return }
+          // R6 单击 vs 拖拽：位移 <4 屏幕px 视为单击——保持选中态（面板/手柄已出现），不改锚
+          const moved = edgeDrag.sx !== undefined
+            && Math.hypot(event.clientX - edgeDrag.sx, event.clientY - edgeDrag.sy) > 4
+          if (!moved) { setEdgeDrag(null); setPointerPos(null); return }
           const canvasPoint = {
             x: (event.clientX - rect.left) / zoom,
             y: (event.clientY - rect.top) / zoom,
@@ -5161,6 +5175,31 @@ window.__ModuleLoader__.load({
         // 预算按语义归属分配，而不是按渲染顺序先到先得——否则前面的边会吃掉全部预算。
         const animating = state === 'active' && budgetEdgeIds.has(edge.id)
         const budgetSkip = state === 'active' && !animating ? 'skip' : undefined
+        // R6 选中边端点手柄：显式拖拽入口（此前只能「按住线中间猜」——可发现性差）
+        const edgeHandles = selectedEdgeId === edge.id
+          ? ['from', 'to'].map((which) => {
+            const handleNode = nodesById.get(which === 'from' ? edge.from : edge.to)
+            if (!handleNode) return null
+            const handleSide = (which === 'from' ? edge.fromSide : edge.toSide) ?? 'right'
+            const handleAnchor = anchorPoint(rectOfNode(handleNode), handleSide)
+            return h('circle', {
+              key: 'handle:' + which,
+              cx: handleAnchor.x,
+              cy: handleAnchor.y,
+              r: 7,
+              className: 'daf-edge-handle',
+              'data-end': which,
+              style: { pointerEvents: 'all', cursor: 'grab' },
+              onPointerDown: (event) => {
+                if (event.button !== 0) return
+                if (Date.now() - suppressEdgeClickRef.current < 800) return
+                event.preventDefault()
+                event.stopPropagation()
+                setEdgeDrag({ id: edge.id, end: which, sx: event.clientX, sy: event.clientY })
+              },
+            })
+          }).filter(Boolean)
+          : []
         return h('g', { key: edge.id },
           h('path', { className: 'daf-edge-glow', d, 'data-state': flowState, 'data-main': onMain ? 'true' : undefined, style: colorStyle }),
           h('path', { className: 'daf-edge-flow', d, 'data-state': flowState, 'data-budget': budgetSkip, 'data-main': onMain ? 'true' : undefined,
@@ -5171,34 +5210,34 @@ window.__ModuleLoader__.load({
             fill: 'none',
             stroke: 'transparent',
             strokeWidth: 14,
-            style: { pointerEvents: 'stroke', cursor: 'context-menu' },
+            style: { pointerEvents: 'stroke', cursor: selectedEdgeId === edge.id ? 'grab' : 'pointer' },
             onContextMenu: (event) => {
               event.preventDefault()
               event.stopPropagation()
-              suppressEdgeClickRef.current = Date.now()
               setEdgeMenu({ id: edge.id, x: event.clientX, y: event.clientY })
             },
             onPointerDown: (event) => {
-              // 连线拖动：按下即判定拖哪一端（距两端锚点近者被拖动）。
-              // 只响应左键：右键交给 onContextMenu 开菜单（手势互斥）
+              // R6 连线交互重构：左键按下 = 选中该边（高亮 + 端点手柄 + 锚点编辑面板出现），
+              // 拖动 = 换锚（onUp 按位移区分单击与拖拽）；右键交给 onContextMenu 开菜单。
+              // A5 防误触：节点拖拽结束后 800ms 内的落点不进入边交互（此前 suppress 只写不读）。
               if (event.button !== 0) return
+              if (Date.now() - suppressEdgeClickRef.current < 800) return
               event.preventDefault()
               event.stopPropagation()
-              suppressEdgeClickRef.current = Date.now()
               const from = nodesById.get(edge.from)
               const to = nodesById.get(edge.to)
               if (!from || !to) return
               const dragRect = surfaceInnerRef.current?.getBoundingClientRect()
               if (!dragRect) return
               const canvasPoint = {
-                // 用内层缩放面的 rect（含滚动补偿）；外层 wrap 的 rect 会差出 scrollLeft/zoom，
-                // 124% 缩放下偏差数百 px，导致端点判定与 24px 吸附全部失效。
+                // 用内层缩放面的 rect（含滚动补偿）；外层 wrap 的 rect 会差出 scrollLeft/zoom。
                 x: (event.clientX - dragRect.left) / zoom,
                 y: (event.clientY - dragRect.top) / zoom,
               }
               const dFrom = Math.hypot(canvasPoint.x - (rectOfNode(from).x + rectOfNode(from).w / 2), canvasPoint.y - (rectOfNode(from).y + rectOfNode(from).h / 2))
               const dTo = Math.hypot(canvasPoint.x - (rectOfNode(to).x + rectOfNode(to).w / 2), canvasPoint.y - (rectOfNode(to).y + rectOfNode(to).h / 2))
-              setEdgeDrag({ id: edge.id, end: dFrom < dTo ? 'from' : 'to' })
+              setEdgeDrag({ id: edge.id, end: dFrom < dTo ? 'from' : 'to', sx: event.clientX, sy: event.clientY })
+              setSelectedEdgeId(edge.id)
               setEdgeMenu(null)
             },
           }),
@@ -5215,6 +5254,7 @@ window.__ModuleLoader__.load({
           traversals > 0 && state !== 'done'
             ? h('path', { key: `${edge.id}:${traversals}`, className: 'daf-edge-anim', d, style: colorStyle })
             : null,
+          ...edgeHandles,
           h('g', {
             className: 'daf-edge-chip',
             transform: `translate(${mid.x}, ${mid.y})`,
@@ -5288,7 +5328,12 @@ window.__ModuleLoader__.load({
         })()
         : null
 
-      const edgesView = [...edgeList, ...bindEdges, ...depEdges]
+      // R6 选中边置顶：选中边的 g 排到最后（DOM 后者在上）——选中后再拖手柄不怕节点遮挡
+      const edgesView = (() => {
+        const all = [...edgeList, ...bindEdges, ...depEdges]
+        const picked = all.filter((item) => item.key === selectedEdgeId)
+        return picked.length > 0 ? [...all.filter((item) => item.key !== selectedEdgeId), ...picked] : all
+      })()
 
       const nodesView = (current?.nodes ?? []).map((node) => {
         const status = statusOf(node.id)

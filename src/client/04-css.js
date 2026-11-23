@@ -39,6 +39,11 @@
 /* 旧 dock body 的绝对定位样式已随抽屉化移除（抽屉容器提供滚动与背景）。 */
 
 .daf-edge[data-selected="true"] { stroke: var(--dsw-alias-brand-primary); stroke-width: 2.2; }
+/* R6 连线选中态：端点手柄（拖到目标节点即换锚）+ 命中层光标语义 */
+.daf-edge-handle { fill: var(--dsw-alias-bg-layer-1); stroke: var(--dsw-alias-brand-primary); stroke-width: 2.5; }
+.daf-edge-handle:hover { r: 9; }
+.daf-edge-handle[data-end="from"] { stroke: var(--dsw-alias-state-success-primary, #3a9d5d); }
+.daf-edge-handle[data-end="to"] { stroke: var(--dsw-alias-brand-primary); }
 .daf-edge-editor { position: absolute; z-index: 6; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px;
   border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-overlay);
   box-shadow: var(--daf-shadow-2); font-size: 11px; max-width: 260px;
