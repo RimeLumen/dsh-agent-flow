@@ -1628,7 +1628,9 @@ window.__ModuleLoader__.load({
     }
     const orderedX = coalesce(xs, new Set([startStub.x, endStub.x]))
     const orderedY = coalesce(ys, new Set([startStub.y, endStub.y]))
-    const budget = 1200
+    // R6 碰撞箱修复：预算 1200→4800——走廊障碍子集化后 orderedX/Y 本已收敛，
+    // 此上限只作性能护栏；此前 ~17 障碍即爆预算恒返 null（绕行只在 ≤15 节点小图生效）
+    const budget = 4800
     if (orderedX.length * orderedY.length > budget) return null
     const blocked = (p) => expanded.some((r) => p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h)
     const nodes = new Map()
@@ -1831,8 +1833,15 @@ window.__ModuleLoader__.load({
         const blocked = grid.query(box).some((item) => item.id !== edge.from && item.id !== edge.to
           && segmentHitsRect(a, b, item.rect, 0))
         if (!blocked) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
-        // 被挡住才做网格路由；此时用全量障碍，保证绕行不会漏掉远处节点。
-        const full = grid.all()
+        // 被挡住才做网格路由。R6 碰撞箱修复：不再传 grid.all() 全量障碍——
+        // 障碍数 ~17+ 时正交网格的 orderedX×orderedY 必爆 1200 预算恒返 null，
+        // 被挡边静默退化为穿越直线（真机截图病症）。改为「搜索走廊」内的障碍子集：
+        // 走廊 = 两锚点包围盒外扩 240px（覆盖折线合理绕行范围），预算内必出折线。
+        const corridor = {
+          minX: Math.min(a.x, b.x) - 240, maxX: Math.max(a.x, b.x) + 240,
+          minY: Math.min(a.y, b.y) - 240, maxY: Math.max(a.y, b.y) + 240,
+        }
+        const full = grid.query(corridor)
           .filter((item) => item.id !== edge.from && item.id !== edge.to)
           .map((item) => item.rect)
         const route = orthogonalRoute(fromRect, toRect, fromSide, toSide, full, { clearance: 10 })
@@ -1846,6 +1855,28 @@ window.__ModuleLoader__.load({
           const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))
           if (!stillBlocked) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
           return polylineToPath(route)
+        }
+        // 走廊路由也失败（极稠密）→ 外推曲线兜底（黄线法）：贝塞尔控制点沿首个被穿
+        // 障碍的法向外推——绝不回退穿模直线。
+        const hitRect = full.find((rect) => segmentHitsRect(a, b, rect, 0))
+        if (hitRect) {
+          // 外推曲线（黄线法）：控制点取「线段中点 + 连线垂线方向 × push」，偏移侧远离障碍中心
+          // ——垂直于连线才能把线从障碍上推开（沿「障碍中心→中点」外推在水平连线时无效）。
+          const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+          const cx = hitRect.x + hitRect.w / 2
+          const cy = hitRect.y + hitRect.h / 2
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const len = Math.hypot(dx, dy) || 1
+          let px = -dy / len
+          let py = dx / len
+          if ((cx - mid.x) * px + (cy - mid.y) * py > 0) { px = -px; py = -py }
+          // 贝塞尔中段实际偏移 ≈ push×0.75，需盖过障碍半宽/半高 + clearance
+          const push = Math.max(hitRect.w, hitRect.h) + 160
+          const ctrl = { x: mid.x + px * push, y: mid.y + py * push }
+          const c1 = { x: a.x + (ctrl.x - a.x) * 0.6, y: a.y + (ctrl.y - a.y) * 0.6 }
+          const c2 = { x: b.x + (ctrl.x - b.x) * 0.6, y: b.y + (ctrl.y - b.y) * 0.6 }
+          return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
         }
         return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
       }
