@@ -104,7 +104,9 @@ export function mergeWorkflows(sources, context = {}) {
     mainPath: undefined,
     vars: {},
     lanes,
-    needsLayout: true,
+    // 注意：不置 needsLayout——条带坐标即最终布局（泳道分带是本合并的核心产出），
+    // 若交由客户端 autoLayout 按 chain 重排会完全打乱条带分区。
+    // 源画布内部布局原样保留；如个别重叠，用户手动微调（pinned 已受尊重）。
   })
   return { workflow, warnings }
 }

@@ -5460,7 +5460,13 @@ window.__ModuleLoader__.load({
           'data-child': String(Boolean(node.parentId)),
           'data-diff': diff ? (diff.added.has(node.id) ? 'added' : diff.moved.has(node.id) ? 'moved' : undefined) : undefined,
           'data-pinned': node.pos?.pinned === true ? 'true' : undefined,
-          style: { transform: `translate3d(${node.pos.x}px, ${node.pos.y}px, 0)`, ...(node.parentId ? { zIndex: 2 } : {}) },
+          // R6 复检修正：zIndex 分层化——此前子节点固定 zIndex 2，分层排序后 planned 层的
+          // 子节点会盖过 running 层节点。改为按状态层给基础 z（done 1 / planned 2 / running 3），
+          // 子节点在其层内 +1（保持「子随父在上」且层间有序）。
+          style: {
+            transform: `translate3d(${node.pos.x}px, ${node.pos.y}px, 0)`,
+            zIndex: statusRank(node.id) + 1 + (node.parentId ? 1 : 0),
+          },
           onPointerDown: (event) => {
             // 起点只能从锚点按钮发起（见下面的 .daf-anchor 渲染）。
             // 节点矩形体一律用于拖动——矩形不再是起线区域。

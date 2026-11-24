@@ -484,7 +484,7 @@ function check(section, label, ok, extra) {
   check(section, 'main 泳道不画背景带', lanesClient.includes("if (lane.id === 'main') continue"))
   check(section, 'needsLayout 宿主透传', lanesWf.needsLayout === undefined && model.normalizeWorkflow({ name: 'x', nodes: [], edges: [], vars: {}, needsLayout: true }).needsLayout === true)
   check(section, '泳道追加打 needsLayout', lanesPlan.includes('live.needsLayout = true'))
-  check(section, '合并产物打 needsLayout', readFileSync(join(hostDir, 'flow', 'merge.js'), 'utf8').includes('needsLayout: true'))
+  check(section, '泳道版 merge 不置 needsLayout（条带即布局，防 chain 重排打乱分区）', !readFileSync(join(hostDir, 'flow', 'merge.js'), 'utf8').includes('needsLayout: true'))
   check(section, '客户端 adoptWorkflow 消费标记', lanesClient.includes('adoptWorkflow') && lanesClient.includes('needsLayout === true'))
   const dragCtx = lanesClient
   check(section, '连线拖拽用内层缩放面坐标（滚动补偿）', !dragCtx.includes('surfaceRef.current.getBoundingClientRect()') && (dragCtx.match(/surfaceInnerRef\.current/g) ?? []).length >= 3)
