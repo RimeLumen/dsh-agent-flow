@@ -155,7 +155,10 @@ export class Store {
     }
     // 紧凑序列化：pretty-print 的缩进让每次写盘体积与耗时 +~30%（state 是机器态，
     // 人读性由 /diagnostics 端点与本文件头注释承担）。
-    const payload = JSON.stringify(this.state)
+    // R6 审计修正：sessionBusy 是瞬态运行时数据（agent/status 高频写入、重启即失效），
+    // 此前被整体序列化进 state.json 且 migrate 不还原——持久化前剔除。
+    const { sessionBusy, ...persistState } = this.state
+    const payload = JSON.stringify(persistState)
     const dir = this.dir
     const file = this.file
     const write = this._queue.then(async () => {
@@ -211,7 +214,7 @@ export class Store {
         try {
           mkdirSync(this.dir, { recursive: true })
           const tmp = this.file + '.tmp'
-          writeFileSync(tmp, JSON.stringify(this.state), 'utf8')
+          writeFileSync(tmp, JSON.stringify((({ sessionBusy, ...rest }) => rest)(this.state)), 'utf8')
           renameSync(tmp, this.file)
         } catch {
         }

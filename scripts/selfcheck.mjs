@@ -555,9 +555,15 @@ function check(section, label, ok, extra) {
   const lineOf = (needle) => canvasLines.findIndex((l) => l.includes(needle))
   const svLine = lineOf('const selectedEdgeView = (() => {')
   check(section, 'selectedEdgeView 存在', svLine > 0)
-  for (const dep of ['const nodesById = useMemo', 'const rectOfNode = (node)', 'const selectedEdge = selectedEdgeId', 'const edgesView = safeView(']) {
+  for (const dep of ['const nodesById = useMemo', 'const rectOfNode = (node)', 'const selectedEdge = selectedEdgeId', 'const edgesView = safeView(', 'const safeView = (name, build)', 'const mutate = useCallback', 'const undo = useCallback']) {
     const di = lineOf(dep)
     check(section, `依赖先于声明：${dep.slice(6, 30)}`, di >= 0 && di < svLine, `decl@${di} vs use@${svLine}`)
+  }
+  // statusRank/laneRank 的消费方是 nodesView（分层排序），与 selectedEdgeView 不同链
+  const nvLine = lineOf('const nodesView = ')
+  for (const dep of ['const statusRank = (id)', 'const laneRank = new Map']) {
+    const di = lineOf(dep)
+    check(section, `分层排序依赖先于声明：${dep.slice(6, 30)}`, di >= 0 && di < nvLine, `decl@${di} vs nodesView@${nvLine}`)
   }
   check(section, '选中边端点手柄存在', canvasLines.some((l) => l.includes("className: 'daf-edge-handle'")))
   check(section, '命中层 800ms 防误触窗口', canvasLines.filter((l) => l.includes('suppressEdgeClickRef.current < 800')).length >= 2)

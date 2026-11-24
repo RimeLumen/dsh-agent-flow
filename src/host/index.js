@@ -288,7 +288,9 @@ export function apply(ctx, config) {
       if (!sessionId) return
       store.state.sessionBusy = { ...(store.state.sessionBusy ?? {}), [sessionId]: payload?.status === 'running' }
       store.emit()
-    } catch {
+    } catch (error) {
+      // R6 审计修正：status 广播失败不再无痕吞掉（sessionBusy 驱动画布执行中态）
+      log(`sessionBusy update failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   })
 
