@@ -555,7 +555,7 @@ function check(section, label, ok, extra) {
   const lineOf = (needle) => canvasLines.findIndex((l) => l.includes(needle))
   const svLine = lineOf('const selectedEdgeView = (() => {')
   check(section, 'selectedEdgeView 存在', svLine > 0)
-  for (const dep of ['const nodesById = useMemo', 'const rectOfNode = (node)', 'const selectedEdge = selectedEdgeId', 'const edgesView = (']) {
+  for (const dep of ['const nodesById = useMemo', 'const rectOfNode = (node)', 'const selectedEdge = selectedEdgeId', 'const edgesView = safeView(']) {
     const di = lineOf(dep)
     check(section, `依赖先于声明：${dep.slice(6, 30)}`, di >= 0 && di < svLine, `decl@${di} vs use@${svLine}`)
   }

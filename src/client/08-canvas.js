@@ -447,6 +447,15 @@
         if (!el || !view) return undefined
         let raf = 0
         const paint = () => {
+          // R6 渲染稳定性：surface 尺寸随内容动态扩展（默认 2400×1600 起，节点超出时跟随
+          // contentBounds——此前固定尺寸导致全屏/大图时连线被裁剪丢失）
+          const surfaceEl = surfaceInnerRef.current
+          if (surfaceEl) {
+            const w = Math.max(2400, Math.ceil((bounds.x + bounds.w + 200) * zoom))
+            const h = Math.max(1600, Math.ceil((bounds.y + bounds.h + 200) * zoom))
+            if (surfaceEl.style.width !== w + 'px') surface.style.width = w + 'px'
+            if (surfaceEl.style.height !== h + 'px') surface.style.height = h + 'px'
+          }
           raf = 0
           const bounds = contentBounds()
           // R6 渲染稳定性：surface 尺寸随内容动态扩展（默认 2400×1600 起，节点超出时跟随
@@ -758,6 +767,17 @@
       const undoStackRef = useRef([])
       const redoStackRef = useRef([])
       const [undoTick, setUndoTick] = useState(0)
+      // R6 兜底策略（132 节点多泳道崩溃视频）：视图级安全包装——单个视图渲染抛错时
+      // 降级为空数组 + 错误提示条，不再让一个视图的异常拖垮整个画布（此前白屏→灰屏→内容丢失）。
+      const safeView = (name, build) => {
+        try {
+          return build()
+        } catch (error) {
+          setError(`${name} 渲染失败已降级：${error instanceof Error ? error.message : String(error)}`.slice(0, 120))
+          return null
+        }
+      }
+
       const mutate = useCallback((mutator) => {
         setCurrent((prev) => {
           if (!prev) return prev
@@ -1836,11 +1856,11 @@
         : null
 
       // R6 选中边置顶：选中边的 g 排到最后（DOM 后者在上）——选中后再拖手柄不怕节点遮挡
-      const edgesView = (() => {
+      const edgesView = safeView('edges', () => {
         const all = [...edgeList, ...bindEdges, ...depEdges]
         const picked = all.filter((item) => item.key === selectedEdgeId)
         return picked.length > 0 ? [...all.filter((item) => item.key !== selectedEdgeId), ...picked] : all
-      })()
+      })
 
       const selectedEdgeView = (() => {
         if (!selectedEdge) return null
@@ -2116,7 +2136,7 @@
               h('div', null, t.canvasEmpty),
               h('div', null, t.canvasEmptyHint))))
       }
-      const laneBandsView = (() => {
+      const laneBandsView = safeView('lanes', () => {
         const lanes = Array.isArray(current?.lanes) ? current.lanes : []
         const all = current?.nodes ?? []
         const bands = []
@@ -2143,11 +2163,11 @@
           }, h('span', { className: 'daf-lane-band-label' }, lane.label)))
         }
         return bands.length > 0 ? bands : null
-      })()
+      })
 
       // 阶段容器框。
       // 把阶段节点与其子节点一起框起来，阶段节点就是框内的标题。
-      const phaseFramesView = (() => {
+      const phaseFramesView = safeView('phases', () => {
         const all = current?.nodes ?? []
         const frames = []
         for (const phase of all.filter((node) => node.kind === 'phase')) {
@@ -2171,7 +2191,7 @@
           }, h('span', { className: 'daf-phase-frame-label' }, phase.title)))
         }
         return frames.length > 0 ? frames : null
-      })()
+      })
 
       // P3 大纲树：阶段 → 子节点（可折叠）；无阶段归属的节点直接列在根层。
       const outlineRows = (() => {
