@@ -1886,7 +1886,22 @@
           h(Btn, { onClick: () => setSelectedEdgeId(null) }, t.cancel))
       })()
 
-      const nodesView = (current?.nodes ?? []).map((node) => {
+      // R6 分层渲染（用户指令）：按运行状态三排序——已完成(0) → 计划(1) → 运行中(2)，
+      // DOM 顺序即 z 序（运行中节点永远在最上层不被计划层遮挡）；done 层内按泳道与 y 二级排序
+      //（同泳道聚簇、父子随容器）。这是后续按层 memo/视口裁剪的挂点——分层结构已就位。
+      const statusRank = (id) => {
+        const st = statusOf(id)
+        return st === 'running' ? 2 : (st === 'succeeded' || st === 'failed' || st === 'dead') ? 0 : 1
+      }
+      const laneRank = new Map((current?.lanes ?? []).flatMap((lane, laneIndex) => (lane.nodeIds ?? []).map((id) => [id, laneIndex])))
+      const orderedNodes = [...(current?.nodes ?? [])].sort((x, y) => {
+        const rank = statusRank(x.id) - statusRank(y.id)
+        if (rank !== 0) return rank
+        const lane = (laneRank.get(x.id) ?? 0) - (laneRank.get(y.id) ?? 0)
+        if (lane !== 0) return lane
+        return (Number(x.pos?.y) || 0) - (Number(y.pos?.y) || 0)
+      })
+      const nodesView = orderedNodes.map((node) => {
         const status = statusOf(node.id)
         const nodeRun = run.nodes?.[node.id]
         const isGroup = node.kind === 'group.steps'
@@ -2274,10 +2289,11 @@
             error ? h('span', { className: 'daf-error', title: error }, error.slice(0, 60)) : null,
             edgeMenuView,
             mermaidOpen ? h(RightDrawer, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
-              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+              // R6 图层修复（用户指令）：与流程管理抽屉同款等高容器（此前内容块不撑满、textarea 固定 10 行）
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: '1 1 auto' } },
                 h('textarea', {
                   className: 'daf-textarea',
-                  rows: 10,
+                  style: { flex: '1 1 auto', minHeight: 0, resize: 'none', fontFamily: 'monospace' },
                   value: mermaidText,
                   placeholder: 'flowchart TD\n  A["开始"] --> B["结束"]\n  B -.-> C["可选"]',
                   onChange: (event) => setMermaidText(event.target.value),
