@@ -142,6 +142,7 @@
                   h('div', { className: 'daf-outline-body' }, outlineRows))
                 : null,
               flowDockView,
+              ...drawerViews,
               showDevPanels ? h(DevLayer, { selected, t, mutate, statusOf, run, checkpoint, current, setError, childrenOf, ctx, issues, runId, setSelectedId, addChild, control, nodesById, steps }) : null,
             ))
     }

@@ -1,0 +1,25 @@
+            mermaidOpen ? h(RightDrawer, { title: t.mermaidImport, onClose: () => setMermaidOpen(false) },
+              // R6 图层修复（用户指令）：与流程管理抽屉同款等高容器（此前内容块不撑满、textarea 固定 10 行）
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: '1 1 auto' } },
+                h('textarea', {
+                  className: 'daf-textarea',
+                  style: { flex: '1 1 auto', minHeight: 0, resize: 'none', fontFamily: 'monospace' },
+                  value: mermaidText,
+                  placeholder: 'flowchart TD\n  A["开始"] --> B["结束"]\n  B -.-> C["可选"]',
+                  onChange: (event) => setMermaidText(event.target.value),
+                }),
+                h('div', { style: { display: 'flex', gap: 6, justifyContent: 'flex-end' } },
+                  h(Btn, { onClick: () => setMermaidOpen(false) }, t.cancel),
+                  h(Btn, { variant: 'primary', onClick: () => void importMermaid(), disabled: busy || mermaidText.trim() === '' }, t.mermaidImport)))) : null,
+            composeOpen ? h(Modal, { title: t.compose, onClose: () => setComposeOpen(false) },
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                h('textarea', {
+                  className: 'daf-textarea',
+                  rows: 14,
+                  value: composeText,
+                  readOnly: true,
+                  'aria-label': t.compose,
+                }),
+                composeWarnings.length > 0
+                  ? h('div', { className: 'daf-muted' }, t.composeWarn + composeWarnings.map((item) => item.message).join('；'))
+                  : null,
