@@ -17,6 +17,7 @@
   --daf-shadow-lift: 0 4px 10px rgba(16, 24, 40, .08), 0 2px 4px rgba(16, 24, 40, .06);
   --daf-shadow-pop: 0 12px 32px rgba(16, 24, 40, .16), 0 4px 8px rgba(16, 24, 40, .08);
   --daf-canvas-bg: #f6f7f9;
+  --daf-on-accent: #ffffff;
   --daf-ease: cubic-bezier(.2, .8, .2, 1);
   font-family: Inter, 'Segoe UI', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   letter-spacing: -0.008em;
@@ -149,7 +150,7 @@
   color: var(--dsw-alias-label-primary); font-size: 12px; cursor: pointer; }
 .daf-btn:hover:not(:disabled) { border-color: var(--dsw-alias-border-l2); }
 .daf-btn:disabled { opacity: .5; cursor: not-allowed; }
-.daf-btn-primary { background: var(--daf-accent); border-color: var(--daf-accent); color: #fff; box-shadow: 0 1px 2px rgba(79, 70, 229, .35); }
+.daf-btn-primary { background: var(--daf-accent); border-color: var(--daf-accent); color: var(--daf-on-accent); box-shadow: 0 1px 2px rgba(79, 70, 229, .35); }
 .daf-btn-primary:hover:not(:disabled) { background: var(--daf-accent-hover); border-color: var(--daf-accent-hover); }
 .daf-btn-danger { color: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-primary); }
 .daf-input, .daf-select, .daf-textarea { width: 100%; min-width: 0; background: var(--dsw-alias-bg-base);

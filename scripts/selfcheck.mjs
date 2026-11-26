@@ -338,10 +338,10 @@ function check(section, label, ok, extra) {
   for (const [label, marker] of need) check(section, label + ' 存在', clientSrc.includes(marker))
 
   // 主题合规：不得出现硬编码颜色（必须走主题变量）
-  // 唯一允许的硬编码白色是导出底色常量；除此之外界面必须走主题变量
-  const whiteHits = clientSrc.split('\n').filter((l) => /#fff/i.test(l))
-  check(section, '硬编码白色只出现在导出底色常量', whiteHits.length === 1 && whiteHits[0].includes('EXPORT_BACKGROUND'),
-    whiteHits.length + ' 处')
+  // R6 设计系统：token 定义层（--daf-* 自有视觉变量）允许定义基色常量；使用处必须引用 token
+  const whiteHits = clientSrc.split('\n').filter((l) => /#fff/i.test(l) && !l.includes('--daf-'))
+  check(section, '硬编码白色只出现在导出底色常量与 token 定义', whiteHits.length === 1 && whiteHits[0].includes('EXPORT_BACKGROUND'),
+    whiteHits.length + ' 处: ' + whiteHits.map((l) => l.trim().slice(0, 60)).join(' | ').slice(0, 200))
   // 阴影与遮罩天然是黑色 alpha：允许出现在主题 token 的定义行（--daf-*），不允许散落在使用处
   const blackHits = clientSrc.split('\n').filter((l) => /rgba\(\s*0\s*,\s*0\s*,\s*0/.test(l))
   check(section, '黑色 rgba 只出现在主题 token 定义', blackHits.every((l) => /--daf-/.test(l)), blackHits.length + ' 处')
