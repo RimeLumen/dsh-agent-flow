@@ -356,10 +356,12 @@
 .daf-outline-dot[data-st="succeeded"] { background: var(--dsw-alias-state-success-primary); }
 .daf-outline-dot[data-st="failed"] { background: var(--dsw-alias-state-error-primary); }
 /* 阶段容器框 */
-.daf-lane-band { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-state-info-primary, #4a90d9);
+.daf-lane-band { position: absolute; top: 0; left: 0; border: 1px dashed color-mix(in srgb, var(--daf-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--daf-accent) 5%, transparent);
   background: color-mix(in srgb, var(--dsw-alias-state-info-primary, #4a90d9) 6%, transparent);
   border-radius: 12px; pointer-events: none; z-index: 0; }
 .daf-lane-band-label { position: absolute; top: 0; left: 12px; transform: translateY(-50%);
+  font-weight: 600; letter-spacing: .02em;
   font-size: 11px; color: var(--dsw-alias-state-info-primary, #4a90d9);
   background: var(--dsw-alias-bg-layer-1); padding: 0 6px; border-radius: 6px; white-space: nowrap; }
 .daf-phase-frame { position: absolute; top: 0; left: 0; border: 1px dashed var(--dsw-alias-border-l2);
@@ -389,7 +391,8 @@
 .daf-surface { position: relative; transform-origin: 0 0; min-width: 2400px; min-height: 1600px; width: var(--daf-surface-w, 2400px); height: var(--daf-surface-h, 1600px);
   background-color: var(--daf-canvas-bg); background-image: radial-gradient(color-mix(in srgb, var(--dsw-alias-border-l1) 70%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
 .daf-edges { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.daf-edge { fill: none; stroke: var(--dsw-alias-border-l2); stroke-width: 1.6; }
+.daf-edge { fill: none; stroke: color-mix(in srgb, var(--dsw-alias-label-secondary) 55%, transparent); stroke-width: 1.5; }
+.daf-edge[data-main="true"] { stroke: var(--daf-accent); stroke-width: 2; opacity: .75; }
 
 .daf-edge-glow { fill: none; stroke: var(--dsw-alias-brand-primary); stroke-width: 7; opacity: .10; filter: blur(3.5px);
   transition: opacity var(--daf-t-base) var(--daf-ease-out); }
@@ -418,7 +421,7 @@
 @keyframes daf-flow { from { stroke-dashoffset: 18; } to { stroke-dashoffset: 0; } }
 
 .daf-node { position: absolute; top: 0; left: 0; width: 220px; border: 1px solid transparent; border-radius: var(--daf-radius, 12px);
-  background: var(--dsw-alias-bg-layer-1); padding: 9px 10px 10px; cursor: grab; user-select: none;
+  background: var(--dsw-alias-bg-layer-1); padding: 9px 10px 10px 13px; cursor: grab; user-select: none; overflow: hidden;
   box-shadow: var(--daf-shadow-card); outline: 1px solid rgba(16, 24, 40, .04); outline-offset: -1px;
   transition: transform var(--daf-t-fast) var(--daf-ease), box-shadow var(--daf-t-fast) var(--daf-ease),
               border-color var(--daf-t-base) var(--daf-ease-out),
@@ -435,6 +438,19 @@
 /* R6 设计系统：hover 上浮 + 阴影抬升；选中态品牌描边 + soft 底 */
 @media (hover: hover) { .daf-node:hover { box-shadow: var(--daf-shadow-lift); transform: translateY(-1px); } }
 .daf-node[data-selected="true"] { border-color: var(--daf-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--daf-accent) 26%, transparent), var(--daf-shadow-lift); background: linear-gradient(0deg, var(--daf-accent-soft), var(--dsw-alias-bg-layer-1)); }
+/* 节点类型色带：左缘 3px 竖条，一眼区分节点类型（设计系统 R6 第二批） */
+.daf-node::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--daf-kind-color, var(--daf-accent)); opacity: .85; }
+.daf-node[data-kind="agent.task"] { --daf-kind-color: #6366f1; }
+.daf-node[data-kind="tool.call"] { --daf-kind-color: #0891b2; }
+.daf-node[data-kind="human.checkpoint"] { --daf-kind-color: #f59e0b; }
+.daf-node[data-kind="io.output"] { --daf-kind-color: #10b981; }
+.daf-node[data-kind="inject.context"], .daf-node[data-kind="inject.skill"] { --daf-kind-color: #8b5cf6; }
+.daf-node[data-kind="flow.parallel"], .daf-node[data-kind="flow.join"], .daf-node[data-kind="flow.loop"], .daf-node[data-kind="flow.wait"] { --daf-kind-color: #0ea5e9; }
+.daf-node[data-kind="branch.condition"] { --daf-kind-color: #f43f5e; }
+.daf-node[data-kind="phase"] { --daf-kind-color: #64748b; }
+.daf-node[data-kind="group.steps"] { --daf-kind-color: #64748b; }
+.daf-node[data-kind="subflow.call"] { --daf-kind-color: #ec4899; }
 
 .daf-node-detail { position: absolute; top: calc(100% + 6px); left: 0; width: 270px; z-index: 5;
   display: flex; flex-direction: column; gap: 3px; padding: 7px 9px; border-radius: 10px;
