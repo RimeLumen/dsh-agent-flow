@@ -496,7 +496,7 @@ function check(section, label, ok, extra) {
   check(section, '松手建线不再写 customPath', dragCtx.includes('customPath: undefined,') && !dragCtx.includes('controlOf'))
   check(section, '路由缓存接入主渲染', dragCtx.includes('edgeDCached(fromRect, toRect, edge, obstacleGrid,'))
   check(section, 'Delete 键删除选中边', dragCtx.includes("event.key === 'Delete'") && dictSrc.includes('删除这条连线'))
-  check(section, '抓取半径统一屏幕感知', (dragCtx.match(/24 \/ \(zoom \|\| 1\)/g) ?? []).length >= 2)
+  check(section, '抓取半径统一屏幕感知', (dragCtx.match(/32 \/ \(zoom \|\| 1\)/g) ?? []).length >= 2)
   check(section, '节点与边拖拽只响应左键', (dragCtx.match(/if \(event\.button !== 0\) return/g) ?? []).length >= 2)
   check(section, '换锚拖拽接入锚点高亮', dragCtx.includes('pointerSnapTarget.nodeId === node.id && pointerSnapTarget.side === side'))
   check(section, '组容器拖动带未钉住子节点', dragCtx.includes("childIds?.has(item.id) && item.pos?.pinned !== true"))

@@ -1856,7 +1856,7 @@ window.__ModuleLoader__.load({
           const straight = Math.hypot(b.x - a.x, b.y - a.y) || 1
           let polyline = 0
           for (let i = 1; i < route.length; i += 1) polyline += Math.hypot(route[i].x - route[i - 1].x, route[i].y - route[i - 1].y)
-          if (polyline / straight <= 2.5) return polylineToPath(route)
+          if (polyline / straight <= 3.5) return polylineToPath(route)
           // 回退前复查：直线若穿节点本体，宁要绕行折线也不要穿模直线（正确性优先于美观）
           const stillBlocked = full.some((rect) => segmentHitsRect(a, b, rect, 0))
           if (!stillBlocked) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
@@ -4959,7 +4959,7 @@ window.__ModuleLoader__.load({
           }
           setPointerPos(canvasPoint)
           // 预览吸附目标：靠近节点（抓取半径 24 屏幕px，除 zoom 换算逻辑距离，缩放下手感一致）
-          const grabRadius = 24 / (zoom || 1)
+          const grabRadius = 32 / (zoom || 1)
           const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
           const fixedId = edgeDrag.end === 'from' ? dragEdge?.to : dragEdge?.from
           let snap = null
@@ -4987,7 +4987,7 @@ window.__ModuleLoader__.load({
             x: (event.clientX - rect.left) / zoom,
             y: (event.clientY - rect.top) / zoom,
           }
-          const grabRadius = 24 / (zoom || 1)
+          const grabRadius = 32 / (zoom || 1)
           // 吸附判定：靠近节点（矩形 24px 邻域内最近者）即绑定——不必精确点中锚点，
           // 锚点自动取该节点上离指针最近的一面。固定端自身的节点不参与。
           const dragEdge = (current?.edges ?? []).find((item) => item.id === edgeDrag.id)
@@ -5372,7 +5372,7 @@ window.__ModuleLoader__.load({
           let best = null
           for (const node of current?.nodes ?? []) {
             if (node.id === connecting.nodeId) continue
-            const hit = nearestAnchor(rectOfNode(node), pointerPos, ANCHOR_SNAP_PX / (zoom || 1))
+            const hit = nearestAnchor(rectOfNode(node), pointerPos, ANCHOR_SNAP_PX * 2 / (zoom || 1))
             if (hit && (!best || hit.distance < best.distance)) best = { nodeId: node.id, side: hit.side, distance: hit.distance }
           }
           return best
@@ -5387,7 +5387,9 @@ window.__ModuleLoader__.load({
       })
 
       const selectedEdgeView = (() => {
-        if (!selectedEdge) return null
+        // R6 交互修正：拖拽换锚进行中隐藏编辑面板——此前面板随选中同时出现，
+        // 拖拽时挡住目标节点与吸附预览（用户反馈「只能在弹框中手动选择锚点」的成因之一）
+        if (!selectedEdge || edgeDrag) return null
         const fromNode = nodesById.get(selectedEdge.from)
         const toNode = nodesById.get(selectedEdge.to)
         if (!fromNode || !toNode) return null
