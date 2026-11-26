@@ -863,13 +863,20 @@ window.__ModuleLoader__.load({
 /* R6 二轮修复（真机：Mermaid 抽屉被画布覆盖且高度塌陷透明）：
    ① scrim 变量缺失时兜底（此前 backdrop 全透明）② drawer-right 显式 100vh 高度
    （top/bottom 组合在 absolute 祖先的层叠上下文内可能塌陷）③ z 提升到 70 高于全部画布层 */
-.daf-drawer-backdrop { position: fixed; inset: 0; z-index: 70; background: var(--daf-scrim, rgba(15, 18, 24, 0.45));
-  opacity: 0; animation: daf-drawer-fade var(--daf-t-fast) var(--daf-ease-out) forwards; }
+/* 液态玻璃抽屉（R6 第三批，用户指令）：不再贴屏——以「画布上的悬浮图层」呈现，
+   四周留边 + 20px 圆角 + 强 blur 饱和 + 顶部内高光 + 深阴影浮起；scrim 减淡让画布透出更多。 */
+.daf-drawer-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(15, 18, 24, 0.24);
+  backdrop-filter: blur(2px); opacity: 0; animation: daf-drawer-fade var(--daf-t-fast) var(--daf-ease-out) forwards; }
 @keyframes daf-drawer-fade { to { opacity: 1; } }
-.daf-drawer-right { position: absolute; top: 0; right: 0; height: 100vh; width: min(440px, 46vw);
-  display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow: auto;
-  background: var(--dsw-alias-bg-overlay); border-left: 1px solid var(--dsw-alias-border-l1);
-  box-shadow: var(--daf-shadow-3); animation: daf-slide-in var(--daf-t-base) var(--daf-ease-out); }
+.daf-drawer-right { position: absolute; top: 14px; right: 14px; bottom: 14px; width: min(480px, 46vw);
+  display: flex; flex-direction: column; gap: 10px; padding: 16px 16px 14px; overflow: auto;
+  border-radius: 20px; border: 1px solid rgba(255, 255, 255, .35);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 62%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--daf-shadow-pop), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(255, 255, 255, .12);
+  animation: daf-slide-in var(--daf-t-base) var(--daf-ease-out);
+  transition: opacity var(--daf-t-fast) var(--daf-ease-out); }
+@keyframes daf-slide-in { from { transform: translateX(28px) scale(.98); opacity: 0 } to { transform: translateX(0) scale(1); opacity: 1 } }
 @keyframes daf-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .daf-drawer-head { display: flex; align-items: center; gap: 8px; }
 .daf-modal-backdrop { position: fixed; inset: 0; background: var(--daf-scrim, rgba(15, 18, 24, 0.45)); background: var(--daf-scrim); display: flex; align-items: center;
@@ -973,11 +980,13 @@ window.__ModuleLoader__.load({
     const CANVAS_CSS = `
 .daf-canvas-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0;
   padding: 0; container-type: inline-size; container-name: flow; }
-.daf-side-rail { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 20;
-  display: flex; flex-direction: column; gap: 6px; padding: 6px 5px; border-radius: 12px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 78%, transparent);
-  backdrop-filter: blur(10px) saturate(130%); max-height: 70vh; overflow-y: auto; }
+.daf-side-rail { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); z-index: 20;
+  display: flex; flex-direction: column; gap: 6px; padding: 8px 6px; border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 58%, transparent);
+  backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: var(--daf-shadow-pop), inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 0 0 1px rgba(255, 255, 255, .1);
+  max-height: 70vh; overflow-y: auto; }
 .daf-side-rail .daf-btn { width: 36px; height: 36px; padding: 0; justify-content: center; }
 .daf-side-rail .daf-toolbar-sep { width: auto; height: 1px; align-self: stretch; margin: 2px 4px; }
 .daf-thumb-viewlayer { position: absolute; right: 8px; bottom: 8px; width: 132px; height: 92px;
