@@ -695,7 +695,28 @@ window.__ModuleLoader__.load({
 
     const BASE_CSS = `
 .daf-scope, .daf-scope * { box-sizing: border-box; }
-.daf-scope { color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.5; }
+/* R6 设计系统（ui-ux-pro-max · Micro-interactions 风格）：插件自有视觉层。
+   主色 indigo #4f46e5 / 强调青 #0891b2，画布冷灰底，双层柔和阴影，12px 圆角，
+   Inter 字体栈，150-300ms 微交互。暗色由 prefers-color-scheme + dsw-alias 宿主 token 自动适配。 */
+.daf-scope {
+  --daf-accent: #4f46e5;
+  --daf-accent-hover: #4338ca;
+  --daf-accent-soft: #eef2ff;
+  --daf-teal: #0891b2;
+  --daf-radius: 12px;
+  --daf-radius-sm: 8px;
+  --daf-shadow-card: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .09);
+  --daf-shadow-lift: 0 4px 10px rgba(16, 24, 40, .08), 0 2px 4px rgba(16, 24, 40, .06);
+  --daf-shadow-pop: 0 12px 32px rgba(16, 24, 40, .16), 0 4px 8px rgba(16, 24, 40, .08);
+  --daf-canvas-bg: #f6f7f9;
+  --daf-ease: cubic-bezier(.2, .8, .2, 1);
+  font-family: Inter, 'Segoe UI', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  letter-spacing: -0.008em;
+}
+.daf-scope { color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.55; }
+@media (prefers-color-scheme: dark) {
+  .daf-scope { --daf-accent: #818cf8; --daf-accent-hover: #a5b4fc; --daf-accent-soft: rgba(99, 102, 241, .16); --daf-canvas-bg: #14161a; }
+}
 .daf-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%;
   padding: 6px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px;
   background: var(--dsw-alias-bg-layer-1); container-type: inline-size; }
@@ -820,7 +841,8 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-primary); font-size: 12px; cursor: pointer; }
 .daf-btn:hover:not(:disabled) { border-color: var(--dsw-alias-border-l2); }
 .daf-btn:disabled { opacity: .5; cursor: not-allowed; }
-.daf-btn-primary { background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); color: var(--daf-on-brand); }
+.daf-btn-primary { background: var(--daf-accent); border-color: var(--daf-accent); color: #fff; box-shadow: 0 1px 2px rgba(79, 70, 229, .35); }
+.daf-btn-primary:hover:not(:disabled) { background: var(--daf-accent-hover); border-color: var(--daf-accent-hover); }
 .daf-btn-danger { color: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-primary); }
 .daf-input, .daf-select, .daf-textarea { width: 100%; min-width: 0; background: var(--dsw-alias-bg-base);
   color: var(--dsw-alias-label-primary); border: 1px solid var(--dsw-alias-border-l1); border-radius: 7px;
@@ -950,7 +972,7 @@ window.__ModuleLoader__.load({
     const CANVAS_CSS = `
 .daf-canvas-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0;
   padding: 0; container-type: inline-size; container-name: flow; }
-.daf-side-rail { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 20;
+.daf-side-rail { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 20;
   display: flex; flex-direction: column; gap: 6px; padding: 6px 5px; border-radius: 12px;
   border: 1px solid var(--dsw-alias-border-l1);
   background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 78%, transparent);
@@ -1056,7 +1078,7 @@ window.__ModuleLoader__.load({
 .daf-surface-wrap { position: relative; overflow: auto; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px;
   background: var(--dsw-alias-bg-base); min-height: 220px; }
 .daf-surface { position: relative; transform-origin: 0 0; min-width: 2400px; min-height: 1600px; width: var(--daf-surface-w, 2400px); height: var(--daf-surface-h, 1600px);
-  background-image: radial-gradient(var(--dsw-alias-border-l1) 1px, transparent 1px); background-size: 20px 20px; }
+  background-color: var(--daf-canvas-bg); background-image: radial-gradient(color-mix(in srgb, var(--dsw-alias-border-l1) 70%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
 .daf-edges { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .daf-edge { fill: none; stroke: var(--dsw-alias-border-l2); stroke-width: 1.6; }
 
@@ -1086,9 +1108,10 @@ window.__ModuleLoader__.load({
   animation: daf-flow 1s linear infinite; pointer-events: none; }
 @keyframes daf-flow { from { stroke-dashoffset: 18; } to { stroke-dashoffset: 0; } }
 
-.daf-node { position: absolute; top: 0; left: 0; width: 220px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px;
-  background: var(--dsw-alias-bg-layer-1); padding: 8px 9px 9px; cursor: grab; user-select: none;
-  transition: transform var(--daf-t-slow) var(--daf-ease-out),
+.daf-node { position: absolute; top: 0; left: 0; width: 220px; border: 1px solid transparent; border-radius: var(--daf-radius, 12px);
+  background: var(--dsw-alias-bg-layer-1); padding: 9px 10px 10px; cursor: grab; user-select: none;
+  box-shadow: var(--daf-shadow-card); outline: 1px solid rgba(16, 24, 40, .04); outline-offset: -1px;
+  transition: transform var(--daf-t-fast) var(--daf-ease), box-shadow var(--daf-t-fast) var(--daf-ease),
               border-color var(--daf-t-base) var(--daf-ease-out),
               box-shadow var(--daf-t-base) var(--daf-ease-out),
               opacity var(--daf-t-base) var(--daf-ease-out); }
@@ -1100,7 +1123,9 @@ window.__ModuleLoader__.load({
 
 .daf-node { animation: daf-node-enter var(--daf-t-slow) var(--daf-ease-out) 1; }
 @keyframes daf-node-enter { from { opacity: 0; } to { opacity: 1; } }
-.daf-node[data-selected="true"] { border-color: var(--dsw-alias-brand-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 30%, transparent); }
+/* R6 设计系统：hover 上浮 + 阴影抬升；选中态品牌描边 + soft 底 */
+@media (hover: hover) { .daf-node:hover { box-shadow: var(--daf-shadow-lift); transform: translateY(-1px); } }
+.daf-node[data-selected="true"] { border-color: var(--daf-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--daf-accent) 26%, transparent), var(--daf-shadow-lift); background: linear-gradient(0deg, var(--daf-accent-soft), var(--dsw-alias-bg-layer-1)); }
 
 .daf-node-detail { position: absolute; top: calc(100% + 6px); left: 0; width: 270px; z-index: 5;
   display: flex; flex-direction: column; gap: 3px; padding: 7px 9px; border-radius: 10px;
